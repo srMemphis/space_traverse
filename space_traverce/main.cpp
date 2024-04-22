@@ -11,10 +11,14 @@
 
 int main()
 {
-	std::string filepath = "msh/my.msh"; // coarse.msh
+	std::string filepath = "msh/my.msh"; // coarse.msh or my.msh
 	
 	std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
-	mesh->FromFile(filepath);
+	bool result = mesh->FromFile(filepath);
+	if (!result)
+		return -1;
+
+
 	mesh->BuildTopologyData();
 	Solver slv(mesh);
 

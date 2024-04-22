@@ -3,6 +3,8 @@
 #include <iostream>
 
 #include "GJK.h"
+#include "utils/Timer.h"
+#include <cassert>
 
 Mesh::Mesh()
 {
@@ -15,6 +17,9 @@ Mesh::~Mesh()
 
 bool Mesh::FromFile(std::string filepath)
 {
+
+	TIME_SCOPE();
+
 	std::ifstream geofile(filepath);
 	if (!geofile.is_open())
 	{
@@ -35,6 +40,7 @@ bool Mesh::FromFile(std::string filepath)
 		if (!ReadSection(geofile, section))
 		{
 			std::cout << "Error reading section" << std::endl;
+			return false;
 		}
 	}
 
@@ -205,6 +211,9 @@ void Mesh::BuildTopologyRecursive(size_t parentID)
 
 bool Mesh::ReadSection(std::ifstream& geofile, std::string s)
 {
+
+	// not critical path
+	// no need to inmplement switch with string to int mapping
 	if (s == "MeshFormat")
 	{
 		return ReadMeshFormat(geofile);
@@ -269,17 +278,15 @@ bool Mesh::ReadSection(std::ifstream& geofile, std::string s)
 bool Mesh::ReadMeshFormat(std::ifstream& geofile)
 {
 	geofile >> m_Version.first;
-	geofile.get();
+	geofile.get();    // get . symbol
 	geofile >> m_Version.second;
 
 	std::cout << "MESH version " << m_Version.first << '.' << m_Version.second << std::endl;
-
 
 	int type;
 	int size;
 
 	geofile >> type >> size;
-
 
 	std::string end;
 	geofile.get(); // get \n
@@ -664,6 +671,7 @@ bool Mesh::ReadNodes(std::ifstream& geofile)
 	if (minNodeTag != 1)
 	{
 		std::cout << "ÒÛ ÏÎÆÐÀË ÃÎÂÍÀ" << std::endl;
+		assert(false);
 	}
 
 

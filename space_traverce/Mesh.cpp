@@ -59,6 +59,8 @@ std::vector<ETetrahedron>& Mesh::GetBulkElements()
 
 void Mesh::BuildTopologyData()
 {
+	TIME_SCOPE();
+
 	// govno
 	if (m_topologyTree.size() == 0)
 	{

@@ -72,7 +72,7 @@ private:
 public:
 	// static class
 	GJK() = delete;
-	static const uint8_t MAX_ITER = 30;
+	static const uint8_t MAX_ITER = 15;
 
 	// return true if shapes intersect
 	static bool Check(const Box& b, const ETetrahedron& t, const std::vector<Node>& nodes)
@@ -167,10 +167,8 @@ private:
 	
 	static void LOG(const Box& b, const std::array<Vec3, 4>& tet, bool result)
 	{
-		bool log = 0;
-		if (log)
-		{
-
+		#define GJK_LOG
+		#ifdef GJK_LOG
 			std::ofstream myfile;
 			myfile.open("GJKlog.txt", std::ios::app);
 			
@@ -190,7 +188,7 @@ private:
 			myfile << '\n';
 			
 			myfile.close();
-		}
+		#endif
 	}
 
 

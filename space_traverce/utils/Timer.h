@@ -25,9 +25,10 @@ public:
 		auto stop = std::chrono::high_resolution_clock::now();
 
 		std::chrono::duration<float> time = stop - m_start;
-		auto ms_time = std::chrono::duration_cast<std::chrono::milliseconds>(time);
+		auto ms_time = std::chrono::duration_cast<std::chrono::milliseconds>(time).count();
 
-		std::cout << m_name << " elapsed in " << ms_time.count() << "ms." << std::endl;
+		std::cout << m_name << " elapsed in " << ms_time / 60000 << "m:" << (ms_time % 60000) / 1000 << "s:"
+			<< (ms_time % 60000) % 1000 << "ms" << std::endl;
 	}
 
 private:

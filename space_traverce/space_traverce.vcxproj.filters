@@ -15,33 +15,33 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="src\main.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Mesh.cpp">
+    <ClCompile Include="src\Mesh.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Solver.cpp">
+    <ClCompile Include="src\Solver.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Mesh.h">
+    <ClInclude Include="src\Mesh.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="ElementTypes.h">
+    <ClInclude Include="src\ElementTypes.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Solver.h">
+    <ClInclude Include="src\Solver.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Box.h">
+    <ClInclude Include="src\Box.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="GJK.h">
+    <ClInclude Include="src\GJK.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="utils\Timer.h">
+    <ClInclude Include="src\utils\Timer.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

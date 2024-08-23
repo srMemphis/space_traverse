@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 
+#define GJK_LOG 0
 class GJK
 {
 private:
@@ -91,10 +92,10 @@ public:
 		m_box[6] = { b.xMax, b.yMax, b.zMax};
 		m_box[7] = { b.xMin, b.yMax, b.zMax};
 
-		m_tet[0] = { nodes.at(t.node1).x, nodes.at(t.node1).y, nodes.at(t.node1).z };
-		m_tet[1] = { nodes.at(t.node2).x, nodes.at(t.node2).y, nodes.at(t.node2).z };
-		m_tet[2] = { nodes.at(t.node3).x, nodes.at(t.node3).y, nodes.at(t.node3).z };
-		m_tet[3] = { nodes.at(t.node4).x, nodes.at(t.node4).y, nodes.at(t.node4).z };
+		m_tet[0] = { nodes.at(t.node[0]).x, nodes.at(t.node[0]).y, nodes.at(t.node[0]).z };
+		m_tet[1] = { nodes.at(t.node[1]).x, nodes.at(t.node[1]).y, nodes.at(t.node[1]).z };
+		m_tet[2] = { nodes.at(t.node[2]).x, nodes.at(t.node[2]).y, nodes.at(t.node[2]).z };
+		m_tet[3] = { nodes.at(t.node[3]).x, nodes.at(t.node[3]).y, nodes.at(t.node[3]).z };
 
 		// box center
 		Vec3 centerB, centerT;
@@ -103,9 +104,9 @@ public:
 		centerB.z = (b.zMax + b.zMin) / 2.0;
 
 		// tetrahedron center
-		centerT.x = (nodes.at(t.node1).x + nodes.at(t.node2).x + nodes.at(t.node3).x + nodes.at(t.node4).x)/4.0;
-		centerT.y = (nodes.at(t.node1).y + nodes.at(t.node2).y + nodes.at(t.node3).y + nodes.at(t.node4).y)/4.0;
-		centerT.z = (nodes.at(t.node1).z + nodes.at(t.node2).z + nodes.at(t.node3).z + nodes.at(t.node4).z)/4.0;
+		centerT.x = (nodes.at(t.node[0]).x + nodes.at(t.node[1]).x + nodes.at(t.node[2]).x + nodes.at(t.node[3]).x)/4.0;
+		centerT.y = (nodes.at(t.node[0]).y + nodes.at(t.node[1]).y + nodes.at(t.node[2]).y + nodes.at(t.node[3]).y)/4.0;
+		centerT.z = (nodes.at(t.node[0]).z + nodes.at(t.node[1]).z + nodes.at(t.node[2]).z + nodes.at(t.node[3]).z)/4.0;
 		
 		// center direction
 		Vec3 dir = (centerT - centerB);
@@ -167,8 +168,7 @@ private:
 	
 	static void LOG(const Box& b, const std::array<Vec3, 4>& tet, bool result)
 	{
-		#define GJK_LOG
-		#ifdef GJK_LOG
+		#if (GJK_LOG == 1)
 			std::ofstream myfile;
 			myfile.open("GJKlog.txt", std::ios::app);
 			

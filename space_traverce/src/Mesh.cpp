@@ -118,28 +118,28 @@ void Mesh::BuildTopologyRecursive(size_t parentID)
 		
 		bool contains = false;
 		// left box.  check every tetrahedron node
-		if (left.boundBox.Contains(m_Nodes.at(element.node1).x, m_Nodes.at(element.node1).y, m_Nodes.at(element.node1).z))
+		if (left.boundBox.Contains(m_Nodes.at(element.node[0]).x, m_Nodes.at(element.node[0]).y, m_Nodes.at(element.node[0]).z))
 		{
-			if (std::find(nodesLeft.begin(), nodesLeft.end(), element.node1) == nodesLeft.end()) // if unique
-				nodesLeft.push_back(element.node1);
+			if (std::find(nodesLeft.begin(), nodesLeft.end(), element.node[0]) == nodesLeft.end()) // if unique
+				nodesLeft.push_back(element.node[0]);
 			contains = true;	
 		}
-		if (left.boundBox.Contains(m_Nodes.at(element.node2).x, m_Nodes.at(element.node2).y, m_Nodes.at(element.node2).z))
+		if (left.boundBox.Contains(m_Nodes.at(element.node[1]).x, m_Nodes.at(element.node[1]).y, m_Nodes.at(element.node[1]).z))
 		{
-			if (std::find(nodesLeft.begin(), nodesLeft.end(), element.node2) == nodesLeft.end()) // if unique
-				nodesLeft.push_back(element.node2);
+			if (std::find(nodesLeft.begin(), nodesLeft.end(), element.node[1]) == nodesLeft.end()) // if unique
+				nodesLeft.push_back(element.node[1]);
 			contains = true;
 		}
-		if (left.boundBox.Contains(m_Nodes.at(element.node3).x, m_Nodes.at(element.node3).y, m_Nodes.at(element.node3).z))
+		if (left.boundBox.Contains(m_Nodes.at(element.node[2]).x, m_Nodes.at(element.node[2]).y, m_Nodes.at(element.node[2]).z))
 		{
-			if (std::find(nodesLeft.begin(), nodesLeft.end(), element.node3) == nodesLeft.end()) // if unique
-				nodesLeft.push_back(element.node3);
+			if (std::find(nodesLeft.begin(), nodesLeft.end(), element.node[2]) == nodesLeft.end()) // if unique
+				nodesLeft.push_back(element.node[2]);
 			contains = true;
 		}
-		if (left.boundBox.Contains(m_Nodes.at(element.node4).x, m_Nodes.at(element.node4).y, m_Nodes.at(element.node4).z))
+		if (left.boundBox.Contains(m_Nodes.at(element.node[3]).x, m_Nodes.at(element.node[3]).y, m_Nodes.at(element.node[3]).z))
 		{
-			if (std::find(nodesLeft.begin(), nodesLeft.end(), element.node4) == nodesLeft.end()) // if unique
-				nodesLeft.push_back(element.node4);
+			if (std::find(nodesLeft.begin(), nodesLeft.end(), element.node[3]) == nodesLeft.end()) // if unique
+				nodesLeft.push_back(element.node[3]);
 			contains = true;
 		}
 
@@ -153,28 +153,28 @@ void Mesh::BuildTopologyRecursive(size_t parentID)
 		// right box. check every tetrahedron node
 		contains = false;
 
-		if (right.boundBox.Contains(m_Nodes.at(element.node1).x, m_Nodes.at(element.node1).y, m_Nodes.at(element.node1).z))
+		if (right.boundBox.Contains(m_Nodes.at(element.node[0]).x, m_Nodes.at(element.node[0]).y, m_Nodes.at(element.node[0]).z))
 		{
-			if (std::find(nodesRight.begin(), nodesRight.end(), element.node1) == nodesRight.end()) // if unique
-				nodesRight.push_back(element.node1);
+			if (std::find(nodesRight.begin(), nodesRight.end(), element.node[0]) == nodesRight.end()) // if unique
+				nodesRight.push_back(element.node[0]);
 			contains = true;
 		}
-		if (right.boundBox.Contains(m_Nodes.at(element.node2).x, m_Nodes.at(element.node2).y, m_Nodes.at(element.node2).z))
+		if (right.boundBox.Contains(m_Nodes.at(element.node[1]).x, m_Nodes.at(element.node[1]).y, m_Nodes.at(element.node[1]).z))
 		{
-			if (std::find(nodesRight.begin(), nodesRight.end(), element.node2) == nodesRight.end()) // if unique
-				nodesRight.push_back(element.node2);
+			if (std::find(nodesRight.begin(), nodesRight.end(), element.node[1]) == nodesRight.end()) // if unique
+				nodesRight.push_back(element.node[1]);
 			contains = true;
 		}
-		if (right.boundBox.Contains(m_Nodes.at(element.node3).x, m_Nodes.at(element.node3).y, m_Nodes.at(element.node3).z))
+		if (right.boundBox.Contains(m_Nodes.at(element.node[2]).x, m_Nodes.at(element.node[2]).y, m_Nodes.at(element.node[2]).z))
 		{
-			if (std::find(nodesRight.begin(), nodesRight.end(), element.node3) == nodesRight.end()) // if unique
-				nodesRight.push_back(element.node3);
+			if (std::find(nodesRight.begin(), nodesRight.end(), element.node[2]) == nodesRight.end()) // if unique
+				nodesRight.push_back(element.node[2]);
 			contains = true;
 		}
-		if (right.boundBox.Contains(m_Nodes.at(element.node4).x, m_Nodes.at(element.node4).y, m_Nodes.at(element.node4).z))
+		if (right.boundBox.Contains(m_Nodes.at(element.node[3]).x, m_Nodes.at(element.node[3]).y, m_Nodes.at(element.node[3]).z))
 		{
-			if (std::find(nodesRight.begin(), nodesRight.end(), element.node4) == nodesRight.end()) // if unique
-				nodesRight.push_back(element.node4);
+			if (std::find(nodesRight.begin(), nodesRight.end(), element.node[3]) == nodesRight.end()) // if unique
+				nodesRight.push_back(element.node[3]);
 			contains = true;
 		}
 
@@ -524,7 +524,7 @@ bool Mesh::ReadElements(std::ifstream& geofile)
 			{
 				ETriangle element;
 
-				geofile >> elementTag >> element.node1 >> element.node2 >> element.node3;
+				geofile >> elementTag >> element.node[0] >> element.node[1] >> element.node[2];
 				//std::cout << elementTag << ' ' << element.node1 << ' ' << element.node2 << ' ' << element.node3 << std::endl;
 
 				m_surfElements.push_back(element);
@@ -534,15 +534,15 @@ bool Mesh::ReadElements(std::ifstream& geofile)
 
 				ETetrahedron element;
 
-				geofile >> elementTag >> element.node1 >> element.node2 >> element.node3 >> element.node4;
+				geofile >> elementTag >> element.node[0] >> element.node[1] >> element.node[2] >> element.node[3];
 				//std::cout << elementTag << ' ' << element.node1 << ' ' << element.node2
 				//		  << ' ' << element.node3 << ' ' << element.node4 << std::endl;
 
-				// gmesh indexing starts from 1
-				element.node1 -= 1;
-				element.node2 -= 1;
-				element.node3 -= 1;
-				element.node4 -= 1;
+				// gmsh indexing starts from 1
+				element.node[0] -= 1;
+				element.node[1] -= 1;
+				element.node[2] -= 1;
+				element.node[3] -= 1;
 
 				m_bulkElements.push_back(element);
 			}else

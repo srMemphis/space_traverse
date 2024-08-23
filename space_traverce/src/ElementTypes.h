@@ -18,16 +18,11 @@ struct Node
 // 3-node triangle element
 struct ETriangle
 {
-	size_t node1;
-	size_t node2;
-	size_t node3;
+	size_t node[3];
 };
 
 // 4-node tetrahedron element
 struct ETetrahedron
 {
-	size_t node1;
-	size_t node2;
-	size_t node3;
-	size_t node4;
+	size_t node[4];
 };

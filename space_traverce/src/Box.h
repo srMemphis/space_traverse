@@ -74,7 +74,7 @@ public:
 		}
 		else
 		{
-			std::cout << "Жидко обосрался\n";
+			std::cerr << " Box::Split Жидко обосрался\n";
 			return false;
 		}
 	}

@@ -7,17 +7,11 @@
 #include <map>
 
 
-struct Entity
-{
-	int physicalTag;
-	int dimention;
-};
 
 class Mesh
 {
 
 public:
-
 	Mesh();
 	~Mesh();
 
@@ -27,6 +21,8 @@ public:
 	std::vector<ETetrahedron>& GetBulkElements();
 	void BuildTopologyData();
 
+	void Clear();
+
 private:
 
 	std::map<std::pair<int, int>, PhisicalName> m_PhisicalNames;
@@ -35,7 +31,9 @@ private:
 
 	std::vector<ETriangle> m_surfElements;
 	std::vector<ETetrahedron> m_bulkElements;
-	std::map<int, Entity> m_Entities;
+
+	std::map<int, Surface> m_surfaces;   // mapped by entity tags
+	std::map<int, Volume> m_volumes;
 
 	// topology data
 	struct treeNode
@@ -63,7 +61,8 @@ private:
 	bool ReadElementData(std::ifstream& geofile);
 	bool ReadElementNodeData(std::ifstream& geofile);
 	bool ReadInterpolationScheme(std::ifstream& geofile);
-
+	
 	void BuildTopologyRecursive(size_t parentID);
+	
 	friend class Solver;
 };

@@ -8,7 +8,6 @@
 
 Mesh::Mesh()
 {
-	m_topologyTree.emplace_back();
 }
 
 Mesh::~Mesh()
@@ -17,7 +16,6 @@ Mesh::~Mesh()
 
 bool Mesh::FromFile(std::string filepath)
 {
-
 	TIME_SCOPE();
 
 	std::ifstream geofile(filepath);
@@ -26,6 +24,9 @@ bool Mesh::FromFile(std::string filepath)
 		std::cout << "File not found!" << std::endl;
 		return false;
 	}
+
+	// clear existing data
+	Clear();
 
 	while (geofile.good())
 	{
@@ -61,23 +62,42 @@ void Mesh::BuildTopologyData()
 {
 	TIME_SCOPE();
 
-	// govno
-	if (m_topologyTree.size() == 0)
+	// if no geometry available
+	if (m_bulkElements.size() == 0)
 	{
-		std::cout << "Error during topology generation; Missing root node!" << std::endl;
+		std::cerr << "Error during topology generation; Missing geometry data!" << std::endl;
 		return;
 	}
-	else if (m_topologyTree.size() > 1)
+
+	// create root node
+	// 
+	// bounding box
+	Box box;
+
+	// update bounding box
+	for (auto& pair : m_volumes)
 	{
-		m_topologyTree.erase(++m_topologyTree.begin(), m_topologyTree.end());
+		auto& v = pair.second;
+
+		box.xMax = box.xMax < v.maxX ? v.maxX : box.xMax;
+		box.yMax = box.yMax < v.maxY ? v.maxY : box.yMax;
+		box.zMax = box.zMax < v.maxZ ? v.maxZ : box.zMax;
+
+		box.xMin = box.xMin > v.minX ? v.minX : box.xMin;
+		box.yMin = box.yMin > v.minY ? v.minY : box.yMin;
+		box.zMin = box.zMin > v.minZ ? v.minZ : box.zMin;
 	}
 
-	// fill topology tree root
+	// add bounding box to the root of topology tree;
+	m_topologyTree.clear();
+	m_topologyTree.emplace_back();
+	m_topologyTree.at(0).boundBox = box;
+
+	// fill topology tree root with elements
 	for (int i = 0; i < m_bulkElements.size(); i++)
 	{
 		m_topologyTree.at(0).elements.push_back(i);
 	}
-
 
 	//m_topologyTree.at(0).boundBox.xMax += 0.01;
 	//m_topologyTree.at(0).boundBox.yMax += 0.01;
@@ -90,6 +110,18 @@ void Mesh::BuildTopologyData()
 	BuildTopologyRecursive(0);
 }
 
+void Mesh::Clear()
+{
+	m_Version = { 0, 0 };
+	m_Nodes.clear();
+	m_surfElements.clear();
+	m_bulkElements.clear();
+	m_surfaces.clear();
+	m_volumes.clear();
+	m_topologyTree.clear();
+}
+
+// TODO: rewrite this SHIT
 void Mesh::BuildTopologyRecursive(size_t parentID)
 {	
 	// create new tree branches
@@ -386,20 +418,18 @@ bool Mesh::ReadEntities(std::ifstream& geofile)
 	// surfaces
 	for (int i = 0; i < numSurfaces; i++)
 	{
-		int surfaceTag;
-		double minX, minY, minZ;
-		double maxX, maxY, maxZ;
+		// buffer
+		Surface tmp;
 
-		geofile >> surfaceTag >> minX >> minY >> minZ >> maxX >> maxY >> maxZ;
+		// read to buffer
+		geofile >> tmp.entytyTag >> tmp.minX >> tmp.minY >> tmp.minZ >> tmp.maxX >> tmp.maxY >> tmp.maxZ;
 
 		size_t numPhysicalTags;
 		geofile >> numPhysicalTags;
 
-		int physicalTag = 0;
 		for (int j = 0; j < numPhysicalTags; j++)
 		{
-			
-			geofile >> physicalTag;
+			geofile >> tmp.physicalTag;
 		}
 
 		size_t numBoundingCurves;
@@ -410,44 +440,26 @@ bool Mesh::ReadEntities(std::ifstream& geofile)
 			geofile >> curveTag;
 		}
 
-		Entity tmp;
-		tmp.physicalTag = physicalTag;
-		tmp.dimention = 2;
-		m_Entities.emplace(surfaceTag, tmp);
+		// save
+		m_surfaces.emplace(tmp.entytyTag, tmp);
 	}
-
-
-	// bounding box
-	Box box;
 
 	// volumes
 	for (int i = 0; i < numVolumes; i++)
 	{
-		
-		int volumeTag;
-		double minX, minY, minZ;
-		double maxX, maxY, maxZ;
+		// buffer
+		Volume tmp;
 
-		geofile >> volumeTag >> minX >> minY >> minZ >> maxX >> maxY >> maxZ;
+		// read from file to buffer
+		geofile >> tmp.entytyTag >> tmp.minX >> tmp.minY >> tmp.minZ >> tmp.maxX >> tmp.maxY >> tmp.maxZ;
 		//std::cout << "Volume tag : " << volumeTag << std::endl;
-
-		// update bounding box
-		box.xMax = box.xMax < maxX ? maxX : box.xMax;
-		box.yMax = box.yMax < maxY ? maxY : box.yMax;
-		box.zMax = box.zMax < maxZ ? maxZ : box.zMax;
-
-		box.xMin = box.xMin > minX ? minX : box.xMin;
-		box.yMin = box.yMin > minY ? minY : box.yMin;
-		box.zMin = box.zMin > minZ ? minZ : box.zMin;
-		//
 
 		size_t numPhysicalTags;
 		geofile >> numPhysicalTags;
 
-		int physicalTag = 0;
 		for (int j = 0; j < numPhysicalTags; j++)
 		{
-			geofile >> physicalTag;
+			geofile >> tmp.physicalTag;
 		}
 
 		size_t numBoundngSurfaces;
@@ -458,17 +470,9 @@ bool Mesh::ReadEntities(std::ifstream& geofile)
 			geofile >> surfaceTag;
 		}
 
-		Entity tmp;
-		tmp.physicalTag = physicalTag;
-		tmp.dimention = 3;
-		m_Entities.emplace(volumeTag, tmp);
-
-
+		//save
+		m_volumes.emplace(tmp.entytyTag, tmp);
 	}
-
-	// add bounding box to the root of topology tree;
-	m_topologyTree.at(0).boundBox = box;
-
 
 	std::string end;
 	geofile.get(); // get \n
@@ -502,8 +506,6 @@ bool Mesh::ReadElements(std::ifstream& geofile)
 	geofile >> numEntityBlocks >> numElements >> minElementTag >> maxElementTag;
 	//std::cout << numEntityBlocks << ' ' << numElements << ' ' << minElementTag << ' ' << maxElementTag << std::endl;
 
-	size_t prevElementTag = 0;
-
 	for (int i = 0; i < numEntityBlocks; i++)
 	{
 		int entityDim;
@@ -514,24 +516,55 @@ bool Mesh::ReadElements(std::ifstream& geofile)
 		geofile >> entityDim >> entityTag >> elementType >> numElementsInBlock;
 		//std::cout << entityDim << ' ' << entityTag << ' ' << elementType << ' ' << numElementsInBlock << std::endl;
 
-		
+		size_t elementTag;
 
-		for (int j = 0; j < numElementsInBlock; j++)
-		{	
-			size_t elementTag;
+		switch (entityDim)
+		{
+		case 2: // surface
+		{
+			if (elementType != 2) // 3-node Triangle
+			{
+				std::cerr << "ERROR element type " << elementType << " is not supported!" << std::endl;
+				return false;
+			}
 
-			if (elementType == 2) // 3-node Triangle
+			// fill entity data
+			auto& surface = m_surfaces.find(entityTag)->second;
+			surface.numElements = numElementsInBlock;
+			surface.firstElementIndex = m_surfElements.size();
+
+			// read elements
+			for (int j = 0; j < numElementsInBlock; j++)
 			{
 				ETriangle element;
 
 				geofile >> elementTag >> element.node[0] >> element.node[1] >> element.node[2];
 				//std::cout << elementTag << ' ' << element.node1 << ' ' << element.node2 << ' ' << element.node3 << std::endl;
 
+				// gmsh indexing starts from 1
+				element.node[0] -= 1;
+				element.node[1] -= 1;
+				element.node[2] -= 1;
+
 				m_surfElements.push_back(element);
 			}
-			else if (elementType == 4) // 4-node Tetrahedron
+			break;
+		}
+		case 3: // volume
+		{
+			if (elementType != 4) // 4-node Tetrahedron
 			{
+				std::cerr << "ERROR element type " << elementType << " is not supported!" << std::endl;
+				return false;
+			}
 
+			// fill entity data
+			auto& volume = m_volumes.find(entityTag)->second;
+			volume.numElements = numElementsInBlock;
+			volume.firstElementIndex = m_bulkElements.size();
+
+			for (int j = 0; j < numElementsInBlock; j++)
+			{
 				ETetrahedron element;
 
 				geofile >> elementTag >> element.node[0] >> element.node[1] >> element.node[2] >> element.node[3];
@@ -545,21 +578,13 @@ bool Mesh::ReadElements(std::ifstream& geofile)
 				element.node[3] -= 1;
 
 				m_bulkElements.push_back(element);
-			}else
-			{
-				std::cout << "ERROR element type " << elementType << " is not supported!" << std::endl;
-				return false;
 			}
-
-			if (elementTag - prevElementTag != 1)
-			{
-				std::cout << "!WARNING! non cousecutive numbering of elements" << std::endl;
-				//std::cout << prevElementTag << ' ' << elementTag << std::endl;
-			}
-
-			prevElementTag = elementTag;
+			break;
 		}
-	}
+		default:break;
+		} // switch
+
+	} // entity block
 
 
 	std::string end;

@@ -15,7 +15,7 @@ public:
 	virtual ~Entity() {}
 
 	int entytyTag = 0;
-	int physicalTag = 0;
+	PhisicalName phisicalName;
 
 	double minX = 0;
 	double minY = 0;

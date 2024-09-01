@@ -28,6 +28,7 @@ bool Mesh::FromFile(std::string filepath)
 	// clear existing data
 	Clear();
 
+	// read file by sections
 	while (geofile.good())
 	{
 		std::string section;
@@ -42,6 +43,26 @@ bool Mesh::FromFile(std::string filepath)
 		{
 			std::cout << "Error reading section" << std::endl;
 			return false;
+		}
+	}
+
+	// fill datastructures
+	for (auto pair : m_PhisicalNames)
+	{
+		// find entity by tag and change its phisical name
+		switch (pair.first.first) // switch by dimention
+		{
+		case 2: // surface
+		{
+			m_surfaces.find(pair.first.second)->second.phisicalName = pair.second;
+			break;
+		}
+		case 3: // volume
+		{
+			m_volumes.find(pair.first.second)->second.phisicalName = pair.second;
+			break;
+		}
+		default:break;
 		}
 	}
 
@@ -429,7 +450,7 @@ bool Mesh::ReadEntities(std::ifstream& geofile)
 
 		for (int j = 0; j < numPhysicalTags; j++)
 		{
-			geofile >> tmp.physicalTag;
+			geofile >> tmp.phisicalName.tag;
 		}
 
 		size_t numBoundingCurves;
@@ -459,7 +480,7 @@ bool Mesh::ReadEntities(std::ifstream& geofile)
 
 		for (int j = 0; j < numPhysicalTags; j++)
 		{
-			geofile >> tmp.physicalTag;
+			geofile >> tmp.phisicalName.tag;
 		}
 
 		size_t numBoundngSurfaces;

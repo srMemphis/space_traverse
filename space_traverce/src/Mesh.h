@@ -10,7 +10,6 @@
 
 class Mesh
 {
-
 public:
 	Mesh();
 	~Mesh();
@@ -19,21 +18,22 @@ public:
 
 	std::vector<ETriangle>& GetSurfElements();
 	std::vector<ETetrahedron>& GetBulkElements();
-	void BuildTopologyData();
 
+	void BuildTopologyData();
 	void Clear();
 
 private:
 
-	std::map<std::pair<int, int>, PhisicalName> m_PhisicalNames;
-	std::pair<int, int> m_Version;
-	std::vector<Node> m_Nodes;
+	std::map<std::pair<int, int>, PhisicalName> m_PhisicalNames;  // mapped by dimention+tag
 
-	std::vector<ETriangle> m_surfElements;
-	std::vector<ETetrahedron> m_bulkElements;
+	std::vector<Node> m_Nodes;
+	std::vector<ETriangle> m_surfElements;     // triangles
+	std::vector<ETetrahedron> m_bulkElements;  // tetrahedrons
 
 	std::map<int, Surface> m_surfaces;   // mapped by entity tags
 	std::map<int, Volume> m_volumes;
+
+	std::pair<int, int> m_Version;
 
 	// topology data
 	struct treeNode

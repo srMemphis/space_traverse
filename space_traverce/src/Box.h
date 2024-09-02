@@ -19,12 +19,12 @@ public:
 	double yMax;
 	double zMax;
 
-	bool Contains(double x, double y, double z)
+	bool Contains(double x, double y, double z) const
 	{
 		return x >= xMin && y >= yMin && z >= zMin && x <= xMax && y <= yMax && z <= zMax;
 	}
 
-	bool Split(Box& out1, Box& out2)
+	bool Split(Box& out1, Box& out2) const
 	{
 		double lenX = std::abs(xMax - xMin);
 		double lenY = std::abs(yMax - yMin);

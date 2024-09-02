@@ -1,10 +1,12 @@
 #include "Mesh.h"
+
+#include "utils/Timer.h"
+#include "utils/Vec3.h"
+
 #include <fstream>
 #include <iostream>
-
-#include "GJK.h"
-#include "utils/Timer.h"
 #include <cassert>
+
 
 Mesh::Mesh()
 {
@@ -47,23 +49,17 @@ bool Mesh::FromFile(std::string filepath)
 	}
 
 	// fill datastructures
-	for (auto pair : m_PhisicalNames)
+	m_PhisicalNames.emplace(std::pair<int, int>{2, 0}, PhisicalName(2, 0, "No Name"));
+	m_PhisicalNames.emplace(std::pair<int, int>{3, 0}, PhisicalName(3, 0, "No Name"));
+
+	for (auto& surf : m_surfaces)
 	{
-		// find entity by tag and change its phisical name
-		switch (pair.first.first) // switch by dimention
-		{
-		case 2: // surface
-		{
-			m_surfaces.find(pair.first.second)->second.phisicalName = pair.second;
-			break;
-		}
-		case 3: // volume
-		{
-			m_volumes.find(pair.first.second)->second.phisicalName = pair.second;
-			break;
-		}
-		default:break;
-		}
+		surf.second.phisicalName = m_PhisicalNames.find({ 2, surf.second.phisicalName.tag})->second;
+	}
+
+	for (auto& vol : m_volumes)
+	{
+		vol.second.phisicalName = m_PhisicalNames.find({ 3, vol.second.phisicalName.tag })->second;
 	}
 
 	return true;
@@ -79,56 +75,18 @@ std::vector<ETetrahedron>& Mesh::GetBulkElements()
 	return m_bulkElements;
 }
 
-void Mesh::BuildTopologyData()
+bool Mesh::BuildTopologyData()
 {
 	TIME_SCOPE();
+	m_topologyTree.Clear();
 
-	// if no geometry available
-	if (m_bulkElements.size() == 0)
+	if (!m_topologyTree.GenerateData(m_volumes, m_bulkElements, m_Nodes))
 	{
 		std::cerr << "Error during topology generation; Missing geometry data!" << std::endl;
-		return;
+		return false;
 	}
 
-	// create root node
-	// 
-	// bounding box
-	Box box;
-
-	// update bounding box
-	for (auto& pair : m_volumes)
-	{
-		auto& v = pair.second;
-
-		box.xMax = box.xMax < v.maxX ? v.maxX : box.xMax;
-		box.yMax = box.yMax < v.maxY ? v.maxY : box.yMax;
-		box.zMax = box.zMax < v.maxZ ? v.maxZ : box.zMax;
-
-		box.xMin = box.xMin > v.minX ? v.minX : box.xMin;
-		box.yMin = box.yMin > v.minY ? v.minY : box.yMin;
-		box.zMin = box.zMin > v.minZ ? v.minZ : box.zMin;
-	}
-
-	// add bounding box to the root of topology tree;
-	m_topologyTree.clear();
-	m_topologyTree.emplace_back();
-	m_topologyTree.at(0).boundBox = box;
-
-	// fill topology tree root with elements
-	for (int i = 0; i < m_bulkElements.size(); i++)
-	{
-		m_topologyTree.at(0).elements.push_back(i);
-	}
-
-	//m_topologyTree.at(0).boundBox.xMax += 0.01;
-	//m_topologyTree.at(0).boundBox.yMax += 0.01;
-	//m_topologyTree.at(0).boundBox.zMax += 0.01;
-
-	//m_topologyTree.at(0).boundBox.xMin -= 0.01;
-	//m_topologyTree.at(0).boundBox.yMin -= 0.01;
-	//m_topologyTree.at(0).boundBox.zMin -= 0.01;
-
-	BuildTopologyRecursive(0);
+	return true;
 }
 
 void Mesh::Clear()
@@ -139,129 +97,61 @@ void Mesh::Clear()
 	m_bulkElements.clear();
 	m_surfaces.clear();
 	m_volumes.clear();
-	m_topologyTree.clear();
+	m_topologyTree.Clear();
 }
 
-// TODO: rewrite this SHIT
-void Mesh::BuildTopologyRecursive(size_t parentID)
-{	
-	// create new tree branches
-	m_topologyTree.emplace_back();
-	size_t leftID = m_topologyTree.size() - 1;
-	m_topologyTree.at(parentID).left = leftID;
+int64_t Mesh::FindElementByCoords(double x, double y, double z) const 
+{
+	//convect coords to vector
+	Vec3 point = { x, y, z };
 
-	m_topologyTree.emplace_back();
-	size_t rightID = m_topologyTree.size() - 1;
-	m_topologyTree.at(parentID).right = rightID;
-	
-	// create local reffs after expanding tree vector
-	treeNode& parent = m_topologyTree.at(parentID);
-	treeNode& left = m_topologyTree.at(leftID);
-	treeNode& right = m_topologyTree.at(rightID);
+	auto& candidates = m_topologyTree.Find(x, y, z);
 
-	// split parent bounding box into two
-	parent.boundBox.Split(left.boundBox, right.boundBox);
-
-	// search for elements in new boxes
-	std::vector<size_t> nodesLeft, nodesRight; // unique nodes in the box
-
-	for (auto index : parent.elements)
+	if (candidates.empty())
 	{
-		auto& element = m_bulkElements.at(index);
+		// point is outside of the geometry
+		std::cerr << "[WARNING] [Mesh::FindElementByCoords] Point is outside of the geometry" << std::endl;
+		return -1;
+	}
+
+	// check every tetrahedron in the candidates list
+	for (auto index : candidates)
+	{
+		auto& elem = m_bulkElements.at(index);
+
+		// check if point is indide tetrahedron by 
+		// checking if it is to the right side of each
+		// tetrahedrons face
+
+		Vec3 node0 = { m_Nodes.at(elem.node[0]).x, m_Nodes.at(elem.node[0]).y, m_Nodes.at(elem.node[0]).z };
+		Vec3 node1 = { m_Nodes.at(elem.node[1]).x, m_Nodes.at(elem.node[1]).y, m_Nodes.at(elem.node[1]).z };
+		Vec3 node2 = { m_Nodes.at(elem.node[2]).x, m_Nodes.at(elem.node[2]).y, m_Nodes.at(elem.node[2]).z };
+		Vec3 node3 = { m_Nodes.at(elem.node[3]).x, m_Nodes.at(elem.node[3]).y, m_Nodes.at(elem.node[3]).z };
 		
-		bool contains = false;
-		// left box.  check every tetrahedron node
-		if (left.boundBox.Contains(m_Nodes.at(element.node[0]).x, m_Nodes.at(element.node[0]).y, m_Nodes.at(element.node[0]).z))
-		{
-			if (std::find(nodesLeft.begin(), nodesLeft.end(), element.node[0]) == nodesLeft.end()) // if unique
-				nodesLeft.push_back(element.node[0]);
-			contains = true;	
-		}
-		if (left.boundBox.Contains(m_Nodes.at(element.node[1]).x, m_Nodes.at(element.node[1]).y, m_Nodes.at(element.node[1]).z))
-		{
-			if (std::find(nodesLeft.begin(), nodesLeft.end(), element.node[1]) == nodesLeft.end()) // if unique
-				nodesLeft.push_back(element.node[1]);
-			contains = true;
-		}
-		if (left.boundBox.Contains(m_Nodes.at(element.node[2]).x, m_Nodes.at(element.node[2]).y, m_Nodes.at(element.node[2]).z))
-		{
-			if (std::find(nodesLeft.begin(), nodesLeft.end(), element.node[2]) == nodesLeft.end()) // if unique
-				nodesLeft.push_back(element.node[2]);
-			contains = true;
-		}
-		if (left.boundBox.Contains(m_Nodes.at(element.node[3]).x, m_Nodes.at(element.node[3]).y, m_Nodes.at(element.node[3]).z))
-		{
-			if (std::find(nodesLeft.begin(), nodesLeft.end(), element.node[3]) == nodesLeft.end()) // if unique
-				nodesLeft.push_back(element.node[3]);
-			contains = true;
-		}
+		Vec3 vec01 = node1 - node0;
+		Vec3 vec02 = node2 - node0;
+		Vec3 vec03 = node3 - node0;
+		Vec3 vec21 = node1 - node2;
+		Vec3 vec23 = node3 - node2;
 
-		if (!contains) // if nodes are not in the box perform GJK test
-			contains = GJK::Check(left.boundBox, element, m_Nodes);
+		Vec3 vec0p = point - node0;
 
-		if(contains)
-			left.elements.push_back(index);
+		double s0 = (vec01.Cross(vec02)).Dot(vec0p);
+		double s1 = (vec03.Cross(vec01)).Dot(vec0p);
+		double s2 = (vec02.Cross(vec03)).Dot(vec0p);
+		double s3 = (vec21.Cross(vec23)).Dot(point - node2);
 
-
-		// right box. check every tetrahedron node
-		contains = false;
-
-		if (right.boundBox.Contains(m_Nodes.at(element.node[0]).x, m_Nodes.at(element.node[0]).y, m_Nodes.at(element.node[0]).z))
+		if (s0 > 0 && s1 > 0 && s2 > 0 && s3 > 0)
 		{
-			if (std::find(nodesRight.begin(), nodesRight.end(), element.node[0]) == nodesRight.end()) // if unique
-				nodesRight.push_back(element.node[0]);
-			contains = true;
+			return index;
 		}
-		if (right.boundBox.Contains(m_Nodes.at(element.node[1]).x, m_Nodes.at(element.node[1]).y, m_Nodes.at(element.node[1]).z))
-		{
-			if (std::find(nodesRight.begin(), nodesRight.end(), element.node[1]) == nodesRight.end()) // if unique
-				nodesRight.push_back(element.node[1]);
-			contains = true;
-		}
-		if (right.boundBox.Contains(m_Nodes.at(element.node[2]).x, m_Nodes.at(element.node[2]).y, m_Nodes.at(element.node[2]).z))
-		{
-			if (std::find(nodesRight.begin(), nodesRight.end(), element.node[2]) == nodesRight.end()) // if unique
-				nodesRight.push_back(element.node[2]);
-			contains = true;
-		}
-		if (right.boundBox.Contains(m_Nodes.at(element.node[3]).x, m_Nodes.at(element.node[3]).y, m_Nodes.at(element.node[3]).z))
-		{
-			if (std::find(nodesRight.begin(), nodesRight.end(), element.node[3]) == nodesRight.end()) // if unique
-				nodesRight.push_back(element.node[3]);
-			contains = true;
-		}
-
-		if (!contains) // if nodes are not in the box perform GJK test
-			contains = GJK::Check(right.boundBox, element, m_Nodes);
-		 
-		if (contains)
-			right.elements.push_back(index);
 	}
 
-	// clear parent element array
-	{
-		std::vector<size_t> tmp;
-		parent.elements.swap(tmp);
-		// tmp deletes here
-	}
-	
-	// propagate split if there is more than 1 node in the box
-	if (nodesLeft.size() > 1)
-	{
-		{
-			std::vector<size_t> tmp;
-			nodesLeft.swap(tmp);
-		}
-		BuildTopologyRecursive(leftID);
-	}
-	if (nodesRight.size() > 1)
-	{
-		{
-			std::vector<size_t> tmp;
-			nodesRight.swap(tmp);
-		}
-		BuildTopologyRecursive(rightID);
-	}
+	// failed to find tetrahedron in the candidate list
+	// should never happen
+	// critical error
+	std::cerr << "[ERROR] [Mesh::FindElementByCoords] Can not find tetrahedron that contains the point" << std::endl;
+	return -2;
 }
 
 bool Mesh::ReadSection(std::ifstream& geofile, std::string s)
@@ -365,6 +255,10 @@ bool Mesh::ReadPhysicalNames(std::ifstream& geofile)
 		geofile >> pname.tag;
 		std::getline(geofile, pname.name);
 
+		// remove quotes and space characters
+		pname.name.erase(0, 2);                  // erase the first two characters
+		pname.name.erase(pname.name.size() - 1); // erase the last character
+
 		m_PhisicalNames.emplace(std::pair<int, int>( pname.dimention , pname.tag ), pname);
 
 		std::cout << pname.dimention << ' ' << pname.tag << ' ' << pname.name << std::endl;
@@ -447,10 +341,11 @@ bool Mesh::ReadEntities(std::ifstream& geofile)
 
 		size_t numPhysicalTags;
 		geofile >> numPhysicalTags;
-
+		
 		for (int j = 0; j < numPhysicalTags; j++)
 		{
 			geofile >> tmp.phisicalName.tag;
+			//std::cout << "Surface " << tmp.entytyTag << " has " << tmp.phisicalName.tag << " Phisical tag" << std::endl;
 		}
 
 		size_t numBoundingCurves;

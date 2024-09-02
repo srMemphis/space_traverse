@@ -134,6 +134,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Solver.cpp" />
+    <ClCompile Include="src\TopologyTree.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Material.h" />
@@ -142,7 +143,9 @@
     <ClInclude Include="src\GJK.h" />
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\Solver.h" />
+    <ClInclude Include="src\TopologyTree.h" />
     <ClInclude Include="src\utils\Timer.h" />
+    <ClInclude Include="src\utils\Vec3.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

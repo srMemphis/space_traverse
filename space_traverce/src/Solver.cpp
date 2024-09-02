@@ -30,13 +30,6 @@ void Solver::DoStuff()
 
 	size_t maxSize = 0;
 
-	for (auto node : m_mesh->m_topologyTree)
-	{
-		maxSize = maxSize < node.elements.size() ? node.elements.size() : maxSize;
-	}
-
-	std::cout << " Max size = " << maxSize << std::endl;
-
 	// check if corner node are not replicated
 	double d = 0.01;
 	Box b(0.5 - d, 0.5 - d, 0.5 - d, 0.5 + d, 0.5 + d, 0.5 + d);

@@ -1,12 +1,10 @@
 #pragma once
 #include "ElementTypes.h"
-#include "Box.h"
+#include "TopologyTree.h"
 
 #include <string>
 #include <vector>
 #include <map>
-
-
 
 class Mesh
 {
@@ -19,32 +17,26 @@ public:
 	std::vector<ETriangle>& GetSurfElements();
 	std::vector<ETetrahedron>& GetBulkElements();
 
-	void BuildTopologyData();
+	bool BuildTopologyData();
 	void Clear();
 
-private:
+	// find element by traversing topology tree
+	// returns element index
+	int64_t FindElementByCoords(double x, double y, double z) const;
 
+private:
 	std::map<std::pair<int, int>, PhisicalName> m_PhisicalNames;  // mapped by dimention+tag
 
-	std::vector<Node> m_Nodes;
+	std::vector<Node> m_Nodes;                 // points
 	std::vector<ETriangle> m_surfElements;     // triangles
 	std::vector<ETetrahedron> m_bulkElements;  // tetrahedrons
 
-	std::map<int, Surface> m_surfaces;   // mapped by entity tags
+	std::map<int, Surface> m_surfaces;         // mapped by entity tags
 	std::map<int, Volume> m_volumes;
 
 	std::pair<int, int> m_Version;
 
-	// topology data
-	struct treeNode
-	{
-		std::vector<size_t> elements;
-		Box boundBox;
-		size_t left = 0;
-		size_t right = 0;
-	};
-	
-	std::vector<treeNode> m_topologyTree;
+	TopologyTree m_topologyTree;
 
 private:
 	bool ReadSection(std::ifstream& geofile, std::string section);
@@ -61,8 +53,6 @@ private:
 	bool ReadElementData(std::ifstream& geofile);
 	bool ReadElementNodeData(std::ifstream& geofile);
 	bool ReadInterpolationScheme(std::ifstream& geofile);
-	
-	void BuildTopologyRecursive(size_t parentID);
-	
+
 	friend class Solver;
 };

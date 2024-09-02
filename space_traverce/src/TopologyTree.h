@@ -1,0 +1,32 @@
+#pragma once
+#include "Box.h"
+#include "ElementTypes.h"
+
+#include <vector>
+#include <map>
+
+
+class TopologyTree
+{
+public:
+	TopologyTree();
+	~TopologyTree();
+
+	bool GenerateData(const std::map<int, Volume>& volumes, const std::vector<ETetrahedron>& elements, const std::vector<Node>& nodes);
+	const std::vector<size_t>& Find(double x, double y, double z) const;
+
+	void Clear();
+	bool IsEmpty() const;
+
+private:
+	struct treeNode
+	{
+		std::vector<size_t> elements;
+		Box boundBox;
+		size_t left = 0;
+		size_t right = 0;
+	};
+
+	std::vector<treeNode> m_topologyTree;
+	void BuildTopologyRecursive(size_t parentID, const std::vector<ETetrahedron>& elements, const std::vector<Node>& nodes);
+};

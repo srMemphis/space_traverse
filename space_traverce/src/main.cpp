@@ -21,12 +21,14 @@ int main()
 	// build binary search tree
 	mesh->BuildTopologyData();
 
+	// assign material data
 	Solver slv(mesh);
 	Material air, glass;
 	air.epsilon = 1;
 	glass.epsilon = 2;
 	slv.AddMaterial("Air", air);
 	slv.AddMaterial("Glass", glass);
+
 	slv.DoStuff();
 
 	//Box box(-0.21875, 0.09375, -0.03125, -0.1875, 0.125, 0);

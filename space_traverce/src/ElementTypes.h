@@ -3,6 +3,10 @@
 
 struct PhisicalName
 {
+	PhisicalName() {}
+	PhisicalName(int Dim, int Tag, const std::string& Name)
+		: dimention(Dim), tag(Tag), name(Name) {}
+
 	int dimention = 0;
 	int tag = 0;
 	std::string name;

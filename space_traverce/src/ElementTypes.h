@@ -1,5 +1,25 @@
 #pragma once
 #include <string>
+#include <span>
+
+struct Node
+{
+	double x = 0;
+	double y = 0;
+	double z = 0;
+};
+
+// 3-node triangle element
+struct ETriangle
+{
+	size_t node[3];
+};
+
+// 4-node tetrahedron element
+struct ETetrahedron
+{
+	size_t node[4];
+};
 
 struct PhisicalName
 {
@@ -35,32 +55,12 @@ public:
 class Surface : public Entity
 {
 public:
-
+	std::span<ETriangle> elements;
 };
 
 class Volume : public Entity
 {
 public:
-
-
-
+	std::span<ETetrahedron> elements;
 };
 
-struct Node
-{
-	double x = 0;
-	double y = 0;
-	double z = 0;
-};
-
-// 3-node triangle element
-struct ETriangle
-{
-	size_t node[3];
-};
-
-// 4-node tetrahedron element
-struct ETetrahedron
-{
-	size_t node[4];
-};

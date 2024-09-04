@@ -54,12 +54,22 @@ bool Mesh::FromFile(std::string filepath)
 
 	for (auto& surf : m_surfaces)
 	{
+		// write full phisical name data
 		surf.second.phisicalName = m_PhisicalNames.find({ 2, surf.second.phisicalName.tag})->second;
+
+		// assign a span of elements to the entity
+		surf.second.elements = {m_surfElements.begin() + surf.second.firstElementIndex,
+								m_surfElements.begin() + surf.second.firstElementIndex + surf.second.numElements};
 	}
 
 	for (auto& vol : m_volumes)
 	{
+		// write full phisical name data
 		vol.second.phisicalName = m_PhisicalNames.find({ 3, vol.second.phisicalName.tag })->second;
+
+		// assign a span of elements to the entity
+		vol.second.elements = { m_bulkElements.begin() + vol.second.firstElementIndex,
+								m_bulkElements.begin() + vol.second.firstElementIndex + vol.second.numElements };
 	}
 
 	return true;

@@ -2,6 +2,7 @@
 #include "GJK.h"
 
 TopologyTree::TopologyTree()
+	: m_maxTetrahedronsAtNode(0)
 {
 }
 
@@ -57,6 +58,15 @@ bool TopologyTree::GenerateData(const std::map<int, Volume>& volumes, const std:
 	//m_topologyTree.at(0).boundBox.zMin -= 0.01;
 
 	BuildTopologyRecursive(0, elements, nodes);
+
+	// statistics
+	m_maxTetrahedronsAtNode = 0;
+
+	for (auto& node : m_topologyTree)
+	{
+		m_maxTetrahedronsAtNode = node.elements.size() > m_maxTetrahedronsAtNode ? node.elements.size() : m_maxTetrahedronsAtNode;
+	}
+
 	return true;
 }
 
@@ -91,6 +101,11 @@ const std::vector<size_t>& TopologyTree::Find(double x, double y, double z) cons
 
 	// return list of elements
 	return m_topologyTree.at(currTreeNode).elements;
+}
+
+const uint32_t TopologyTree::MaxTetraAtNode() const
+{
+	return m_maxTetrahedronsAtNode;
 }
 
 void TopologyTree::Clear()

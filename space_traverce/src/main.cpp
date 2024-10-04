@@ -29,6 +29,8 @@ int main()
 	slv.AddMaterial("Air", air);
 	slv.AddMaterial("Glass", glass);
 
+	slv.AssembleLeft();
+	slv.AssembleRight();
 	slv.DoStuff();
 
 	//Box box(-0.21875, 0.09375, -0.03125, -0.1875, 0.125, 0);

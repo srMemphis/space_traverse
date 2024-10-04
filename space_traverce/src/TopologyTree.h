@@ -14,6 +14,7 @@ public:
 
 	bool GenerateData(const std::map<int, Volume>& volumes, const std::vector<ETetrahedron>& elements, const std::vector<Node>& nodes);
 	const std::vector<size_t>& Find(double x, double y, double z) const;
+	const uint32_t MaxTetraAtNode() const;
 
 	void Clear();
 	bool IsEmpty() const;
@@ -29,4 +30,7 @@ private:
 
 	std::vector<treeNode> m_topologyTree;
 	void BuildTopologyRecursive(size_t parentID, const std::vector<ETetrahedron>& elements, const std::vector<Node>& nodes);
+
+	//statistics
+	uint32_t m_maxTetrahedronsAtNode;
 };

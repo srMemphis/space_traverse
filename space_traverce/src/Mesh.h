@@ -12,17 +12,32 @@ public:
 	Mesh();
 	~Mesh();
 
+	// initialize mesh data from file
 	bool FromFile(std::string filepath);
 
-	std::vector<ETriangle>& GetSurfElements();
-	std::vector<ETetrahedron>& GetBulkElements();
+	// getters
+	const std::vector<ETriangle>& GetSurfElements() const;
+	const std::vector<ETetrahedron>& GetBulkElements() const;
+	const std::vector<Node>& GetNodes() const;
+	const std::map<int, Volume>& GetVolumes() const;
+	const std::map<int, Surface> GetSurfaces() const;
 
-	bool BuildTopologyData();
-	void Clear();
+	const ETriangle& GetTriangle(size_t index) const;
+	const ETetrahedron& GetTetrahedron(size_t index) const;
+	const Node& GetNode(size_t index) const;
+
+	// stats
+	const uint32_t MaxTetraAtNode() const;
+	const double GetVolumeOfTetrahedron(size_t index) const;
+
+	const char* GetPhisicalNameOfTetrahedron(size_t index) const;
 
 	// find element by traversing topology tree
 	// returns element index
 	int64_t FindElementByCoords(double x, double y, double z) const;
+
+	bool BuildTopologyData();
+	void Clear();
 
 private:
 	std::map<std::pair<int, int>, PhisicalName> m_PhisicalNames;  // mapped by dimention+tag

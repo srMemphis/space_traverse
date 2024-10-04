@@ -3,9 +3,12 @@
 #include "utils/Timer.h"
 #include "utils/Vec3.h"
 
+#include <Eigen/Dense>
+
 #include <fstream>
 #include <iostream>
 #include <cassert>
+#include <algorithm>
 
 
 Mesh::Mesh()
@@ -75,14 +78,84 @@ bool Mesh::FromFile(std::string filepath)
 	return true;
 }
 
-std::vector<ETriangle>& Mesh::GetSurfElements()
+const std::vector<ETriangle>& Mesh::GetSurfElements() const
 {
 	return m_surfElements;
 }
 
-std::vector<ETetrahedron>& Mesh::GetBulkElements()
+const std::vector<ETetrahedron>& Mesh::GetBulkElements() const
 {
 	return m_bulkElements;
+}
+
+const std::vector<Node>& Mesh::GetNodes() const
+{
+	return m_Nodes;
+}
+
+const std::map<int, Volume>& Mesh::GetVolumes() const
+{
+	return m_volumes;
+}
+
+const std::map<int, Surface> Mesh::GetSurfaces() const
+{
+	return m_surfaces;
+}
+
+const ETriangle& Mesh::GetTriangle(size_t index) const
+{
+	return m_surfElements.at(index);
+}
+
+const ETetrahedron& Mesh::GetTetrahedron(size_t index) const
+{
+	return m_bulkElements.at(index);
+}
+
+const Node& Mesh::GetNode(size_t index) const
+{
+	return m_Nodes.at(index);
+}
+
+const uint32_t Mesh::MaxTetraAtNode() const
+{
+	std::vector<uint16_t> histogram(m_Nodes.size(), 0);
+
+	for (auto& tetra : m_bulkElements)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			histogram.at(tetra.node[i]) += 1;
+		}
+	}
+	
+	return *std::max_element(histogram.begin(), histogram.end());
+}
+
+const double Mesh::GetVolumeOfTetrahedron(size_t index) const
+{
+	auto& tetra = m_bulkElements.at(index);
+	Eigen::Matrix3d jacob(
+		{
+			{m_Nodes.at(tetra.node[1]).x - m_Nodes.at(tetra.node[0]).x, m_Nodes.at(tetra.node[1]).y - m_Nodes.at(tetra.node[0]).y, m_Nodes.at(tetra.node[1]).z - m_Nodes.at(tetra.node[0]).z},
+			{m_Nodes.at(tetra.node[2]).x - m_Nodes.at(tetra.node[0]).x, m_Nodes.at(tetra.node[2]).y - m_Nodes.at(tetra.node[0]).y, m_Nodes.at(tetra.node[2]).z - m_Nodes.at(tetra.node[0]).z},
+			{m_Nodes.at(tetra.node[3]).x - m_Nodes.at(tetra.node[0]).x, m_Nodes.at(tetra.node[3]).y - m_Nodes.at(tetra.node[0]).y, m_Nodes.at(tetra.node[3]).z - m_Nodes.at(tetra.node[0]).z}
+		});
+	double volume = jacob.determinant() / 6.0;
+	return volume;
+}
+
+const char* Mesh::GetPhisicalNameOfTetrahedron(size_t index) const
+{
+	for (auto& key_vol : m_volumes)
+	{
+		if (index >= key_vol.second.firstElementIndex && index < key_vol.second.firstElementIndex + key_vol.second.numElements)
+		{
+			return key_vol.second.phisicalName.name.c_str();
+		}
+	}
+	return "";
 }
 
 bool Mesh::BuildTopologyData()

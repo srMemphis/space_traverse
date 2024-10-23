@@ -247,8 +247,8 @@ void UnsignedRange::ResolveCollisions(std::list<std::pair<size_t, size_t>>::iter
 	}
 
 	std::list<std::pair<size_t, size_t>>::iterator delBegin = start;
+	std::list<std::pair<size_t, size_t>>::iterator delEnd = start;
 	delBegin++;
-	std::list<std::pair<size_t, size_t>>::iterator delEnd;
 
 	auto iterator = delBegin;
 

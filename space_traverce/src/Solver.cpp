@@ -193,14 +193,16 @@ void Solver::AssembleRight()
 		// assemble right hand side
 		Eigen::Vector4d flocal = Eigen::Vector4d(1, 1, 1, 1) * (jacob.determinant() / 6.0) / (4 * c_epsilon0) * -m_chargeDensity(tetraIndex);
 
+
+		// TODO FIX
 		// save only i-components
-		for (int i = 0; i < 4; i++)
+		/*for (int i = 0; i < 4; i++)
 		{
 			if (m_iIndex.IsInRange(tetra.node[i]))
 			{
 				m_fi(tetra.node[i]) += flocal(i);
 			}
-		}
+		}*/
 
 	}
 

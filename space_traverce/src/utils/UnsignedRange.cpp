@@ -216,7 +216,7 @@ void UnsignedRange::RemoveInterval(size_t first, size_t last)
 	m_data.erase(delBegin, delEnd);
 }
 
-bool UnsignedRange::IsInRange(size_t number) const
+bool UnsignedRange::Contains(size_t number) const
 {
 	for (auto& range : m_data)
 	{
@@ -230,7 +230,7 @@ bool UnsignedRange::IsInRange(size_t number) const
 
 size_t UnsignedRange::GetPositionOf(size_t number) const
 {
-	if (!IsInRange(number))
+	if (!Contains(number))
 	{
 		throw std::out_of_range("Argument is out of range.");
 	}

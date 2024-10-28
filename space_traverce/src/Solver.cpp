@@ -91,10 +91,13 @@ void Solver::AssembleLeft()
 	auto& nodes = m_mesh->GetNodes();
 	size_t numNodes = nodes.size();
 
-	// the chunky boy
-	Eigen::SparseMatrix<double> K(numNodes, numNodes);
+	// the chunky boys
 	auto elemPerCol = m_mesh->MaxTetraAtNode();
-	K.reserve(Eigen::VectorXi::Constant(numNodes, elemPerCol));
+	m_Kii.resize(m_iIndex.Size(), m_iIndex.Size());
+	m_Kij.resize(m_iIndex.Size(), m_jIndex.Size());
+
+	m_Kii.reserve(Eigen::VectorXi::Constant(m_iIndex.Size(), elemPerCol)); // reserve elements for i columns
+	m_Kij.reserve(Eigen::VectorXi::Constant(m_jIndex.Size(), elemPerCol)); // reserve elements for j columns
 
 	for (size_t tetraIndex = 0; tetraIndex < m_mesh->GetBulkElements().size(); tetraIndex++)
 	{
@@ -137,36 +140,27 @@ void Solver::AssembleLeft()
 			for (int j = 0; j < 4; j++)
 			{
 				// split matrix
-				K.coeffRef(tetra.node[i], tetra.node[j]) += Klocal(i,j);
+				if (m_iIndex.Contains(tetra.node[i]))
+				{	
+					// ii
+					if (m_iIndex.Contains(tetra.node[j]))
+					{
+						m_Kii.coeffRef(m_iIndex.GetPositionOf(tetra.node[i]), m_iIndex.GetPositionOf(tetra.node[j])) += Klocal(i, j);
+					}
+					// ij
+					else
+					{
+						m_Kij.coeffRef(m_iIndex.GetPositionOf(tetra.node[i]), m_jIndex.GetPositionOf(tetra.node[j])) += Klocal(i, j);
+					}
+				}
 			}
 		}
 
 	} // element loop
 
-	// TODO: this is not working. FIX
-	// divide matrix into parts
-	//m_Kii.reserve(Eigen::VectorXi::Constant(m_iIndex.Size(), elemPerCol));
-	//m_Kij.reserve(Eigen::VectorXi::Constant(m_jIndex.Size(), elemPerCol));
-
-	//RangeIterator iIter(m_iIndex);
-	//RangeIterator iiIter(m_iIndex);
-	//RangeIterator jIter(m_jIndex);
-
-	//for (auto i = iIter.Get(); i < iIter.GetMax(); iIter.Advance())
-	//{
-	//	i = iIter.Get();
-	//	for (auto j = jIter.Get(); j < jIter.GetMax(); jIter.Advance())
-	//	{
-	//		j = jIter.Get();
-	//		m_Kij.coeffRef(i, j) = K.coeff(i, j);
-	//	}
-
-	//	for (auto ii = iiIter.Get(); ii < iiIter.GetMax(); iiIter.Advance())
-	//	{
-	//		m_Kii.coeffRef(i, ii) = K.coeff(i, ii);
-	//	}
-	//}
-
+	//finalize
+	m_Kii.finalize();
+	m_Kij.finalize();
 }
 
 void Solver::AssembleRight()
@@ -174,10 +168,9 @@ void Solver::AssembleRight()
 	TIME_SCOPE();
 
 	auto& nodes = m_mesh->GetNodes();
-	size_t numNodes = nodes.size();
 
-	// right hand side
-	Eigen::VectorXd f(numNodes);
+	// reserve space
+	m_fi.resize(m_iIndex.Size());
 
 	for (size_t tetraIndex = 0; tetraIndex < m_mesh->GetBulkElements().size(); tetraIndex++)
 	{
@@ -190,19 +183,17 @@ void Solver::AssembleRight()
 				{nodes.at(tetra.node[3]).x - nodes.at(tetra.node[0]).x, nodes.at(tetra.node[3]).y - nodes.at(tetra.node[0]).y, nodes.at(tetra.node[3]).z - nodes.at(tetra.node[0]).z}
 			});
 
-		// assemble right hand side
+		// assemble local f vector
 		Eigen::Vector4d flocal = Eigen::Vector4d(1, 1, 1, 1) * (jacob.determinant() / 6.0) / (4 * c_epsilon0) * -m_chargeDensity(tetraIndex);
 
-
-		// TODO FIX
-		// save only i-components
-		/*for (int i = 0; i < 4; i++)
+		// save only i-components to global f vector
+		for (int i = 0; i < 4; i++)
 		{
-			if (m_iIndex.IsInRange(tetra.node[i]))
+			if (m_iIndex.Contains(tetra.node[i]))
 			{
-				m_fi(tetra.node[i]) += flocal(i);
+				m_fi(m_iIndex.GetPositionOf(tetra.node[i])) += flocal(i);
 			}
-		}*/
+		}
 
 	}
 

@@ -13,7 +13,7 @@ public:
 	void AddInterval(size_t first, size_t last);
 	void RemoveInterval(size_t first, size_t last);
 
-	bool IsInRange(size_t number) const;
+	bool Contains(size_t number) const;
 	size_t GetPositionOf(size_t number) const;
 	size_t Size() const;
 

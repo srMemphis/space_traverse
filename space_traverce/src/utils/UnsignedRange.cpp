@@ -1,4 +1,5 @@
 #include "UnsignedRange.h"
+#include <stdexcept>
 
 void UnsignedRange::Add(size_t number)
 {
@@ -225,6 +226,32 @@ bool UnsignedRange::IsInRange(size_t number) const
 		}
 	}
 	return false;
+}
+
+size_t UnsignedRange::GetPositionOf(size_t number) const
+{
+	if (!IsInRange(number))
+	{
+		throw std::out_of_range("Argument is out of range.");
+	}
+
+	size_t result = 0;
+
+	for (auto iterator = m_data.begin(); iterator != m_data.end(); iterator++)
+	{
+		if (number > iterator->second)
+		{
+			result += iterator->second - iterator->first;
+		}
+		else
+		{
+			result += number - iterator->first;
+			break;
+		}
+
+	}
+
+	return result;
 }
 
 size_t UnsignedRange::Size() const

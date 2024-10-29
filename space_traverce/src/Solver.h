@@ -18,8 +18,9 @@ public:
 	void AddMaterial(const std::string& name, const Material& mat);
 	void AssignElementChargeDensity(size_t index, double value);
 	bool SetBoundaryValue(const std::string& name, double value);
-	void DoStuff();
 	bool SaveSolutionToFile(std::string filepath);
+
+	void DoStuff();
 
 	void AssembleLeft();
 	void AssembleRight();

@@ -29,10 +29,30 @@ int main()
 	slv.AddMaterial("Air", air);
 	slv.AddMaterial("Glass", glass);
 
+	// set boundary conditions
+	if (!slv.SetBoundaryValue("Border", 100))
+	{
+		std::cout << "surface not found" << std::endl;
+		return 1;
+	}
+
+	// assemble linear system
 	slv.AssembleLeft();
 	slv.AssembleRight();
-	slv.Solve();
-	slv.SaveSolutionToFile("solution.txt");
+
+	// solve systems
+	if (!slv.Solve())
+	{
+		std::cout << "Solving failed" << std::endl;
+		return 2;
+	}
+
+	// save solution to file
+	if (!slv.SaveSolutionToFile("solution.txt"))
+	{
+		std::cout << "failed to save solution to file" << std::endl;
+		return 3;
+	}
 
 	slv.DoStuff();
 

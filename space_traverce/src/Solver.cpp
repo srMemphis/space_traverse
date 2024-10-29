@@ -2,38 +2,64 @@
 #include "utils/Timer.h"
 
 #include <Eigen/Dense>
+#include<Eigen/IterativeLinearSolvers>
 
 #include <iostream>
+#include <fstream>
 
 
 Solver::Solver(std::shared_ptr<Mesh> mesh)
 	:m_mesh(mesh)
 {
+	TIME_SCOPE();
+
 	size_t numNodes = m_mesh->GetNodes().size();
 	size_t numTetra = m_mesh->GetBulkElements().size();
 	
+	// initial conditions
 	m_chargeDensity.resize(numTetra);
 	m_chargeDensity.setZero();
 
+	// solution vector
 	m_u.resize(numNodes);
 	m_u.setZero();
 
-	m_uBoundary = Eigen::SparseVector<double>(numNodes);
-
+	// separate boundary and volume node indices
 	for (auto& key_volume : m_mesh->GetVolumes())
 	{
 		if (key_volume.second.numElements != 0)
-			m_iIndex.AddInterval(key_volume.second.firstElementIndex, key_volume.second.firstElementIndex + key_volume.second.numElements-1);
+		{
+			// for every tetrahedron add its nodes to index array
+			for (size_t i = key_volume.second.firstElementIndex; i < key_volume.second.firstElementIndex + key_volume.second.numElements; i++)
+			{
+				m_iIndex.Add(m_mesh->m_bulkElements.at(i).node[0]);
+				m_iIndex.Add(m_mesh->m_bulkElements.at(i).node[1]);
+				m_iIndex.Add(m_mesh->m_bulkElements.at(i).node[2]);
+				m_iIndex.Add(m_mesh->m_bulkElements.at(i).node[3]);
+			}
+		}
 	}
 
 	for (auto& key_surface : m_mesh->GetSurfaces())
 	{
 		if (key_surface.second.numElements != 0)
 		{
-			m_jIndex.AddInterval(key_surface.second.firstElementIndex, key_surface.second.firstElementIndex + key_surface.second.numElements-1);
-			m_iIndex.RemoveInterval(key_surface.second.firstElementIndex, key_surface.second.firstElementIndex + key_surface.second.numElements - 1);
+			for (size_t i = key_surface.second.firstElementIndex; i < key_surface.second.firstElementIndex + key_surface.second.numElements; i++)
+			{
+				m_jIndex.Add(m_mesh->m_surfElements.at(i).node[0]);
+				m_jIndex.Add(m_mesh->m_surfElements.at(i).node[1]);
+				m_jIndex.Add(m_mesh->m_surfElements.at(i).node[2]);
+
+				m_iIndex.RemoveInterval(m_mesh->m_surfElements.at(i).node[0], m_mesh->m_surfElements.at(i).node[0]);
+				m_iIndex.RemoveInterval(m_mesh->m_surfElements.at(i).node[1], m_mesh->m_surfElements.at(i).node[1]);
+				m_iIndex.RemoveInterval(m_mesh->m_surfElements.at(i).node[2], m_mesh->m_surfElements.at(i).node[2]);
+			}
 		}
 	}
+
+	// boundary value vector
+	m_uBound.resize(m_jIndex.Size());
+	m_uBound.setZero();
 
 }
 
@@ -61,7 +87,8 @@ bool Solver::SetBoundaryValue(const std::string& name, double value)
 			isFound = true;
 			for (auto& triangle : key_surface.second.elements)
 			{
-				m_uBoundary.coeffRef(triangle.node[0]) = value;
+				m_uBound.coeffRef(m_jIndex.GetPositionOf(triangle.node[0])) = value;
+				m_u.coeffRef(triangle.node[0]) = value;
 			}
 		}
 	}
@@ -82,6 +109,26 @@ void Solver::DoStuff()
 	
 	std::cout << "Max tetrahedrons at one node = " << m_mesh->MaxTetraAtNode() << std::endl;
 
+}
+
+bool Solver::SaveSolutionToFile(std::string filepath)
+{
+	std::ofstream myfile;
+	myfile.open(filepath, std::ios::out | std::ios::trunc);
+
+	if (!myfile.is_open())
+	{
+		return false;
+	}
+
+	for (size_t i = 0; i < m_u.size(); i++)
+	{
+		myfile << m_u(i) << ' ';
+	}
+
+	myfile.close();
+
+	return true;
 }
 
 void Solver::AssembleLeft()
@@ -197,4 +244,36 @@ void Solver::AssembleRight()
 
 	}
 
+}
+
+bool Solver::Solve()
+{
+	TIME_SCOPE();
+
+	// iterative solver
+	Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::Lower | Eigen::Upper> cg;
+
+	// register right side
+	cg.compute(m_Kii);
+
+	// solve for left side
+	Eigen::VectorXd uSolved = cg.solve(m_fi - m_Kij * m_uBound);
+
+	if (cg.info() != Eigen::ComputationInfo::Success)
+	{
+		return false;
+	}
+
+	std::cout << "Iterations = " << cg.iterations() << std::endl;
+
+	// assemble full u
+	RangeIterator iIndex(m_iIndex);
+	
+	for (size_t i = iIndex.Get(); i < iIndex.GetMax(); iIndex.Advance())
+	{
+		i = iIndex.Get();
+		m_u(i) = uSolved(m_iIndex.GetPositionOf(i));
+	}
+
+	return true;
 }

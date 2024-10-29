@@ -31,6 +31,9 @@ int main()
 
 	slv.AssembleLeft();
 	slv.AssembleRight();
+	slv.Solve();
+	slv.SaveSolutionToFile("solution.txt");
+
 	slv.DoStuff();
 
 	//Box box(-0.21875, 0.09375, -0.03125, -0.1875, 0.125, 0);

@@ -40,5 +40,5 @@ private:
 #define PPCAT_NX(A, B) A ## B
 #define PPCAT(A, B) PPCAT_NX(A, B)
 
-#define INIT_TIMER(functionname) Timer PPCAT(timer,__LINE__)(functionname);
-#define TIME_SCOPE() INIT_TIMER(__FUNCTION__)
+#define TIME_SCOPE(functionname) Timer PPCAT(timer,__LINE__)(functionname);
+#define TIME_FUNCTION() TIME_SCOPE(__FUNCTION__)

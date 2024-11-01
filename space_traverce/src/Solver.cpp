@@ -11,7 +11,7 @@
 Solver::Solver(std::shared_ptr<Mesh> mesh)
 	:m_mesh(mesh)
 {
-	TIME_SCOPE();
+	TIME_FUNCTION();
 
 	size_t numNodes = m_mesh->GetNodes().size();
 	size_t numTetra = m_mesh->GetBulkElements().size();
@@ -97,7 +97,7 @@ bool Solver::SetBoundaryValue(const std::string& name, double value)
 
 void Solver::DoStuff()
 {
-	TIME_SCOPE();
+	TIME_FUNCTION();
 	
 	auto& surfElems = m_mesh->GetSurfElements();
 
@@ -133,7 +133,7 @@ bool Solver::SaveSolutionToFile(std::string filepath)
 
 void Solver::AssembleLeft()
 {
-	TIME_SCOPE();
+	TIME_FUNCTION();
 
 	auto& nodes = m_mesh->GetNodes();
 	size_t numNodes = nodes.size();
@@ -212,7 +212,7 @@ void Solver::AssembleLeft()
 
 void Solver::AssembleRight()
 {
-	TIME_SCOPE();
+	TIME_FUNCTION();
 
 	auto& nodes = m_mesh->GetNodes();
 
@@ -248,7 +248,7 @@ void Solver::AssembleRight()
 
 bool Solver::Solve()
 {
-	TIME_SCOPE();
+	TIME_FUNCTION();
 
 	// iterative solver
 	Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::Lower | Eigen::Upper> cg;

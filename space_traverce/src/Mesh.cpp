@@ -21,7 +21,7 @@ Mesh::~Mesh()
 
 bool Mesh::FromFile(std::string filepath)
 {
-	TIME_SCOPE();
+	TIME_FUNCTION();
 
 	std::ifstream geofile(filepath);
 	if (!geofile.is_open())
@@ -160,7 +160,7 @@ const char* Mesh::GetPhisicalNameOfTetrahedron(size_t index) const
 
 bool Mesh::BuildTopologyData()
 {
-	TIME_SCOPE();
+	TIME_FUNCTION();
 	m_topologyTree.Clear();
 
 	if (!m_topologyTree.GenerateData(m_volumes, m_bulkElements, m_Nodes))

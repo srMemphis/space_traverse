@@ -2,7 +2,7 @@
 #include "utils/Timer.h"
 
 #include <Eigen/Dense>
-#include<Eigen/IterativeLinearSolvers>
+#include <Eigen/IterativeLinearSolvers>
 
 #include <iostream>
 #include <fstream>
@@ -12,6 +12,8 @@ Solver::Solver(std::shared_ptr<Mesh> mesh)
 	:m_mesh(mesh)
 {
 	TIME_FUNCTION();
+
+	m_matlab.OpenFile("solution.m");
 
 	size_t numNodes = m_mesh->GetNodes().size();
 	size_t numTetra = m_mesh->GetBulkElements().size();
@@ -24,43 +26,8 @@ Solver::Solver(std::shared_ptr<Mesh> mesh)
 	m_u.resize(numNodes);
 	m_u.setZero();
 
-	// separate boundary and volume node indices
-	for (auto& key_volume : m_mesh->GetVolumes())
-	{
-		if (key_volume.second.numElements != 0)
-		{
-			// for every tetrahedron add its nodes to index array
-			for (size_t i = key_volume.second.firstElementIndex; i < key_volume.second.firstElementIndex + key_volume.second.numElements; i++)
-			{
-				m_iIndex.Add(m_mesh->m_bulkElements.at(i).node[0]);
-				m_iIndex.Add(m_mesh->m_bulkElements.at(i).node[1]);
-				m_iIndex.Add(m_mesh->m_bulkElements.at(i).node[2]);
-				m_iIndex.Add(m_mesh->m_bulkElements.at(i).node[3]);
-			}
-		}
-	}
-
-	for (auto& key_surface : m_mesh->GetSurfaces())
-	{
-		if (key_surface.second.numElements != 0)
-		{
-			for (size_t i = key_surface.second.firstElementIndex; i < key_surface.second.firstElementIndex + key_surface.second.numElements; i++)
-			{
-				m_jIndex.Add(m_mesh->m_surfElements.at(i).node[0]);
-				m_jIndex.Add(m_mesh->m_surfElements.at(i).node[1]);
-				m_jIndex.Add(m_mesh->m_surfElements.at(i).node[2]);
-
-				m_iIndex.RemoveInterval(m_mesh->m_surfElements.at(i).node[0], m_mesh->m_surfElements.at(i).node[0]);
-				m_iIndex.RemoveInterval(m_mesh->m_surfElements.at(i).node[1], m_mesh->m_surfElements.at(i).node[1]);
-				m_iIndex.RemoveInterval(m_mesh->m_surfElements.at(i).node[2], m_mesh->m_surfElements.at(i).node[2]);
-			}
-		}
-	}
-
-	// boundary value vector
-	m_uBound.resize(m_jIndex.Size());
-	m_uBound.setZero();
-
+	// init iner node indices
+	m_iIndex.AddInterval(0, m_mesh->m_Nodes.size()-1);
 }
 
 Solver::~Solver()
@@ -77,22 +44,73 @@ void Solver::AssignElementChargeDensity(size_t index, double value)
 	m_chargeDensity(index) = value;
 }
 
-bool Solver::SetBoundaryValue(const std::string& name, double value)
+bool Solver::SetInitialValue(const std::string& volumeName, double value)
 {
+	TIME_FUNCTION();
+
 	bool isFound = false;
-	for (auto& key_surface : m_mesh->m_surfaces)
+
+	int physTag = m_mesh->NameToTag(volumeName);
+
+	for (auto& key_volume : m_mesh->m_volumes)
 	{
-		if (key_surface.second.phisicalName.name == name)
+		auto& volume = key_volume.second;
+
+		if (volume.HasTag(physTag))
 		{
 			isFound = true;
+
+			for (size_t i = volume.firstElementIndex; i < volume.firstElementIndex + volume.numElements; i++)
+			{
+				AssignElementChargeDensity(i, value);
+			}
+		}
+	}
+
+	return isFound;
+}
+
+bool Solver::SetBoundaryValue(const std::string& name, double value)
+{
+	TIME_FUNCTION();
+
+	auto physTag = m_mesh->NameToTag(name);
+	bool found = false;
+
+	for (auto& key_surface : m_mesh->m_surfaces)
+	{
+		if (key_surface.second.HasTag(physTag))
+		{
+			found = true;
+
+			// separate boundary and inner indices
+			for (auto& element : key_surface.second.elements)
+			{
+				m_jIndex.Add(element.node[0]);
+				m_jIndex.Add(element.node[1]);
+				m_jIndex.Add(element.node[2]);
+
+				m_iIndex.RemoveInterval(element.node[0], element.node[0]);
+				m_iIndex.RemoveInterval(element.node[1], element.node[1]);
+				m_iIndex.RemoveInterval(element.node[2], element.node[2]);
+			}
+
+			// boundary value vector resize
+			m_uBound.resize(m_jIndex.Size());
+			m_uBound.setZero();
+
+			// write boundary coefficients
 			for (auto& triangle : key_surface.second.elements)
 			{
 				m_uBound.coeffRef(m_jIndex.GetPositionOf(triangle.node[0])) = value;
 				m_u.coeffRef(triangle.node[0]) = value;
 			}
+
+
 		}
 	}
-	return isFound;
+
+	return found;
 }
 
 void Solver::DoStuff()
@@ -111,24 +129,19 @@ void Solver::DoStuff()
 
 }
 
-bool Solver::SaveSolutionToFile(std::string filepath)
+bool Solver::SaveSolutionToFile(const std::string& filepath)
 {
-	std::ofstream myfile;
-	myfile.open(filepath, std::ios::out | std::ios::trunc);
+	TIME_FUNCTION();
 
-	if (!myfile.is_open())
+	if(m_matlab.Write(m_u, "uPlus") &&
+		m_matlab.Write(m_mesh->GetNodesX(), "xPlus") &&
+		m_matlab.Write(m_mesh->GetNodesY(), "yPlus") &&
+		m_matlab.Write(m_mesh->GetNodesZ(), "zPlus")) 
 	{
-		return false;
+		return true;
 	}
-
-	for (size_t i = 0; i < m_u.size(); i++)
-	{
-		myfile << m_u(i) << ' ';
-	}
-
-	myfile.close();
-
-	return true;
+	
+	return false;
 }
 
 void Solver::AssembleLeft()
@@ -176,7 +189,8 @@ void Solver::AssembleLeft()
 		}
 
 		// multiply local matrix by epsilon of material
-		auto name = m_mesh->GetPhisicalNameOfTetrahedron(tetraIndex);
+		auto& tags = m_mesh->GetPhisicalTagsOfTetrahedron(tetraIndex);
+		auto& name = m_mesh->TagToName(tags.at(0));
 		auto& material = m_materials.find(name)->second;
 
 		Klocal *= material.epsilon;
@@ -218,6 +232,7 @@ void Solver::AssembleRight()
 
 	// reserve space
 	m_fi.resize(m_iIndex.Size());
+	m_fi.setZero();
 
 	for (size_t tetraIndex = 0; tetraIndex < m_mesh->GetBulkElements().size(); tetraIndex++)
 	{
@@ -231,7 +246,7 @@ void Solver::AssembleRight()
 			});
 
 		// assemble local f vector
-		Eigen::Vector4d flocal = Eigen::Vector4d(1, 1, 1, 1) * (jacob.determinant() / 6.0) / (4 * c_epsilon0) * -m_chargeDensity(tetraIndex);
+		Eigen::Vector4d flocal = Eigen::Vector4d(1, 1, 1, 1) * (jacob.determinant() / 6.0) * -m_chargeDensity(tetraIndex) / (4 * c_epsilon0);
 
 		// save only i-components to global f vector
 		for (int i = 0; i < 4; i++)
@@ -272,7 +287,17 @@ bool Solver::Solve()
 	for (size_t i = iIndex.Get(); i < iIndex.GetMax(); iIndex.Advance())
 	{
 		i = iIndex.Get();
+
 		m_u(i) = uSolved(m_iIndex.GetPositionOf(i));
+	}
+
+	RangeIterator jIndex(m_jIndex);
+
+	for (size_t j = jIndex.Get(); j < jIndex.GetMax(); jIndex.Advance())
+	{
+		j = jIndex.Get();
+
+		m_u(j) = m_uBound(m_jIndex.GetPositionOf(j));
 	}
 
 	return true;

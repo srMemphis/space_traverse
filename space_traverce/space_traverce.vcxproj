@@ -145,6 +145,7 @@
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Solver.cpp" />
     <ClCompile Include="src\TopologyTree.cpp" />
+    <ClCompile Include="src\utils\ToMatlab.cpp" />
     <ClCompile Include="src\utils\UnsignedRange.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -156,6 +157,7 @@
     <ClInclude Include="src\Solver.h" />
     <ClInclude Include="src\TopologyTree.h" />
     <ClInclude Include="src\utils\Timer.h" />
+    <ClInclude Include="src\utils\ToMatlab.h" />
     <ClInclude Include="src\utils\UnsignedRange.h" />
     <ClInclude Include="src\utils\Vec3.h" />
   </ItemGroup>

@@ -11,7 +11,8 @@
 
 int main()
 {
-	std::string filepath = "msh/my.msh"; // coarse.msh or my.msh
+	//std::string filepath = "msh/sphere_coarse.msh";
+	std::string filepath = "msh/sphere.msh";
 	
 	std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
 	bool result = mesh->FromFile(filepath);
@@ -19,7 +20,7 @@ int main()
 		return -1;
 	
 	// build binary search tree
-	mesh->BuildTopologyData();
+	//mesh->BuildTopologyData();
 
 	// assign material data
 	Solver slv(mesh);
@@ -27,14 +28,19 @@ int main()
 	air.epsilon = 1;
 	glass.epsilon = 2;
 	slv.AddMaterial("Air", air);
-	slv.AddMaterial("Glass", glass);
+	slv.AddMaterial("Metall", glass);
 
 	// set boundary conditions
-	if (!slv.SetBoundaryValue("Border", 100))
+	if (!slv.SetBoundaryValue("Air Boundary", 0))
 	{
 		std::cout << "surface not found" << std::endl;
 		return 1;
 	}
+
+	// initial charge value
+	double charge = 1;
+	double chargeDensity = charge / mesh->GetVolumeOfVolume("Metall");
+	slv.SetInitialValue("Metall", chargeDensity);
 
 	// assemble linear system
 	slv.AssembleLeft();

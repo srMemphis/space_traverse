@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <span>
+#include <vector>
 
 struct Node
 {
@@ -38,8 +39,19 @@ public:
 	Entity() {}
 	virtual ~Entity() {}
 
+	bool HasTag(int tag) const
+	{
+		for (auto& mytag : physicalTags)
+		{
+			if (mytag == tag)
+				return true;
+		}
+
+		return false;
+	}
+
 	int entytyTag = 0;
-	PhisicalName phisicalName;
+	std::vector<int> physicalTags;
 
 	double minX = 0;
 	double minY = 0;
@@ -56,11 +68,12 @@ class Surface : public Entity
 {
 public:
 	std::span<ETriangle> elements;
+	static const int dimention = 2;
 };
 
 class Volume : public Entity
 {
 public:
 	std::span<ETetrahedron> elements;
+	static const int dimention = 3;
 };
-

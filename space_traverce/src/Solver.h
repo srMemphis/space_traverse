@@ -2,6 +2,7 @@
 #include "Mesh.h"
 #include "Material.h"
 #include "utils/UnsignedRange.h"
+#include "utils/ToMatlab.h"
  	
 #include <Eigen/SparseCore>
 
@@ -17,8 +18,9 @@ public:
 	
 	void AddMaterial(const std::string& name, const Material& mat);
 	void AssignElementChargeDensity(size_t index, double value);
+	bool SetInitialValue(const std::string& volumeName, double value);
 	bool SetBoundaryValue(const std::string& name, double value);
-	bool SaveSolutionToFile(std::string filepath);
+	bool SaveSolutionToFile(const std::string& filepath);
 
 	void DoStuff();
 
@@ -39,4 +41,6 @@ private:
 	Eigen::VectorXd m_uBound;						// values of j-idexed nodes
 	UnsignedRange m_iIndex;							// i - non - boundary node index
 	UnsignedRange m_jIndex;							// j - boundary node index
+
+	ToMatlab m_matlab;
 };

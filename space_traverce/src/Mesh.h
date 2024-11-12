@@ -29,8 +29,16 @@ public:
 	// stats
 	const uint32_t MaxTetraAtNode() const;
 	const double GetVolumeOfTetrahedron(size_t index) const;
+	const double GetVolumeOfVolume(const std::string name) const;
 
-	const char* GetPhisicalNameOfTetrahedron(size_t index) const;
+	// utils
+	int NameToTag(const std::string& name) const;
+	const std::string& TagToName(int tag) const;
+	const std::vector<double> GetNodesX() const;
+	const std::vector<double> GetNodesY() const;
+	const std::vector<double> GetNodesZ() const;
+
+	const std::vector<int>& GetPhisicalTagsOfTetrahedron(size_t index) const;
 
 	// find element by traversing topology tree
 	// returns element index
@@ -40,7 +48,7 @@ public:
 	void Clear();
 
 private:
-	std::map<std::pair<int, int>, PhisicalName> m_PhisicalNames;  // mapped by dimention+tag
+	std::map<std::string, PhisicalName> m_PhisicalNames;  // mapped by name
 
 	std::vector<Node> m_Nodes;                 // points
 	std::vector<ETriangle> m_surfElements;     // triangles

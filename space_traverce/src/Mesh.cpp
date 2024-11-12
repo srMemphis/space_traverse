@@ -52,14 +52,8 @@ bool Mesh::FromFile(std::string filepath)
 	}
 
 	// fill datastructures
-	m_PhisicalNames.emplace(std::pair<int, int>{2, 0}, PhisicalName(2, 0, "No Name"));
-	m_PhisicalNames.emplace(std::pair<int, int>{3, 0}, PhisicalName(3, 0, "No Name"));
-
 	for (auto& surf : m_surfaces)
 	{
-		// write full phisical name data
-		surf.second.phisicalName = m_PhisicalNames.find({ 2, surf.second.phisicalName.tag})->second;
-
 		// assign a span of elements to the entity
 		surf.second.elements = {m_surfElements.begin() + surf.second.firstElementIndex,
 								m_surfElements.begin() + surf.second.firstElementIndex + surf.second.numElements};
@@ -67,9 +61,6 @@ bool Mesh::FromFile(std::string filepath)
 
 	for (auto& vol : m_volumes)
 	{
-		// write full phisical name data
-		vol.second.phisicalName = m_PhisicalNames.find({ 3, vol.second.phisicalName.tag })->second;
-
 		// assign a span of elements to the entity
 		vol.second.elements = { m_bulkElements.begin() + vol.second.firstElementIndex,
 								m_bulkElements.begin() + vol.second.firstElementIndex + vol.second.numElements };
@@ -146,16 +137,106 @@ const double Mesh::GetVolumeOfTetrahedron(size_t index) const
 	return volume;
 }
 
-const char* Mesh::GetPhisicalNameOfTetrahedron(size_t index) const
+const double Mesh::GetVolumeOfVolume(const std::string name) const
+{
+	double result = 0;
+
+	int physTag = m_PhisicalNames.find(name)->second.tag;
+
+	for (auto& key_volume : m_volumes) // for every volume
+	{
+		bool found = false;
+		for (auto& tag : key_volume.second.physicalTags)
+		{
+			if (tag == physTag)
+				found = true;
+		}
+
+		if (found) // if it has the same physical name
+		{
+			auto& volume = key_volume.second;
+
+			// fore every tetrahedron in volume
+			for (size_t i = volume.firstElementIndex; i < volume.firstElementIndex + volume.numElements; i++)
+			{
+				result += GetVolumeOfTetrahedron(i);
+			}
+		}
+	}
+
+	return result;
+}
+
+int Mesh::NameToTag(const std::string& name) const
+{
+	int tag = 0;
+
+	tag = m_PhisicalNames.find(name)->second.tag;
+
+	return tag;
+}
+
+const std::string& Mesh::TagToName(int tag) const
+{
+	for (auto& name : m_PhisicalNames)
+	{
+		if (name.second.tag == tag)
+		{
+			return name.second.name;
+		}
+	}
+
+	return "";
+}
+
+const std::vector<double> Mesh::GetNodesX() const
+{
+	std::vector<double> v;
+	v.reserve(m_Nodes.size());
+
+	for (auto& node : m_Nodes)
+	{
+		v.push_back(node.x);
+	}
+
+	return v;
+}
+
+const std::vector<double> Mesh::GetNodesY() const
+{
+	std::vector<double> v;
+	v.reserve(m_Nodes.size());
+
+	for (auto& node : m_Nodes)
+	{
+		v.push_back(node.y);
+	}
+
+	return v;
+}
+
+const std::vector<double> Mesh::GetNodesZ() const
+{
+	std::vector<double> v;
+	v.reserve(m_Nodes.size());
+
+	for (auto& node : m_Nodes)
+	{
+		v.push_back(node.z);
+	}
+
+	return v;
+}
+
+const std::vector<int>& Mesh::GetPhisicalTagsOfTetrahedron(size_t index) const
 {
 	for (auto& key_vol : m_volumes)
 	{
 		if (index >= key_vol.second.firstElementIndex && index < key_vol.second.firstElementIndex + key_vol.second.numElements)
 		{
-			return key_vol.second.phisicalName.name.c_str();
+			return key_vol.second.physicalTags;
 		}
 	}
-	return "";
 }
 
 bool Mesh::BuildTopologyData()
@@ -342,7 +423,7 @@ bool Mesh::ReadPhysicalNames(std::ifstream& geofile)
 		pname.name.erase(0, 2);                  // erase the first two characters
 		pname.name.erase(pname.name.size() - 1); // erase the last character
 
-		m_PhisicalNames.emplace(std::pair<int, int>( pname.dimention , pname.tag ), pname);
+		m_PhisicalNames.emplace(pname.name, pname);
 
 		std::cout << pname.dimention << ' ' << pname.tag << ' ' << pname.name << std::endl;
 	}
@@ -425,10 +506,13 @@ bool Mesh::ReadEntities(std::ifstream& geofile)
 		size_t numPhysicalTags;
 		geofile >> numPhysicalTags;
 		
+		tmp.physicalTags.reserve(numPhysicalTags);
+
 		for (int j = 0; j < numPhysicalTags; j++)
-		{
-			geofile >> tmp.phisicalName.tag;
-			//std::cout << "Surface " << tmp.entytyTag << " has " << tmp.phisicalName.tag << " Phisical tag" << std::endl;
+		{	
+			int tmpPhysTag = 0;
+			geofile >> tmpPhysTag;
+			tmp.physicalTags.push_back(tmpPhysTag);
 		}
 
 		size_t numBoundingCurves;
@@ -456,9 +540,12 @@ bool Mesh::ReadEntities(std::ifstream& geofile)
 		size_t numPhysicalTags;
 		geofile >> numPhysicalTags;
 
+		tmp.physicalTags.reserve(numPhysicalTags);
 		for (int j = 0; j < numPhysicalTags; j++)
 		{
-			geofile >> tmp.phisicalName.tag;
+			int tmpPhysTag = 0;
+			geofile >> tmpPhysTag;
+			tmp.physicalTags.push_back(tmpPhysTag);
 		}
 
 		size_t numBoundngSurfaces;

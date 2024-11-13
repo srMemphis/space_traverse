@@ -70,6 +70,7 @@ bool Solver::SetInitialValue(const std::string& volumeName, double value)
 	return isFound;
 }
 
+// TODO: This will work only for one boundary. Fix if needed
 bool Solver::SetBoundaryValue(const std::string& name, double value)
 {
 	TIME_FUNCTION();
@@ -94,19 +95,27 @@ bool Solver::SetBoundaryValue(const std::string& name, double value)
 				m_iIndex.RemoveInterval(element.node[1], element.node[1]);
 				m_iIndex.RemoveInterval(element.node[2], element.node[2]);
 			}
+		}
+	}
 
-			// boundary value vector resize
-			m_uBound.resize(m_jIndex.Size());
-			m_uBound.setZero();
+	// boundary value vector resize
+	m_uBound.conservativeResize(m_jIndex.Size());
 
+	for (auto& key_surface : m_mesh->m_surfaces)
+	{
+		if (key_surface.second.HasTag(physTag))
+		{
 			// write boundary coefficients
 			for (auto& triangle : key_surface.second.elements)
 			{
 				m_uBound.coeffRef(m_jIndex.GetPositionOf(triangle.node[0])) = value;
+				m_uBound.coeffRef(m_jIndex.GetPositionOf(triangle.node[1])) = value;
+				m_uBound.coeffRef(m_jIndex.GetPositionOf(triangle.node[2])) = value;
+
 				m_u.coeffRef(triangle.node[0]) = value;
+				m_u.coeffRef(triangle.node[1]) = value;
+				m_u.coeffRef(triangle.node[2]) = value;
 			}
-
-
 		}
 	}
 
@@ -119,6 +128,8 @@ void Solver::DoStuff()
 	
 	auto& surfElems = m_mesh->GetSurfElements();
 
+	std::cout << "There are " << m_mesh->m_Nodes.size() << " nodes" << std::endl;
+
 	std::cout << "There are " << surfElems.size() << " triangles" << std::endl;
 
 	auto& bulkElems = m_mesh->GetBulkElements();
@@ -126,6 +137,10 @@ void Solver::DoStuff()
 	std::cout << "There are " << bulkElems.size() << " tetrahedrons" << std::endl;
 	
 	std::cout << "Max tetrahedrons at one node = " << m_mesh->MaxTetraAtNode() << std::endl;
+
+	std::cout << "Boundary nodes = " << m_jIndex.Size() << "; Iner nodes = " << m_iIndex.Size() << std::endl;
+	
+	std::cout << "Total indices = " << m_jIndex.Size() + m_iIndex.Size() << std::endl;
 
 }
 

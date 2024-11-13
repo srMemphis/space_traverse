@@ -1,5 +1,5 @@
-#include "TopologyTree.h"
-#include "GJK.h"
+#include "mesh/TopologyTree.h"
+#include "mesh/GJK.h"
 
 TopologyTree::TopologyTree()
 	: m_maxTetrahedronsAtNode(0)

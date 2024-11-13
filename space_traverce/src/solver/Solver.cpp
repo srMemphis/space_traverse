@@ -1,4 +1,4 @@
-#include "Solver.h"
+#include "solver/Solver.h"
 #include "utils/Timer.h"
 
 #include <Eigen/Dense>

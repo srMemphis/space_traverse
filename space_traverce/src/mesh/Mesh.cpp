@@ -1,4 +1,4 @@
-#include "Mesh.h"
+#include "mesh/Mesh.h"
 
 #include "utils/Timer.h"
 #include "utils/Vec3.h"

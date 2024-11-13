@@ -1,6 +1,6 @@
 #pragma once
-#include "Mesh.h"
-#include "Material.h"
+#include "mesh/Mesh.h"
+#include "solver/Material.h"
 #include "utils/UnsignedRange.h"
 #include "utils/ToMatlab.h"
  	

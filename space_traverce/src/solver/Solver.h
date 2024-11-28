@@ -13,20 +13,23 @@ class Solver
 {
 public:
 
-	Solver(std::shared_ptr<Mesh> mesh);
+	Solver();
 	~Solver();
 	
+	void SetMesh(std::shared_ptr<Mesh> mesh);
 	void AddMaterial(const std::string& name, const Material& mat);
 	void AssignElementChargeDensity(size_t index, double value);
 	bool SetInitialValue(const std::string& volumeName, double value);
 	bool SetBoundaryValue(const std::string& name, double value);
-	bool SaveSolutionToFile(const std::string& filepath);
-
-	void DoStuff();
-
+	
 	void AssembleLeft();
 	void AssembleRight();
 	bool Solve();
+
+	void DoStuff();
+	bool SaveSolutionToFile(const std::string& filepath);
+
+	Eigen::Vector3d GetField(double x, double y, double z);
 
 private:
 	const double c_epsilon0 = 8.8541878128e-12;

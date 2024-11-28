@@ -8,16 +8,22 @@
 #include <fstream>
 
 
-Solver::Solver(std::shared_ptr<Mesh> mesh)
-	:m_mesh(mesh)
+Solver::Solver()
 {
-	TIME_FUNCTION();
-
 	m_matlab.OpenFile("solution.m");
+}
+
+Solver::~Solver()
+{
+}
+
+void Solver::SetMesh(std::shared_ptr<Mesh> mesh)
+{
+	m_mesh = mesh;
 
 	size_t numNodes = m_mesh->GetNodes().size();
 	size_t numTetra = m_mesh->GetBulkElements().size();
-	
+
 	// initial conditions
 	m_chargeDensity.resize(numTetra);
 	m_chargeDensity.setZero();
@@ -27,11 +33,7 @@ Solver::Solver(std::shared_ptr<Mesh> mesh)
 	m_u.setZero();
 
 	// init iner node indices
-	m_iIndex.AddInterval(0, m_mesh->m_Nodes.size()-1);
-}
-
-Solver::~Solver()
-{
+	m_iIndex.AddInterval(0, m_mesh->m_Nodes.size() - 1);
 }
 
 void Solver::AddMaterial(const std::string& name, const Material& mat)
@@ -157,6 +159,23 @@ bool Solver::SaveSolutionToFile(const std::string& filepath)
 	}
 	
 	return false;
+}
+
+Eigen::Vector3d Solver::GetField(double x, double y, double z)
+{
+	// out of bounds check
+	
+
+	auto elemIndex = m_mesh->FindElementByCoords(x, y, z);
+	auto& element = m_mesh->m_bulkElements.at(elemIndex);
+	auto& gradient = m_mesh->m_GradientVectors.at(elemIndex);
+
+	Eigen::Vector3d field = - gradient.at(0) * m_u(element.node[0])
+							- gradient.at(1) * m_u(element.node[1])
+							- gradient.at(2) * m_u(element.node[2])
+							- gradient.at(3) * m_u(element.node[3]);
+
+	return field;
 }
 
 void Solver::AssembleLeft()

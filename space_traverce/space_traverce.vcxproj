@@ -143,12 +143,17 @@
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\mesh\Mesh.cpp" />
+    <ClCompile Include="src\SimuControl.cpp" />
+    <ClCompile Include="src\solver\Beam.cpp" />
     <ClCompile Include="src\solver\Solver.cpp" />
     <ClCompile Include="src\mesh\TopologyTree.cpp" />
+    <ClCompile Include="src\solver\Track.cpp" />
     <ClCompile Include="src\utils\ToMatlab.cpp" />
     <ClCompile Include="src\utils\UnsignedRange.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\SimuControl.h" />
+    <ClInclude Include="src\solver\Beam.h" />
     <ClInclude Include="src\solver\Material.h" />
     <ClInclude Include="src\mesh\Box.h" />
     <ClInclude Include="src\mesh\ElementTypes.h" />
@@ -156,6 +161,8 @@
     <ClInclude Include="src\mesh\Mesh.h" />
     <ClInclude Include="src\solver\Solver.h" />
     <ClInclude Include="src\mesh\TopologyTree.h" />
+    <ClInclude Include="src\solver\Track.h" />
+    <ClInclude Include="src\utils\Geometry.h" />
     <ClInclude Include="src\utils\Timer.h" />
     <ClInclude Include="src\utils\ToMatlab.h" />
     <ClInclude Include="src\utils\UnsignedRange.h" />

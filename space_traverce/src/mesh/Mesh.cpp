@@ -2,6 +2,7 @@
 
 #include "utils/Timer.h"
 #include "utils/Vec3.h"
+#include "utils/Geometry.h"
 
 #include <Eigen/Dense>
 
@@ -52,19 +53,8 @@ bool Mesh::FromFile(std::string filepath)
 	}
 
 	// fill datastructures
-	for (auto& surf : m_surfaces)
-	{
-		// assign a span of elements to the entity
-		surf.second.elements = {m_surfElements.begin() + surf.second.firstElementIndex,
-								m_surfElements.begin() + surf.second.firstElementIndex + surf.second.numElements};
-	}
-
-	for (auto& vol : m_volumes)
-	{
-		// assign a span of elements to the entity
-		vol.second.elements = { m_bulkElements.begin() + vol.second.firstElementIndex,
-								m_bulkElements.begin() + vol.second.firstElementIndex + vol.second.numElements };
-	}
+	FillEntitiesWithElements();
+	GenerateGradientVectors();
 
 	return true;
 }
@@ -255,7 +245,7 @@ bool Mesh::BuildTopologyData()
 
 void Mesh::Clear()
 {
-	m_Version = { 0, 0 };
+	m_Version = std::pair<int,int>{ 0, 0 };
 	m_Nodes.clear();
 	m_surfElements.clear();
 	m_bulkElements.clear();
@@ -760,11 +750,53 @@ bool Mesh::ReadInterpolationScheme(std::ifstream& geofile)
 	return false;
 }
 
+void Mesh::FillEntitiesWithElements()
+{
+	for (auto& surf : m_surfaces)
+	{
+		// assign a span of elements to the entity
+		surf.second.elements = { m_surfElements.begin() + surf.second.firstElementIndex,
+								m_surfElements.begin() + surf.second.firstElementIndex + surf.second.numElements };
+	}
 
+	for (auto& vol : m_volumes)
+	{
+		// assign a span of elements to the entity
+		vol.second.elements = { m_bulkElements.begin() + vol.second.firstElementIndex,
+								m_bulkElements.begin() + vol.second.firstElementIndex + vol.second.numElements };
+	}
+}
+
+void Mesh::GenerateGradientVectors()
+{
+	m_GradientVectors.reserve(m_bulkElements.size());
+
+	//#pragma omp parallel for
+	for (size_t i = 0; i < m_bulkElements.size(); i++ )
+	{
+		auto& element = m_bulkElements.at(i);
+
+		Eigen::Vector3d p1 {m_Nodes.at(element.node[0]).x, m_Nodes.at(element.node[0]).y, m_Nodes.at(element.node[0]).z};
+		Eigen::Vector3d p2 {m_Nodes.at(element.node[1]).x, m_Nodes.at(element.node[1]).y, m_Nodes.at(element.node[1]).z};
+		Eigen::Vector3d p3 {m_Nodes.at(element.node[2]).x, m_Nodes.at(element.node[2]).y, m_Nodes.at(element.node[2]).z};
+		Eigen::Vector3d p4 {m_Nodes.at(element.node[3]).x, m_Nodes.at(element.node[3]).y, m_Nodes.at(element.node[3]).z};
+
+		auto grad1 = Geometry::BarycentricGradient(p1, p2, p3, p4);
+		auto grad2 = Geometry::BarycentricGradient(p2, p1, p3, p4);
+		auto grad3 = Geometry::BarycentricGradient(p3, p2, p1, p4);
+		auto grad4 = Geometry::BarycentricGradient(p4, p2, p3, p1);
+
+		m_GradientVectors.emplace_back();
+
+		m_GradientVectors.at(i).at(0) = grad1;
+		m_GradientVectors.at(i).at(1) = grad2;
+		m_GradientVectors.at(i).at(2) = grad3;
+		m_GradientVectors.at(i).at(3) = grad4;
+	}
+}
 
 bool Mesh::ReadNodes(std::ifstream& geofile)
 {
-
 	size_t numEntityBlocks; 
 	size_t numNodes;
 	size_t minNodeTag;

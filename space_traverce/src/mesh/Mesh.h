@@ -6,6 +6,8 @@
 #include <vector>
 #include <map>
 
+#include <Eigen/Dense>
+
 class Mesh
 {
 public:
@@ -57,9 +59,10 @@ private:
 	std::map<int, Surface> m_surfaces;         // mapped by entity tags
 	std::map<int, Volume> m_volumes;
 
-	std::pair<int, int> m_Version;
+	std::pair<int, int> m_Version;				// gmsh file version
 
-	TopologyTree m_topologyTree;
+	TopologyTree m_topologyTree;				// binary search tree
+	std::vector<std::array<Eigen::Vector3d, 4>> m_GradientVectors;        // four gradient vectors per element
 
 private:
 	bool ReadSection(std::ifstream& geofile, std::string section);
@@ -76,6 +79,10 @@ private:
 	bool ReadElementData(std::ifstream& geofile);
 	bool ReadElementNodeData(std::ifstream& geofile);
 	bool ReadInterpolationScheme(std::ifstream& geofile);
+
+	// after file is read
+	void FillEntitiesWithElements();
+	void GenerateGradientVectors();
 
 	friend class Solver;
 };

@@ -1,4 +1,7 @@
 #include "Track.h"
+
+#include "debug/Log.h"
+
 #include <cmath>
 #include <algorithm>
 

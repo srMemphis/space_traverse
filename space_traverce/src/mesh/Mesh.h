@@ -34,8 +34,8 @@ public:
 	const double GetVolumeOfVolume(const std::string name) const;
 
 	// utils
-	int NameToTag(const std::string& name) const;
-	const std::string& TagToName(int tag) const;
+	int NameToTag(const std::string& name) const;	// physical name to tag
+	const std::string& TagToName(int tag) const;	// physical tag to name
 	const std::vector<double> GetNodesX() const;
 	const std::vector<double> GetNodesY() const;
 	const std::vector<double> GetNodesZ() const;

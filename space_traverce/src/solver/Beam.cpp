@@ -1,5 +1,7 @@
 #include "Beam.h"
 
+#include "debug/Log.h"
+
 Beam::Beam()
 {
 }

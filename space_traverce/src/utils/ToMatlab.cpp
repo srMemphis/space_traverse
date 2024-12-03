@@ -1,6 +1,7 @@
 #include "utils/ToMatlab.h"
 
-#include <iostream>
+#include "debug/Log.h"
+
 #include <vector>
 
 ToMatlab::ToMatlab()
@@ -19,8 +20,8 @@ bool ToMatlab::OpenFile(std::string name)
 {
 	if (m_file.is_open())
 	{
-		std::cout << "Unable to open file : " << name
-			<< ". File is already opened" << std::endl;
+		LOG_ERROR("Unable to open file :{}. File is already opened", name);
+
 		return false;
 	}
 
@@ -28,7 +29,8 @@ bool ToMatlab::OpenFile(std::string name)
 
 	if (!m_file.is_open())
 	{
-		std::cout << "Unable to open file : " << name << std::endl;
+		LOG_ERROR("Unable to open file :{}.", name);
+
 		return false;
 	}
 
@@ -39,7 +41,8 @@ bool ToMatlab::Write(Eigen::VectorXd vec, const std::string& name)
 {
 	if (!m_file.is_open())
 	{
-		std::cout << "Unable to write vector " << name << " to file.File is not opened." << std::endl;
+		LOG_ERROR("Unable to write vector {} to file.File is not opened.", name);
+
 		return false;
 	}
 
@@ -59,7 +62,8 @@ bool ToMatlab::Write(std::vector<double> vec, const std::string& name)
 {
 	if (!m_file.is_open())
 	{
-		std::cout << "Unable to write vector " << name << " to file.File is not opened." << std::endl;
+		LOG_ERROR("Unable to write vector {} to file.File is not opened.", name);
+
 		return false;
 	}
 
@@ -80,7 +84,8 @@ bool ToMatlab::Write(const Eigen::SparseMatrix<double>& matrix, const std::strin
 	
 	if (!m_file.is_open())
 	{
-		std::cout << "Unable to write matrix " << name <<  " to file.File is not opened." << std::endl;
+		LOG_ERROR("Unable to write matrix {} to file.File is not opened.", name);
+
 		return false;
 	}
 

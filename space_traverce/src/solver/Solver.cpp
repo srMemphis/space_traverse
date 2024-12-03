@@ -1,5 +1,7 @@
 #include "solver/Solver.h"
+
 #include "utils/Timer.h"
+#include "debug/Log.h"
 
 #include <Eigen/Dense>
 #include <Eigen/IterativeLinearSolvers>
@@ -122,28 +124,6 @@ bool Solver::SetBoundaryValue(const std::string& name, double value)
 	}
 
 	return found;
-}
-
-void Solver::DoStuff()
-{
-	TIME_FUNCTION();
-	
-	auto& surfElems = m_mesh->GetSurfElements();
-
-	std::cout << "There are " << m_mesh->m_Nodes.size() << " nodes" << std::endl;
-
-	std::cout << "There are " << surfElems.size() << " triangles" << std::endl;
-
-	auto& bulkElems = m_mesh->GetBulkElements();
-
-	std::cout << "There are " << bulkElems.size() << " tetrahedrons" << std::endl;
-	
-	std::cout << "Max tetrahedrons at one node = " << m_mesh->MaxTetraAtNode() << std::endl;
-
-	std::cout << "Boundary nodes = " << m_jIndex.Size() << "; Iner nodes = " << m_iIndex.Size() << std::endl;
-	
-	std::cout << "Total indices = " << m_jIndex.Size() + m_iIndex.Size() << std::endl;
-
 }
 
 bool Solver::SaveSolutionToFile(const std::string& filepath)
@@ -313,7 +293,7 @@ bool Solver::Solve()
 		return false;
 	}
 
-	std::cout << "Iterations = " << cg.iterations() << std::endl;
+	LOG_TRACE("Iterations = {}", cg.iterations());
 
 	// assemble full u
 	RangeIterator iIndex(m_iIndex);

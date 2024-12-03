@@ -74,8 +74,9 @@ public:
 		}
 		else
 		{
-			std::cerr << " Box::Split Жидко обосрался\n";
 			return false;
 		}
+		
+		return true;
 	}
 };

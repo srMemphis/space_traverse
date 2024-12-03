@@ -26,7 +26,6 @@ public:
 	void AssembleRight();
 	bool Solve();
 
-	void DoStuff();
 	bool SaveSolutionToFile(const std::string& filepath);
 
 	Eigen::Vector3d GetField(double x, double y, double z);

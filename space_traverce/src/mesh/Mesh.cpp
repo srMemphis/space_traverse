@@ -3,6 +3,7 @@
 #include "utils/Timer.h"
 #include "utils/Vec3.h"
 #include "utils/Geometry.h"
+#include "debug/Log.h"
 
 #include <Eigen/Dense>
 
@@ -10,7 +11,6 @@
 #include <iostream>
 #include <cassert>
 #include <algorithm>
-
 
 Mesh::Mesh()
 {
@@ -27,7 +27,8 @@ bool Mesh::FromFile(std::string filepath)
 	std::ifstream geofile(filepath);
 	if (!geofile.is_open())
 	{
-		std::cout << "File not found!" << std::endl;
+		LOG_ERROR("Mesh file {} is not found", filepath);
+
 		return false;
 	}
 
@@ -44,10 +45,11 @@ bool Mesh::FromFile(std::string filepath)
 		if (section == "")
 			break;
 
-		std::cout << "Reading Section " << section << std::endl;
+		LOG_TRACE("Reading Section {}", section);
+
 		if (!ReadSection(geofile, section))
 		{
-			std::cout << "Error reading section" << std::endl;
+			LOG_ERROR("Error reading section {}", section);
 			return false;
 		}
 	}
@@ -367,7 +369,7 @@ bool Mesh::ReadSection(std::ifstream& geofile, std::string s)
 	}
 	else
 	{
-		std::cout << "Unlnown section in geo file: " << s <<  std::endl;
+		LOG_WARN("Unknown section in geo file: {}", s);
 		return false;
 	}
 
@@ -380,7 +382,7 @@ bool Mesh::ReadMeshFormat(std::ifstream& geofile)
 	geofile.get();    // get . symbol
 	geofile >> m_Version.second;
 
-	std::cout << "MESH version " << m_Version.first << '.' << m_Version.second << std::endl;
+	LOG_TRACE("MESH version {}.{}", m_Version.first, m_Version.second);
 
 	int type;
 	int size;
@@ -415,7 +417,7 @@ bool Mesh::ReadPhysicalNames(std::ifstream& geofile)
 
 		m_PhisicalNames.emplace(pname.name, pname);
 
-		std::cout << pname.dimention << ' ' << pname.tag << ' ' << pname.name << std::endl;
+		LOG_TRACE("dim: {}, tag: {}, name: {}", pname.dimention, pname.tag, pname.name);
 	}
 
 	std::string end;
@@ -434,7 +436,6 @@ bool Mesh::ReadEntities(std::ifstream& geofile)
 	size_t numVolumes;
 
 	geofile >> numPoints >> numCurves >> numSurfaces >> numVolumes;
-	//std::cout << numPoints << ' ' << numCurves << ' ' << numSurfaces << ' ' << numVolumes << std::endl;
 
 	// points
 	for (int i = 0; i < numPoints; i++)
@@ -443,7 +444,6 @@ bool Mesh::ReadEntities(std::ifstream& geofile)
 		double X, Y, Z;
 
 		geofile >> pointTag >> X >> Y >> Z;
-		//std::cout << pointTag << ' ' << X << ' ' << Y << ' ' << Z << std::endl;
 
 		size_t numPhysicalTags;
 		geofile >> numPhysicalTags;
@@ -525,7 +525,6 @@ bool Mesh::ReadEntities(std::ifstream& geofile)
 
 		// read from file to buffer
 		geofile >> tmp.entytyTag >> tmp.minX >> tmp.minY >> tmp.minZ >> tmp.maxX >> tmp.maxY >> tmp.maxZ;
-		//std::cout << "Volume tag : " << volumeTag << std::endl;
 
 		size_t numPhysicalTags;
 		geofile >> numPhysicalTags;
@@ -580,7 +579,6 @@ bool Mesh::ReadElements(std::ifstream& geofile)
 	size_t maxElementTag;
 
 	geofile >> numEntityBlocks >> numElements >> minElementTag >> maxElementTag;
-	//std::cout << numEntityBlocks << ' ' << numElements << ' ' << minElementTag << ' ' << maxElementTag << std::endl;
 
 	for (int i = 0; i < numEntityBlocks; i++)
 	{
@@ -590,7 +588,6 @@ bool Mesh::ReadElements(std::ifstream& geofile)
 		size_t numElementsInBlock;
 
 		geofile >> entityDim >> entityTag >> elementType >> numElementsInBlock;
-		//std::cout << entityDim << ' ' << entityTag << ' ' << elementType << ' ' << numElementsInBlock << std::endl;
 
 		size_t elementTag;
 
@@ -615,7 +612,6 @@ bool Mesh::ReadElements(std::ifstream& geofile)
 				ETriangle element;
 
 				geofile >> elementTag >> element.node[0] >> element.node[1] >> element.node[2];
-				//std::cout << elementTag << ' ' << element.node1 << ' ' << element.node2 << ' ' << element.node3 << std::endl;
 
 				// gmsh indexing starts from 1
 				element.node[0] -= 1;
@@ -644,8 +640,6 @@ bool Mesh::ReadElements(std::ifstream& geofile)
 				ETetrahedron element;
 
 				geofile >> elementTag >> element.node[0] >> element.node[1] >> element.node[2] >> element.node[3];
-				//std::cout << elementTag << ' ' << element.node1 << ' ' << element.node2
-				//		  << ' ' << element.node3 << ' ' << element.node4 << std::endl;
 
 				// gmsh indexing starts from 1
 				element.node[0] -= 1;
@@ -661,7 +655,6 @@ bool Mesh::ReadElements(std::ifstream& geofile)
 		} // switch
 
 	} // entity block
-
 
 	std::string end;
 	geofile.get(); // get \n
@@ -811,14 +804,11 @@ bool Mesh::ReadNodes(std::ifstream& geofile)
 	geofile >> minNodeTag;
 	geofile >> maxNodeTag;
 
-	//std::cout << numEntityBlocks << ' ' << numNodes << ' ' << minNodeTag << ' ' << maxNodeTag << std::endl;
-
 	if (minNodeTag != 1)
 	{
-		std::cout << "ÒÛ ÏÎÆÐÀË ÃÎÂÍÀ" << std::endl;
+		LOG_CRITICAL("Ubnormal node indexing in mesh!");
 		assert(false);
 	}
-
 
 	m_Nodes.reserve(numNodes);
 	size_t prevNodeTag = 0;
@@ -830,19 +820,15 @@ bool Mesh::ReadNodes(std::ifstream& geofile)
 		geofile >> parametric;
 		geofile >> numNodesInBlock;
 
-		
 		size_t nodeTag;
 		for (int j = 0; j < numNodesInBlock; j++)
 		{
 			
 			geofile >> nodeTag;
-			
-			//std::cout << nodeTag << std::endl;
 
 			if (nodeTag - prevNodeTag != 1)
 			{
-				std::cout << "!WARNING! non consecutive node numbering" << std::endl;
-				std::cout << prevNodeTag << ' ' << nodeTag << std::endl;
+				LOG_ERROR("Non consecutive node numbering: {} -> {}", prevNodeTag, nodeTag);
 			}
 			prevNodeTag = nodeTag;
 		}
@@ -853,14 +839,9 @@ bool Mesh::ReadNodes(std::ifstream& geofile)
 			geofile >> node.y;
 			geofile >> node.z;
 
-			//std::cout << node.x << ' ' << node.y << ' ' << node.z << std::endl;
-
 			m_Nodes.push_back(node);
 		}
-
-
 	}
-
 
 	std::string end;
 	geofile.get(); // get \n

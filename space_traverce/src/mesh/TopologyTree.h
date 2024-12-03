@@ -32,5 +32,5 @@ private:
 	void BuildTopologyRecursive(size_t parentID, const std::vector<ETetrahedron>& elements, const std::vector<Node>& nodes);
 
 	//statistics
-	uint32_t m_maxTetrahedronsAtNode;
+	size_t m_maxTetrahedronsAtNode;
 };

@@ -1,5 +1,7 @@
 #include "utils/UnsignedRange.h"
 
+#include "debug/Log.h"
+
 #include <stdexcept>
 
 void UnsignedRange::Add(size_t number)

@@ -1,5 +1,8 @@
 #include "SimuControl.h"
 
+#include "debug/Log.h"
+
+#include <algorithm>
 #include <string>
 
 SimuControl::SimuControl()
@@ -39,7 +42,7 @@ bool SimuControl::Prepare()
 	// set boundary conditions
 	if (!m_solver->SetBoundaryValue("Air Boundary", 0))
 	{
-		std::cout << "surface not found" << std::endl;
+		LOG_ERROR("surface not found");
 		return false;
 	}
 
@@ -50,6 +53,30 @@ bool SimuControl::Prepare()
 
 	// assemble linear system
 	m_solver->AssembleLeft();
+
+	return true;
+}
+
+bool SimuControl::AddStoppingVolume(const std::string& name)
+{	
+	auto physTag = m_mesh->NameToTag(name);
+	bool found = false;
+
+	for (auto& key_volume : m_mesh->GetSurfaces())
+	{
+		if (key_volume.second.HasTag(physTag))
+		{
+			found = true;
+			
+			if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), key_volume.first)
+				!= m_stoppingVolumes.end())
+			{
+				m_stoppingVolumes.push_back(key_volume.first);
+			}
+		}
+	}
+	
+	return found;
 }
 
 int SimuControl::Run()
@@ -60,18 +87,16 @@ int SimuControl::Run()
 	// solve systems
 	if (!m_solver->Solve())
 	{
-		std::cout << "Solving failed" << std::endl;
+		LOG_ERROR("Solving failed");
 		return 2;
 	}
 
 	// save solution to file
 	if (!m_solver->SaveSolutionToFile("solution.txt"))
 	{
-		std::cout << "failed to save solution to file" << std::endl;
+		LOG_ERROR("failed to save solution to file");
 		return 3;
 	}
-
-	m_solver->DoStuff();
 
 	return 0;
 }

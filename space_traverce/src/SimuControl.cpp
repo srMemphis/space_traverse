@@ -23,7 +23,7 @@ bool SimuControl::MeshFromFile(const std::string& filepath)
 		return false;
 
 	// build binary search tree
-	//mesh->BuildTopologyData();
+	m_mesh->BuildTopologyData();
 
 	m_solver->SetMesh(m_mesh);
 
@@ -32,6 +32,10 @@ bool SimuControl::MeshFromFile(const std::string& filepath)
 
 bool SimuControl::Prepare()
 {
+	// set beam stopping function
+	m_beam->SetStoppingFunction(std::bind(&SimuControl::BeamShouldStop, this,
+		std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
 	// assign material data
 	Material air, glass;
 	air.epsilon = 1;
@@ -60,23 +64,10 @@ bool SimuControl::Prepare()
 bool SimuControl::AddStoppingVolume(const std::string& name)
 {	
 	auto physTag = m_mesh->NameToTag(name);
-	bool found = false;
 
-	for (auto& key_volume : m_mesh->GetSurfaces())
-	{
-		if (key_volume.second.HasTag(physTag))
-		{
-			found = true;
-			
-			if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), key_volume.first)
-				!= m_stoppingVolumes.end())
-			{
-				m_stoppingVolumes.push_back(key_volume.first);
-			}
-		}
-	}
+	m_stoppingVolumes.push_back(physTag);
 	
-	return found;
+	return true;
 }
 
 int SimuControl::Run()
@@ -92,11 +83,32 @@ int SimuControl::Run()
 	}
 
 	// save solution to file
-	if (!m_solver->SaveSolutionToFile("solution.txt"))
+	if (!m_solver->SaveSolutionToFile("solution.mat"))
 	{
 		LOG_ERROR("failed to save solution to file");
 		return 3;
 	}
 
 	return 0;
+}
+
+bool SimuControl::BeamShouldStop(double x, double y, double z) const
+{
+	// get element index
+	auto elemIndex = m_mesh->FindElementByCoords(x, y, z);
+	// get its physical tags
+	auto& tags = m_mesh->GetPhisicalTagsOfTetrahedron(elemIndex);
+
+	bool contains = false;
+
+	// check if should stop on this tags
+	for (auto tag : tags)
+	{
+		if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), tag) != m_stoppingVolumes.end())
+		{
+			contains = true;
+		}
+	}
+	
+	return contains;
 }

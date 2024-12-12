@@ -2,6 +2,7 @@
 #include "mesh/Box.h"
 #include "mesh/ElementTypes.h"
 #include "utils/Vec3.h"
+#include "debug/Log.h"
 
 #include <cmath>
 #include <vector>
@@ -97,7 +98,7 @@ public:
 
 			if (iter > MAX_ITER)
 			{
-				std::cout << "GJK to many iterations: " << iter << std::endl;
+				LOG_TRACE("GJK to many iterations: {}", iter);
 				//LOG(b, m_tet);
 
 				// most of the time there is no intersection

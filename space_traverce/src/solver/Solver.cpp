@@ -12,7 +12,6 @@
 
 Solver::Solver()
 {
-	m_matlab.OpenFile("solution.m");
 }
 
 Solver::~Solver()
@@ -129,6 +128,8 @@ bool Solver::SetBoundaryValue(const std::string& name, double value)
 bool Solver::SaveSolutionToFile(const std::string& filepath)
 {
 	TIME_FUNCTION();
+
+	m_matlab.OpenFile(filepath);
 
 	if(m_matlab.Write(m_u, "uPlus") &&
 		m_matlab.Write(m_mesh->GetNodesX(), "xPlus") &&

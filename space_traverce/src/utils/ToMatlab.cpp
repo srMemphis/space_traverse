@@ -2,32 +2,35 @@
 
 #include "debug/Log.h"
 
+#include "TinyMAT/tinymatwriter.h"
+
 #include <vector>
 
 ToMatlab::ToMatlab()
+	:m_file(nullptr)
 {
 }
 
 ToMatlab::~ToMatlab()
 {
-	if (m_file.is_open())
+	if (m_file)
 	{
-		m_file.close();
+		TinyMATWriter_close(m_file);
 	}
 }
 
 bool ToMatlab::OpenFile(std::string name)
 {
-	if (m_file.is_open())
+	if (m_file)
 	{
 		LOG_ERROR("Unable to open file :{}. File is already opened", name);
 
 		return false;
 	}
 
-	m_file.open(name, std::ios::out | std::ios::trunc);
+	m_file = TinyMATWriter_open(name.c_str());
 
-	if (!m_file.is_open())
+	if (!m_file)
 	{
 		LOG_ERROR("Unable to open file :{}.", name);
 
@@ -39,82 +42,37 @@ bool ToMatlab::OpenFile(std::string name)
 
 bool ToMatlab::Write(Eigen::VectorXd vec, const std::string& name)
 {
-	if (!m_file.is_open())
+	if (!m_file)
 	{
 		LOG_ERROR("Unable to write vector {} to file.File is not opened.", name);
 
 		return false;
 	}
 
-	m_file << '\n' << name << " =  [ ";
+	std::vector<double> v(&vec[0], vec.data() + vec.cols() * vec.rows());
 
-	for (size_t i = 0; i < vec.size(); i++)
+	if (vec.IsRowMajor())
 	{
-		m_file << vec(i) << ' ';
+		TinyMATWriter_writeContainerAsRow(m_file, name.c_str(), v);
 	}
-
-	m_file << "];\n";
+	else
+	{
+		TinyMATWriter_writeContainerAsColumn(m_file, name.c_str(), v);
+	}
 
 	return true;
 }
 
 bool ToMatlab::Write(std::vector<double> vec, const std::string& name)
 {
-	if (!m_file.is_open())
+	if (!m_file)
 	{
 		LOG_ERROR("Unable to write vector {} to file.File is not opened.", name);
 
 		return false;
 	}
 
-	m_file << '\n' << name << " =  [ ";
-
-	for (size_t i = 0; i < vec.size(); i++)
-	{
-		m_file << vec.at(i) << ' ';
-	}
-
-	m_file << "];\n";
-
-	return true;
-}
-
-bool ToMatlab::Write(const Eigen::SparseMatrix<double>& matrix, const std::string& name)
-{
-	
-	if (!m_file.is_open())
-	{
-		LOG_ERROR("Unable to write matrix {} to file.File is not opened.", name);
-
-		return false;
-	}
-
-	Eigen::VectorXd rows, cols, value;
-	
-	size_t size = matrix.nonZeros();
-	rows.resize(size);
-	cols.resize(size);
-	value.resize(size);
-
-	size_t index = 0;
-	for (size_t i = 0; i < matrix.outerSize(); i++)
-	{
-		for (Eigen::SparseMatrix<double>::InnerIterator it(matrix, i); it; ++it)
-		{
-			rows(index) = it.row() + 1;
-			cols(index) = it.col() + 1;
-			value(index) = it.value();
-
-			index++;
-		}
-	}
-
-	Write(rows, std::string(name + "_rows"));
-	Write(cols, std::string(name + "_cols"));
-	Write(value, std::string(name + "_value"));
-
-	m_file << '\n' << name << " = sparse(" << name << "_rows, " << name << "_cols, " << name << "_value, "
-		<< matrix.rows() << ", " << matrix.cols() << ");\n";
+	TinyMATWriter_writeContainerAsColumn(m_file, name.c_str(), vec);
 
 	return true;
 }

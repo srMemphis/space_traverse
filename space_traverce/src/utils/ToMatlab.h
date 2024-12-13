@@ -18,6 +18,8 @@ public:
 
 	bool Write(std::vector<double> vec, const std::string& name);
 
+	void Close();
+
 private:
 
 	TinyMATWriterFile* m_file;

@@ -129,6 +129,8 @@ bool Solver::SaveSolutionToFile(const std::string& filepath)
 {
 	TIME_FUNCTION();
 
+	bool res = false;
+	
 	m_matlab.OpenFile(filepath);
 
 	if(m_matlab.Write(m_u, "uPlus") &&
@@ -136,10 +138,12 @@ bool Solver::SaveSolutionToFile(const std::string& filepath)
 		m_matlab.Write(m_mesh->GetNodesY(), "yPlus") &&
 		m_matlab.Write(m_mesh->GetNodesZ(), "zPlus")) 
 	{
-		return true;
+		res = true;
 	}
 	
-	return false;
+	m_matlab.Close();
+
+	return res;
 }
 
 Eigen::Vector3d Solver::GetField(double x, double y, double z)

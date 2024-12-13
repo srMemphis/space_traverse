@@ -13,10 +13,7 @@ ToMatlab::ToMatlab()
 
 ToMatlab::~ToMatlab()
 {
-	if (m_file)
-	{
-		TinyMATWriter_close(m_file);
-	}
+	Close();
 }
 
 bool ToMatlab::OpenFile(std::string name)
@@ -75,4 +72,13 @@ bool ToMatlab::Write(std::vector<double> vec, const std::string& name)
 	TinyMATWriter_writeContainerAsColumn(m_file, name.c_str(), vec);
 
 	return true;
+}
+
+void ToMatlab::Close()
+{
+	if (m_file)
+	{
+		TinyMATWriter_close(m_file);
+		m_file = nullptr;
+	}
 }

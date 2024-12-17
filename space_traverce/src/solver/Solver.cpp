@@ -10,19 +10,6 @@
 #include <iostream>
 #include <fstream>
 
-struct hui
-{
-	int b;
-	int* a;
-
-	hui(hui& other)
-	{
-
-	}
-};
-
-
-
 Solver::Solver()
 {
 }

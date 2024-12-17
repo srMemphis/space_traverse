@@ -29,6 +29,7 @@ public:
 	bool SaveSolutionToFile(const std::string& filepath);
 
 	Eigen::Vector3d GetField(double x, double y, double z);
+	Eigen::Vector3d GetField2(double x, double y, double z);
 
 private:
 	const double c_epsilon0 = 8.8541878128e-12;
@@ -43,6 +44,8 @@ private:
 	Eigen::VectorXd m_uBound;						// values of j-idexed nodes
 	UnsignedRange m_iIndex;							// i - non - boundary node index
 	UnsignedRange m_jIndex;							// j - boundary node index
+
+	std::vector<Eigen::Vector3d> m_field;						// mean of electric field at nodes
 
 	ToMatlab m_matlab;
 };

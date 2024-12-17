@@ -2,12 +2,25 @@
 
 #include "utils/Timer.h"
 #include "debug/Log.h"
+#include "utils/Geometry.h"
 
 #include <Eigen/Dense>
 #include <Eigen/IterativeLinearSolvers>
 
 #include <iostream>
 #include <fstream>
+
+struct hui
+{
+	int b;
+	int* a;
+
+	hui(hui& other)
+	{
+
+	}
+};
+
 
 
 Solver::Solver()
@@ -133,6 +146,18 @@ bool Solver::SaveSolutionToFile(const std::string& filepath)
 	
 	m_matlab.OpenFile(filepath);
 
+	int N = 1000;
+	std::vector<double> field;
+	Eigen::ArrayXd x = Eigen::ArrayXd::LinSpaced(N, -0.45, 0.45);
+
+	for (int i = 0; i < N; i++)
+	{
+		field.push_back(GetField2(x[i], 0, 0).norm());
+	}
+
+	m_matlab.Write(field, "field");
+	m_matlab.Write(x, "xField");
+
 	if(m_matlab.Write(m_u, "uPlus") &&
 		m_matlab.Write(m_mesh->GetNodesX(), "xPlus") &&
 		m_matlab.Write(m_mesh->GetNodesY(), "yPlus") &&
@@ -148,17 +173,48 @@ bool Solver::SaveSolutionToFile(const std::string& filepath)
 
 Eigen::Vector3d Solver::GetField(double x, double y, double z)
 {
-	// out of bounds check
-	
-
 	auto elemIndex = m_mesh->FindElementByCoords(x, y, z);
 	auto& element = m_mesh->m_bulkElements.at(elemIndex);
 	auto& gradient = m_mesh->m_GradientVectors.at(elemIndex);
-
+	
+	// find field from weighted gradients
 	Eigen::Vector3d field = - gradient.at(0) * m_u(element.node[0])
 							- gradient.at(1) * m_u(element.node[1])
 							- gradient.at(2) * m_u(element.node[2])
 							- gradient.at(3) * m_u(element.node[3]);
+
+	return field;
+}
+
+Eigen::Vector3d Solver::GetField2(double x, double y, double z)
+{
+	auto elemIndex = m_mesh->FindElementByCoords(x, y, z);
+	auto& element = m_mesh->m_bulkElements.at(elemIndex);
+	auto& nodes = m_mesh->GetNodes();
+
+	// find barycentric weights
+	/*Eigen::Matrix4d left;
+	left << 1, 1, 1, 1,
+		nodes.at(element.node[0]).x, nodes.at(element.node[1]).x, nodes.at(element.node[2]).x, nodes.at(element.node[3]).x,
+		nodes.at(element.node[0]).y, nodes.at(element.node[1]).y, nodes.at(element.node[2]).y, nodes.at(element.node[3]).y,
+		nodes.at(element.node[0]).z, nodes.at(element.node[1]).z, nodes.at(element.node[2]).z, nodes.at(element.node[3]).z;
+
+	Eigen::Vector4d right{ 1, x, y, z };
+
+	Eigen::Vector4d bary = left.ldlt().solve(right).normalized();*/
+
+	double elemVolume = m_mesh->GetVolumeOfTetrahedron(elemIndex);
+	Eigen::Vector4d bary;
+	bary(0) = Geometry::TetrahedronVolume(nodes.at(element.node[1]), nodes.at(element.node[3]), nodes.at(element.node[2]), { x,y,z }) / elemVolume;
+	bary(1) = Geometry::TetrahedronVolume(nodes.at(element.node[0]), nodes.at(element.node[2]), nodes.at(element.node[3]), { x,y,z }) / elemVolume;
+	bary(2) = Geometry::TetrahedronVolume(nodes.at(element.node[0]), nodes.at(element.node[3]), nodes.at(element.node[1]), { x,y,z }) / elemVolume;
+	bary(3) = 1 - bary(0) - bary(1) - bary(2);
+
+	// find field from weighted gradients
+	Eigen::Vector3d field = bary(0) * m_field.at(element.node[0])
+		+ bary(1) * m_field.at(element.node[1])
+		+ bary(2) * m_field.at(element.node[2])
+		+ bary(3) * m_field.at(element.node[3]);
 
 	return field;
 }
@@ -317,6 +373,56 @@ bool Solver::Solve()
 		j = jIndex.Get();
 
 		m_u(j) = m_uBound(m_jIndex.GetPositionOf(j));
+	}
+
+
+	// calc mean of field at nodes
+	//
+	m_field.resize(m_u.size());
+
+	std::vector<Eigen::Vector3d> elemField;
+	size_t numElem = m_mesh->GetBulkElements().size();
+	elemField.resize(numElem);
+
+	// first calc field at elements
+	for (size_t elemIndex = 0; elemIndex < numElem; elemIndex++)
+	{
+		auto& gradient = m_mesh->m_GradientVectors.at(elemIndex);
+		auto& element = m_mesh->m_bulkElements.at(elemIndex);
+
+		elemField.at(elemIndex) = -gradient.at(0) * m_u(element.node[0])
+			- gradient.at(1) * m_u(element.node[1])
+			- gradient.at(2) * m_u(element.node[2])
+			- gradient.at(3) * m_u(element.node[3]);
+	}
+
+	// then calc mean
+	size_t numNodes = m_mesh->GetNodes().size();
+	for (size_t nodeindex = 0; nodeindex < numNodes; nodeindex++)
+	{
+		auto& node = m_mesh->GetNode(nodeindex);
+		auto& candidates = m_mesh->m_topologyTree.Find(node.x, node.y, node.z);
+
+		m_field.at(nodeindex).setZero();
+		int count = 0;
+		for (auto& candidateIndex : candidates)
+		{
+			auto& cand = m_mesh->GetTetrahedron(candidateIndex);
+
+			if (cand.node[0] == nodeindex || cand.node[1] == nodeindex 
+				|| cand.node[2] == nodeindex || cand.node[3] == nodeindex)
+			{
+				count++;
+				m_field.at(nodeindex) += elemField.at(candidateIndex);
+			}
+		}
+
+		if (count == 0)
+		{
+			LOG_ERROR("SKIBIDI");
+		}
+
+		m_field.at(nodeindex) = m_field.at(nodeindex).array() / count;
 	}
 
 	return true;

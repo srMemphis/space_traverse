@@ -238,7 +238,7 @@ bool Mesh::BuildTopologyData()
 
 	if (!m_topologyTree.GenerateData(m_volumes, m_bulkElements, m_Nodes))
 	{
-		std::cerr << "Error during topology generation; Missing geometry data!" << std::endl;
+		LOG_ERROR("Error during topology generation; Missing geometry data!");
 		return false;
 	}
 
@@ -266,7 +266,7 @@ int64_t Mesh::FindElementByCoords(double x, double y, double z) const
 	if (candidates.empty())
 	{
 		// point is outside of the geometry
-		std::cerr << "[WARNING] [Mesh::FindElementByCoords] Point is outside of the geometry" << std::endl;
+		LOG_WARN("Point is outside of the geometry");
 		return -1;
 	}
 
@@ -306,7 +306,7 @@ int64_t Mesh::FindElementByCoords(double x, double y, double z) const
 	// failed to find tetrahedron in the candidate list
 	// should never happen
 	// critical error
-	std::cerr << "[ERROR] [Mesh::FindElementByCoords] Can not find tetrahedron that contains the point" << std::endl;
+	LOG_CRITICAL("Can not find tetrahedron that contains the point");
 	return -2;
 }
 
@@ -597,7 +597,7 @@ bool Mesh::ReadElements(std::ifstream& geofile)
 		{
 			if (elementType != 2) // 3-node Triangle
 			{
-				std::cerr << "ERROR element type " << elementType << " is not supported!" << std::endl;
+				LOG_ERROR("ERROR element type {} is not supported!", elementType);
 				return false;
 			}
 
@@ -626,7 +626,7 @@ bool Mesh::ReadElements(std::ifstream& geofile)
 		{
 			if (elementType != 4) // 4-node Tetrahedron
 			{
-				std::cerr << "ERROR element type " << elementType << " is not supported!" << std::endl;
+				LOG_ERROR("ERROR element type {} is not supported!", elementType);
 				return false;
 			}
 

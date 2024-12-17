@@ -186,6 +186,7 @@
     <ClInclude Include="src\utils\Geometry.h" />
     <ClInclude Include="src\utils\Timer.h" />
     <ClInclude Include="src\utils\ToMatlab.h" />
+    <ClInclude Include="src\utils\Types.h" />
     <ClInclude Include="src\utils\UnsignedRange.h" />
     <ClInclude Include="src\utils\Vec3.h" />
   </ItemGroup>

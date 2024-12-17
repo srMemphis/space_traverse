@@ -3,12 +3,7 @@
 #include <span>
 #include <vector>
 
-struct Node
-{
-	double x = 0;
-	double y = 0;
-	double z = 0;
-};
+#include "utils/Types.h"
 
 // 3-node triangle element
 struct ETriangle

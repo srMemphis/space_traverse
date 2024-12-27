@@ -10,6 +10,13 @@ SimuControl::SimuControl()
 	m_mesh = std::make_shared<Mesh>();
 	m_solver = std::make_shared<Solver>();
 	m_beam = std::make_shared <Beam> ();
+
+	// set beam stopping and field functions
+	m_beam->SetStoppingFunction(std::bind(&SimuControl::BeamShouldStop, this,
+		std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
+	m_beam->SetFieldFunction(std::bind(&Solver::GetField2, m_solver,
+		std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 }
 
 SimuControl::~SimuControl()
@@ -32,10 +39,6 @@ bool SimuControl::MeshFromFile(const std::string& filepath)
 
 bool SimuControl::Prepare()
 {
-	// set beam stopping function
-	m_beam->SetStoppingFunction(std::bind(&SimuControl::BeamShouldStop, this,
-		std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-
 	// assign material data
 	Material air, glass;
 	air.epsilon = 1;
@@ -102,6 +105,10 @@ int SimuControl::Run()
 
 bool SimuControl::BeamShouldStop(double x, double y, double z) const
 {
+	// TODO
+	// out of bounds check
+
+
 	// get element index
 	auto elemIndex = m_mesh->FindElementByCoords(x, y, z);
 	// get its physical tags

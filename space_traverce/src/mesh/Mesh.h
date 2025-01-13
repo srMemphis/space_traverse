@@ -14,40 +14,42 @@ public:
 	Mesh();
 	~Mesh();
 
-	// initialize mesh data from file
-	bool FromFile(std::string filepath);
+	// modifiers
+	bool FromFile(std::string filepath); 	// initialize mesh data from file
+	bool BuildTopologyData();
+	void Clear();
 
 	// getters
 	const std::vector<ETriangle>& GetSurfElements() const;
 	const std::vector<ETetrahedron>& GetBulkElements() const;
 	const std::vector<Node>& GetNodes() const;
 	const std::map<int, Volume>& GetVolumes() const;
-	const std::map<int, Surface> GetSurfaces() const;
+	const std::map<int, Surface>& GetSurfaces() const;
+	const std::vector<int>& GetPhisicalTagsOfTetrahedron(size_t index) const;
 
 	const ETriangle& GetTriangle(size_t index) const;
 	const ETetrahedron& GetTetrahedron(size_t index) const;
 	const Node& GetNode(size_t index) const;
 
 	// stats
-	const uint32_t MaxTetraAtNode() const;
-	const double GetVolumeOfTetrahedron(size_t index) const;
-	const double GetVolumeOfVolume(const std::string name) const;
+	uint32_t MaxTetraAtNode() const;
+	double GetVolumeOfTetrahedron(size_t index) const;
+	double GetVolumeOfVolume(const std::string name) const;
 
 	// utils
 	int NameToTag(const std::string& name) const;	// physical name to tag
 	const std::string& TagToName(int tag) const;	// physical tag to name
-	const std::vector<double> GetNodesX() const;
-	const std::vector<double> GetNodesY() const;
-	const std::vector<double> GetNodesZ() const;
-
-	const std::vector<int>& GetPhisicalTagsOfTetrahedron(size_t index) const;
+	std::vector<double> GetNodesX() const;			// creates vector of node coordinates
+	std::vector<double> GetNodesY() const;
+	std::vector<double> GetNodesZ() const;
+	bool IsInBounds(double x, double y, double z) const;						// checks if point is inside biggest bounding box 
+	
 
 	// find element by traversing topology tree
 	// returns element index
 	int64_t FindElementByCoords(double x, double y, double z) const;
 
-	bool BuildTopologyData();
-	void Clear();
+
 
 private:
 	std::map<std::string, PhisicalName> m_PhisicalNames;  // mapped by name

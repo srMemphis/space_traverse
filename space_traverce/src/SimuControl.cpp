@@ -105,9 +105,11 @@ int SimuControl::Run()
 
 bool SimuControl::BeamShouldStop(double x, double y, double z) const
 {
-	// TODO
 	// out of bounds check
-
+	if (!m_mesh->IsInBounds(x, y, z))
+	{
+		return false;
+	}
 
 	// get element index
 	auto elemIndex = m_mesh->FindElementByCoords(x, y, z);

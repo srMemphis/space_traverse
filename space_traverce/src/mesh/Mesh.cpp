@@ -81,7 +81,7 @@ const std::map<int, Volume>& Mesh::GetVolumes() const
 	return m_volumes;
 }
 
-const std::map<int, Surface> Mesh::GetSurfaces() const
+const std::map<int, Surface>& Mesh::GetSurfaces() const
 {
 	return m_surfaces;
 }
@@ -101,7 +101,7 @@ const Node& Mesh::GetNode(size_t index) const
 	return m_Nodes.at(index);
 }
 
-const uint32_t Mesh::MaxTetraAtNode() const
+uint32_t Mesh::MaxTetraAtNode() const
 {
 	std::vector<uint16_t> histogram(m_Nodes.size(), 0);
 
@@ -116,7 +116,7 @@ const uint32_t Mesh::MaxTetraAtNode() const
 	return *std::max_element(histogram.begin(), histogram.end());
 }
 
-const double Mesh::GetVolumeOfTetrahedron(size_t index) const
+double Mesh::GetVolumeOfTetrahedron(size_t index) const
 {
 	auto& tetra = m_bulkElements.at(index);
 	Eigen::Matrix3d jacob(
@@ -129,7 +129,7 @@ const double Mesh::GetVolumeOfTetrahedron(size_t index) const
 	return volume;
 }
 
-const double Mesh::GetVolumeOfVolume(const std::string name) const
+double Mesh::GetVolumeOfVolume(const std::string name) const
 {
 	double result = 0;
 
@@ -181,7 +181,7 @@ const std::string& Mesh::TagToName(int tag) const
 	return "";
 }
 
-const std::vector<double> Mesh::GetNodesX() const
+std::vector<double> Mesh::GetNodesX() const
 {
 	std::vector<double> v;
 	v.reserve(m_Nodes.size());
@@ -194,7 +194,7 @@ const std::vector<double> Mesh::GetNodesX() const
 	return v;
 }
 
-const std::vector<double> Mesh::GetNodesY() const
+std::vector<double> Mesh::GetNodesY() const
 {
 	std::vector<double> v;
 	v.reserve(m_Nodes.size());
@@ -207,7 +207,7 @@ const std::vector<double> Mesh::GetNodesY() const
 	return v;
 }
 
-const std::vector<double> Mesh::GetNodesZ() const
+std::vector<double> Mesh::GetNodesZ() const
 {
 	std::vector<double> v;
 	v.reserve(m_Nodes.size());
@@ -218,6 +218,11 @@ const std::vector<double> Mesh::GetNodesZ() const
 	}
 
 	return v;
+}
+
+bool Mesh::IsInBounds(double x, double y, double z) const
+{
+	return m_topologyTree.IsInBounds(x,y,z);
 }
 
 const std::vector<int>& Mesh::GetPhisicalTagsOfTetrahedron(size_t index) const
@@ -266,7 +271,7 @@ int64_t Mesh::FindElementByCoords(double x, double y, double z) const
 	if (candidates.empty())
 	{
 		// point is outside of the geometry
-		LOG_WARN("Point is outside of the geometry");
+		LOG_ERROR("Point is outside of the geometry");
 		return -1;
 	}
 

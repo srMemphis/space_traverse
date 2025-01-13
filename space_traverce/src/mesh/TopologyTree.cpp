@@ -74,12 +74,12 @@ bool TopologyTree::GenerateData(const std::map<int, Volume>& volumes, const std:
 
 const std::vector<size_t>& TopologyTree::Find(double x, double y, double z) const
 {
-	
 	// check if point is inside bounding box
-	if (!m_topologyTree.at(0).boundBox.Contains(x, y, z))
+	if (!IsInBound(x, y, z))
 	{
 		// returns empty vector
-		return std::vector<size_t>();
+		LOG_ERROR("Looking for point outside of the search tree!");
+		return m_emptyVector;
 	}
 
 	// find node that contains elements
@@ -103,6 +103,12 @@ const std::vector<size_t>& TopologyTree::Find(double x, double y, double z) cons
 
 	// return list of elements
 	return m_topologyTree.at(currTreeNode).elements;
+}
+
+bool TopologyTree::IsInBounds(double x, double y, double z) const
+{
+	// checking root node bounding box for point (x,y,z)
+	return m_topologyTree.at(0).boundBox.Contains(x, y, z);
 }
 
 const uint32_t TopologyTree::MaxTetraAtNode() const

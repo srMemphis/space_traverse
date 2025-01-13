@@ -362,7 +362,7 @@ bool Solver::Solve()
 		m_u(j) = m_uBound(m_jIndex.GetPositionOf(j));
 	}
 
-
+	// -------------------- when using avaraged field -------------------------------
 	// calc mean of field at nodes
 	//
 	m_field.resize(m_u.size());

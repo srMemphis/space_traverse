@@ -239,6 +239,7 @@ const std::vector<int>& Mesh::GetPhisicalTagsOfTetrahedron(size_t index) const
 bool Mesh::BuildTopologyData()
 {
 	TIME_FUNCTION();
+	LOG_TRACE("Building topology...");
 	m_topologyTree.Clear();
 
 	if (!m_topologyTree.GenerateData(m_volumes, m_bulkElements, m_Nodes))

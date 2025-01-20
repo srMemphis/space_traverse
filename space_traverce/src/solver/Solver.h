@@ -26,7 +26,7 @@ public:
 	void AssembleRight();
 	bool Solve();
 
-	bool SaveSolutionToFile(const std::string& filepath);
+	bool SaveSolutionToFile(ToMatlab& file);
 
 	Eigen::Vector3d GetField(double x, double y, double z);
 	Eigen::Vector3d GetField2(double x, double y, double z);
@@ -46,6 +46,4 @@ private:
 	UnsignedRange m_jIndex;							// j - boundary node index
 
 	std::vector<Eigen::Vector3d> m_field;						// mean of electric field at nodes
-
-	ToMatlab m_matlab;
 };

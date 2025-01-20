@@ -75,7 +75,7 @@ bool TopologyTree::GenerateData(const std::map<int, Volume>& volumes, const std:
 const std::vector<size_t>& TopologyTree::Find(double x, double y, double z) const
 {
 	// check if point is inside bounding box
-	if (!IsInBound(x, y, z))
+	if (!IsInBounds(x, y, z))
 	{
 		// returns empty vector
 		LOG_ERROR("Looking for point outside of the search tree!");

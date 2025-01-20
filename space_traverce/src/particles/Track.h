@@ -17,13 +17,21 @@ public:
 	double GetTimestep() const;
 
 	// modifiers
-	void SetStepSize(double step);
+
+	// set this as initial values before macking step
+	void SetStepSize(double step);							// step can be changed after each MakeStep() call
 	void SetStartingPosition(Eigen::Vector3d point);
 	void SetStartingVelocity(Eigen::Vector3d velo);
-	void SetAcceleration(Eigen::Vector3d accel);
+	void SetAcceleration(Eigen::Vector3d accel);			// use this to set starting value and to set new values after each MakeStep() call
+
+	// make step
+	const Eigen::Vector3d& MakeStep();
+
+	// calc new acceleration and set it before calc new velocity
 	void CalcNewVelocity();
 
-	const Eigen::Vector3d& MakeStep();
+	// clear all points exept first
+	void ResetToStartingPosition();
 
 private:
 	double m_stepSize;		// fixed distance the particle will fly

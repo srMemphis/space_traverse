@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -163,10 +163,10 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\mesh\Mesh.cpp" />
     <ClCompile Include="src\SimuControl.cpp" />
-    <ClCompile Include="src\solver\Beam.cpp" />
+    <ClCompile Include="src\particles\Beam.cpp" />
     <ClCompile Include="src\solver\Solver.cpp" />
     <ClCompile Include="src\mesh\TopologyTree.cpp" />
-    <ClCompile Include="src\solver\Track.cpp" />
+    <ClCompile Include="src\particles\Track.cpp" />
     <ClCompile Include="src\utils\Timer.cpp" />
     <ClCompile Include="src\utils\ToMatlab.cpp" />
     <ClCompile Include="src\utils\UnsignedRange.cpp" />
@@ -174,7 +174,7 @@
   <ItemGroup>
     <ClInclude Include="src\debug\Log.h" />
     <ClInclude Include="src\SimuControl.h" />
-    <ClInclude Include="src\solver\Beam.h" />
+    <ClInclude Include="src\particles\Beam.h" />
     <ClInclude Include="src\solver\Material.h" />
     <ClInclude Include="src\mesh\Box.h" />
     <ClInclude Include="src\mesh\ElementTypes.h" />
@@ -182,8 +182,9 @@
     <ClInclude Include="src\mesh\Mesh.h" />
     <ClInclude Include="src\solver\Solver.h" />
     <ClInclude Include="src\mesh\TopologyTree.h" />
-    <ClInclude Include="src\solver\Track.h" />
+    <ClInclude Include="src\particles\Track.h" />
     <ClInclude Include="src\utils\Geometry.h" />
+    <ClInclude Include="src\utils\PhysConstants.h" />
     <ClInclude Include="src\utils\Timer.h" />
     <ClInclude Include="src\utils\ToMatlab.h" />
     <ClInclude Include="src\utils\Types.h" />

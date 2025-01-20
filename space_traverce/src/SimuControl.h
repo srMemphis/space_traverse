@@ -3,7 +3,7 @@
 
 #include "mesh/Mesh.h"
 #include "solver/Solver.h"
-#include "solver/Beam.h"
+#include "particles/Beam.h"
 
 class SimuControl
 {
@@ -12,9 +12,9 @@ public:
 	~SimuControl();
 
 	bool MeshFromFile(const std::string& filepath);
-	bool Prepare();
-
 	bool AddStoppingVolume(const std::string& name);
+
+	bool Prepare();
 
 	int Run();
 
@@ -26,4 +26,7 @@ private:
 	std::shared_ptr<Beam> m_beam;
 
 	std::vector<int> m_stoppingVolumes;		// tags of phys names electrons should stop in
+
+
+	ToMatlab m_matlab;			// matlab file IO
 };

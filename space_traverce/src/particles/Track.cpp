@@ -6,7 +6,7 @@
 #include <algorithm>
 
 Track::Track()
-	:m_stepSize(1), m_dt(0), m_velo(0,0), m_accel(0,0)
+	:m_stepSize(1), m_dt(0)
 {
 }
 
@@ -48,6 +48,8 @@ const Eigen::Vector3d& Track::MakeStep()
 {
 	// Verlet velocity algorythm
 
+
+	// TODO: fix verlet algoritm. velosity and acceleration are incorrect
 	// get direction of particle
 	Eigen::Vector3d dir = m_velo.first + 0.5 * m_accel.first;
 	
@@ -56,7 +58,8 @@ const Eigen::Vector3d& Track::MakeStep()
 	dir *= m_stepSize;
 
 	// get new point
-	m_points.push_back(m_points.back() + dir);
+	auto& oldpoint = GetLastPoint();
+	m_points.push_back(oldpoint + dir);
 
 	// calc dt
 	m_dt = m_stepSize / m_velo.first.norm();
@@ -66,6 +69,11 @@ const Eigen::Vector3d& Track::MakeStep()
 
 void Track::SetStartingPosition(Eigen::Vector3d point)
 {
+	if (m_points.size() == 0)
+	{
+		m_points.resize(1);
+	}
+
 	m_points.at(0) = point;
 }
 
@@ -79,6 +87,11 @@ void Track::CalcNewVelocity()
 	m_velo.first = m_velo.second + 0.5 * m_dt * (m_accel.first + m_accel.second);
 
 	std::swap(m_velo.first, m_velo.second);
+}
+
+void Track::ResetToStartingPosition()
+{
+	m_points.resize(1);
 }
 
 void Track::SetAcceleration(Eigen::Vector3d accel)

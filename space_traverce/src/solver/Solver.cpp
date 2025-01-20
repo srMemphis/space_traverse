@@ -125,13 +125,11 @@ bool Solver::SetBoundaryValue(const std::string& name, double value)
 	return found;
 }
 
-bool Solver::SaveSolutionToFile(const std::string& filepath)
+bool Solver::SaveSolutionToFile(ToMatlab& file)
 {
 	TIME_FUNCTION();
 
 	bool res = false;
-	
-	m_matlab.OpenFile(filepath);
 
 	int N = 1000;
 	std::vector<double> field;
@@ -142,18 +140,16 @@ bool Solver::SaveSolutionToFile(const std::string& filepath)
 		field.push_back(GetField2(x[i], 0, 0).norm());
 	}
 
-	m_matlab.Write(field, "field");
-	m_matlab.Write(x, "xField");
+	file.Write(field, "field");
+	file.Write(x, "xField");
 
-	if(m_matlab.Write(m_u, "uPlus") &&
-		m_matlab.Write(m_mesh->GetNodesX(), "xPlus") &&
-		m_matlab.Write(m_mesh->GetNodesY(), "yPlus") &&
-		m_matlab.Write(m_mesh->GetNodesZ(), "zPlus")) 
+	if(file.Write(m_u, "uPlus") &&
+		file.Write(m_mesh->GetNodesX(), "xPlus") &&
+		file.Write(m_mesh->GetNodesY(), "yPlus") &&
+		file.Write(m_mesh->GetNodesZ(), "zPlus"))
 	{
 		res = true;
 	}
-	
-	m_matlab.Close();
 
 	return res;
 }

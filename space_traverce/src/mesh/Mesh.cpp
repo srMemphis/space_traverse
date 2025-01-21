@@ -272,7 +272,7 @@ int64_t Mesh::FindElementByCoords(double x, double y, double z) const
 	if (candidates.empty())
 	{
 		// point is outside of the geometry
-		LOG_ERROR("Point is outside of the geometry");
+		LOG_ERROR("Point is outside of the geometry: ({},{},{})", x, y, z);
 		return -1;
 	}
 
@@ -310,9 +310,9 @@ int64_t Mesh::FindElementByCoords(double x, double y, double z) const
 	}
 
 	// failed to find tetrahedron in the candidate list
-	// should never happen
-	// critical error
-	LOG_CRITICAL("Can not find tetrahedron that contains the point");
+	// may happen if the point is inside of the bounding box but outside of the edge tetrahedrons
+	// not crititcal if the algorythm is doing OK. Critical otherwise
+	LOG_ERROR("Can not find tetrahedron that contains the point: ({},{},{})", x,y,z);
 	return -2;
 }
 

@@ -133,6 +133,7 @@ int SimuControl::Run()
 bool SimuControl::BeamShouldStop(double x, double y, double z) const
 {
 	// out of bounds check
+	// TODO: THis is failing! Consider shunking the bounding box!
 	if (!m_mesh->IsInBounds(x, y, z))
 	{
 		return false;

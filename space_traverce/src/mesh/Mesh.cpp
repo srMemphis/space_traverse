@@ -239,7 +239,7 @@ const std::vector<int>& Mesh::GetPhisicalTagsOfTetrahedron(size_t index) const
 bool Mesh::BuildTopologyData()
 {
 	PROFILE_FUNCTION();
-	LOG_TRACE("Building topology...");
+
 	m_topologyTree.Clear();
 
 	if (!m_topologyTree.GenerateData(m_volumes, m_bulkElements, m_Nodes))
@@ -751,6 +751,8 @@ bool Mesh::ReadInterpolationScheme(std::ifstream& geofile)
 
 void Mesh::FillEntitiesWithElements()
 {
+	PROFILE_FUNCTION();
+
 	for (auto& surf : m_surfaces)
 	{
 		// assign a span of elements to the entity
@@ -768,6 +770,8 @@ void Mesh::FillEntitiesWithElements()
 
 void Mesh::GenerateGradientVectors()
 {
+	PROFILE_FUNCTION();
+
 	m_GradientVectors.reserve(m_bulkElements.size());
 
 	//#pragma omp parallel for

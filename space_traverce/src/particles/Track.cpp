@@ -1,6 +1,7 @@
 #include "Track.h"
 
 #include "debug/Log.h"
+#include "debug/Profiler.h"
 
 #include <cmath>
 #include <algorithm>
@@ -46,6 +47,7 @@ void Track::SetStepSize(double step)
 
 const Eigen::Vector3d& Track::MakeStep()
 {
+
 	// Verlet velocity algorythm
 
 	// get direction of particle

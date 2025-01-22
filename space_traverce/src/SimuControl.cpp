@@ -9,6 +9,8 @@
 
 SimuControl::SimuControl()
 {
+	PROFILE_FUNCTION();
+
 	m_mesh = std::make_shared<Mesh>();
 	m_solver = std::make_shared<Solver>();
 	m_beam = std::make_shared <Beam> ();
@@ -22,11 +24,15 @@ SimuControl::~SimuControl()
 
 bool SimuControl::MeshFromFile(const std::string& filepath)
 {
+	PROFILE_FUNCTION();
+	LOG_TRACE("Reading mesh...");
+
 	bool result = m_mesh->FromFile(filepath);
 	if (!result)
 		return false;
 
 	// build binary search tree
+	LOG_TRACE("Building topology data...");
 	m_mesh->BuildTopologyData();
 
 	m_solver->SetMesh(m_mesh);
@@ -54,7 +60,7 @@ bool SimuControl::Prepare()
 	}
 
 	// initial charge value
-	double charge = 1;
+	double charge = 1000;
 	double chargeDensity = charge / m_mesh->GetVolumeOfVolume("Metall");
 	m_solver->SetInitialValue("Metall", chargeDensity);
 
@@ -67,12 +73,14 @@ bool SimuControl::Prepare()
 	electron.E0 = 0.511e6;		//eV
 
 	m_beam->SetParticle(electron);
-	m_beam->SetEnergy(10000); // eV
-	m_beam->SetCenterPosition(0, 0, 0);
+	m_beam->SetEnergy(10); // eV
+	m_beam->SetCenterPosition(0, 0, -0.4);
 	m_beam->SetDirection(0,0,1);
 	m_beam->SetRadius(0.1);
 
 	m_beam->GeneratePrimaryPosition();
+
+	AddStoppingVolume("Metall");
 
 	// set beam stopping and field functions
 	m_beam->SetStoppingFunction(std::bind(&SimuControl::BeamShouldStop, this,
@@ -98,25 +106,29 @@ int SimuControl::Run()
 	PROFILE_FUNCTION();
 	LOG_TRACE("Running simulation...");
 	
+	LOG_TRACE("Assembling ...");
 	m_solver->AssembleRight();
 
 	// solve systems
+	LOG_TRACE("Solving...");
 	if (!m_solver->Solve())
 	{
 		LOG_ERROR("Solving failed");
 		return 2;
 	}
 
+	// propagate particles in geometry
+	LOG_TRACE("Propagating Tracks");
+	m_beam->Run();
+	
 	// save solution to file
+	LOG_TRACE("Saving solution to file...");
 	if (!m_solver->SaveSolutionToFile(m_matlab))
 	{
 		LOG_ERROR("failed to save solution to file");
 		return 3;
 	}
 
-	// propagate particles in geometry
-	m_beam->Run();
-	
 	if (!m_beam->SaveTracksToFile(m_matlab))
 	{
 		LOG_ERROR("failed to save tracks to file");

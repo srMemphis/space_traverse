@@ -44,8 +44,10 @@ void Beam::SetDirection(double x, double y, double z)
 
 void Beam::GeneratePrimaryPosition()
 {
+	PROFILE_FUNCTION();
+
 	// for now this is the only option
-	GenerateUniformDisk(30);
+	GenerateUniformDisk(4);
 }
 
 void Beam::SetParticle(Particle p)
@@ -177,6 +179,7 @@ void Beam::GenerateUniformDisk(uint32_t circles)
 void Beam::Run()
 {
 	PROFILE_FUNCTION();
+
 	// initial speed value
 	double speed = phys::c * std::sqrt(1 - 1 / std::pow((m_energy + m_particle.E0) / m_particle.E0, 2));
 
@@ -185,6 +188,7 @@ void Beam::Run()
 	// setting initial values
 	for (int i = 0; i < m_tracks.size(); i++)
 	{
+		
 		auto& track = m_tracks.at(i);
 
 		// TODO: create api to set this from outside. 
@@ -196,8 +200,11 @@ void Beam::Run()
 	}
 
 	// TODO: consider parallel for
+	#pragma omp parallel for num_threads(3)
 	for (int i = 0; i < m_tracks.size(); i++)
 	{
+		PROFILE_SCOPE("ONE TRACK RUN");
+
 		auto& track = m_tracks.at(i);
 		while (true)
 		{

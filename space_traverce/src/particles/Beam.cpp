@@ -4,6 +4,7 @@
 #include <Eigen/Geometry>
 
 #include "utils/PhysConstants.h"
+#include "debug/Profiler.h"
 #include "debug/Log.h"
 
 Beam::Beam()
@@ -44,7 +45,7 @@ void Beam::SetDirection(double x, double y, double z)
 void Beam::GeneratePrimaryPosition()
 {
 	// for now this is the only option
-	GenerateUniformDisk(3);
+	GenerateUniformDisk(30);
 }
 
 void Beam::SetParticle(Particle p)
@@ -87,7 +88,7 @@ bool Beam::SaveTracksToFile(ToMatlab& file)
 		auto size = points.size();
 
 		// reserve for x y and z
-		coords.reserve(size*3);
+		coords.resize(size*3);
 		
 		// writing column major matrix as vector
 		for (size_t i = 0; i < size; i++)
@@ -175,6 +176,7 @@ void Beam::GenerateUniformDisk(uint32_t circles)
 
 void Beam::Run()
 {
+	PROFILE_FUNCTION();
 	// initial speed value
 	double speed = phys::c * std::sqrt(1 - 1 / std::pow((m_energy + m_particle.E0) / m_particle.E0, 2));
 
@@ -186,7 +188,7 @@ void Beam::Run()
 		auto& track = m_tracks.at(i);
 
 		// TODO: create api to set this from outside. 
-		track.SetStepSize(0.01);
+		track.SetStepSize(0.001);
 
 		track.SetStartingVelocity(m_direction * speed);
 		auto field = m_fieldFunction(track.GetLastPoint().x(), track.GetLastPoint().y(), track.GetLastPoint().z());

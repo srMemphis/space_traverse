@@ -1,7 +1,7 @@
 #include "SimuControl.h"
 
 #include "debug/Log.h"
-#include "utils/Timer.h"
+#include "debug/Profiler.h"
 #include "utils/PhysConstants.h"
 
 #include <algorithm>
@@ -36,7 +36,7 @@ bool SimuControl::MeshFromFile(const std::string& filepath)
 
 bool SimuControl::Prepare()
 {
-	TIME_FUNCTION();
+	PROFILE_FUNCTION();
 	LOG_TRACE("Initializing simulation parameters...");
 
 	// assign material data
@@ -95,7 +95,7 @@ bool SimuControl::AddStoppingVolume(const std::string& name)
 
 int SimuControl::Run()
 {
-	TIME_FUNCTION();
+	PROFILE_FUNCTION();
 	LOG_TRACE("Running simulation...");
 	
 	m_solver->AssembleRight();
@@ -132,15 +132,16 @@ int SimuControl::Run()
 
 bool SimuControl::BeamShouldStop(double x, double y, double z) const
 {
-	// out of bounds check
-	// TODO: THis is failing! Consider shunking the bounding box!
-	if (!m_mesh->IsInBounds(x, y, z))
-	{
-		return false;
-	}
-
+	// TODO: Consider narrow boundary checking to avoid infinite warnings
 	// get element index
 	auto elemIndex = m_mesh->FindElementByCoords(x, y, z);
+
+	if (elemIndex < 0 )
+	{
+		// we are outside
+		return true;
+	}
+
 	// get its physical tags
 	auto& tags = m_mesh->GetPhisicalTagsOfTetrahedron(elemIndex);
 

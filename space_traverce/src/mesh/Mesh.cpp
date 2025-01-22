@@ -1,6 +1,6 @@
 #include "mesh/Mesh.h"
 
-#include "utils/Timer.h"
+#include "debug/Profiler.h"
 #include "utils/Vec3.h"
 #include "utils/Geometry.h"
 #include "debug/Log.h"
@@ -22,7 +22,7 @@ Mesh::~Mesh()
 
 bool Mesh::FromFile(std::string filepath)
 {
-	TIME_FUNCTION();
+	PROFILE_FUNCTION();
 
 	std::ifstream geofile(filepath);
 	if (!geofile.is_open())
@@ -238,7 +238,7 @@ const std::vector<int>& Mesh::GetPhisicalTagsOfTetrahedron(size_t index) const
 
 bool Mesh::BuildTopologyData()
 {
-	TIME_FUNCTION();
+	PROFILE_FUNCTION();
 	LOG_TRACE("Building topology...");
 	m_topologyTree.Clear();
 

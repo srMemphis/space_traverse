@@ -48,7 +48,6 @@ const Eigen::Vector3d& Track::MakeStep()
 {
 	// Verlet velocity algorythm
 
-	// TODO: fix verlet algoritm. velosity and acceleration are incorrect
 	// get direction of particle
 	Eigen::Vector3d dir = m_velo.first + 0.5 * m_accel.first;
 	

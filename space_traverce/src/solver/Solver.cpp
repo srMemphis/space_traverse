@@ -1,6 +1,6 @@
 #include "solver/Solver.h"
 
-#include "utils/Timer.h"
+#include "debug/Profiler.h"
 #include "debug/Log.h"
 #include "utils/Geometry.h"
 
@@ -49,7 +49,7 @@ void Solver::AssignElementChargeDensity(size_t index, double value)
 
 bool Solver::SetInitialValue(const std::string& volumeName, double value)
 {
-	TIME_FUNCTION();
+	PROFILE_FUNCTION();
 
 	bool isFound = false;
 
@@ -76,7 +76,7 @@ bool Solver::SetInitialValue(const std::string& volumeName, double value)
 // TODO: This will work only for one boundary. Fix if needed
 bool Solver::SetBoundaryValue(const std::string& name, double value)
 {
-	TIME_FUNCTION();
+	PROFILE_FUNCTION();
 
 	auto physTag = m_mesh->NameToTag(name);
 	bool found = false;
@@ -127,7 +127,7 @@ bool Solver::SetBoundaryValue(const std::string& name, double value)
 
 bool Solver::SaveSolutionToFile(ToMatlab& file)
 {
-	TIME_FUNCTION();
+	PROFILE_FUNCTION();
 
 	bool res = false;
 
@@ -204,7 +204,7 @@ Eigen::Vector3d Solver::GetField2(double x, double y, double z)
 
 void Solver::AssembleLeft()
 {
-	TIME_FUNCTION();
+	PROFILE_FUNCTION();
 
 	auto& nodes = m_mesh->GetNodes();
 	size_t numNodes = nodes.size();
@@ -284,7 +284,7 @@ void Solver::AssembleLeft()
 
 void Solver::AssembleRight()
 {
-	TIME_FUNCTION();
+	PROFILE_FUNCTION();
 
 	auto& nodes = m_mesh->GetNodes();
 
@@ -321,7 +321,7 @@ void Solver::AssembleRight()
 
 bool Solver::Solve()
 {
-	TIME_FUNCTION();
+	PROFILE_FUNCTION();
 
 	// iterative solver
 	Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::Lower | Eigen::Upper> cg;

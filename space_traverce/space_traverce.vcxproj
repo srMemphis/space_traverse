@@ -167,7 +167,7 @@
     <ClCompile Include="src\solver\Solver.cpp" />
     <ClCompile Include="src\mesh\TopologyTree.cpp" />
     <ClCompile Include="src\particles\Track.cpp" />
-    <ClCompile Include="src\utils\Timer.cpp" />
+    <ClCompile Include="src\debug\Profiler.cpp" />
     <ClCompile Include="src\utils\ToMatlab.cpp" />
     <ClCompile Include="src\utils\UnsignedRange.cpp" />
   </ItemGroup>
@@ -185,7 +185,7 @@
     <ClInclude Include="src\particles\Track.h" />
     <ClInclude Include="src\utils\Geometry.h" />
     <ClInclude Include="src\utils\PhysConstants.h" />
-    <ClInclude Include="src\utils\Timer.h" />
+    <ClInclude Include="src\debug\Profiler.h" />
     <ClInclude Include="src\utils\ToMatlab.h" />
     <ClInclude Include="src\utils\Types.h" />
     <ClInclude Include="src\utils\UnsignedRange.h" />

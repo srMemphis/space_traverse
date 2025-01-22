@@ -1,11 +1,13 @@
 #include "SimuControl.h"
 #include "debug/Log.h"
+#include "debug/Profiler.h"
 
 #include <string>
 
 int main()
 {
 	Log::Init("simulog.log");
+	PROFILE_BEGIN_SESSION("profile", "profile.json");
 
 	SimuControl simulation;
 
@@ -19,6 +21,8 @@ int main()
 		return 1;
 	
 	auto res = simulation.Run();
+
+	PROFILE_END_SESSION();
 
 	return res;
 }

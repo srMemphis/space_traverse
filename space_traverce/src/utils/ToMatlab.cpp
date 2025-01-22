@@ -93,7 +93,7 @@ bool ToMatlab::WriteCell(const std::vector<double>& vec)
 		return false;
 	}
 
-	TinyMATWriter_writeContainerAsColumn(m_file, nullptr, vec);
+	TinyMATWriter_writeContainerAsColumn(m_file, "", vec);
 }
 
 bool ToMatlab::WriteCellAsMatrix(const std::vector<double>& vec, uint32_t rows, uint32_t cols)
@@ -105,7 +105,7 @@ bool ToMatlab::WriteCellAsMatrix(const std::vector<double>& vec, uint32_t rows, 
 		return false;
 	}
 
-	TinyMATWriter_writeMatrix2D_colmajor(m_file, nullptr, vec.data(), cols, rows);
+	TinyMATWriter_writeMatrix2D_colmajor(m_file, "", vec.data(), cols, rows);
 }
 
 void ToMatlab::Close()

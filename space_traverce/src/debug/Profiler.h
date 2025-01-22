@@ -3,6 +3,8 @@
 #include <ctime>
 #include <string>
 #include <fstream>
+#include <thread>
+#include <mutex>
 
 struct ProfileResult
 {
@@ -62,6 +64,12 @@ private:
 	bool m_Stopped;
 };
 
+template <size_t N>
+struct ChangeResult
+{
+	char Data[N];
+};
+
 template <size_t N, size_t K>
 constexpr auto CleanupOutputString(const char(&expr)[N], const char(&remove)[K])
 {
@@ -101,7 +109,7 @@ constexpr auto CleanupOutputString(const char(&expr)[N], const char(&remove)[K])
 #define FUNC_SIG "HZ_FUNC_SIG unknown!"
 #endif
 
-
+#define PROFILER
 #ifdef PROFILER
 
 	#define PROFILE_BEGIN_SESSION(name, filepath) Profiler::Get().BeginSession(name, filepath);

@@ -199,7 +199,7 @@ void Beam::Run()
 		track.SetAcceleration(field * m_particle.charge);
 	}
 
-	// TODO: consider parallel for
+
 	#pragma omp parallel for num_threads(3)
 	for (int i = 0; i < m_tracks.size(); i++)
 	{

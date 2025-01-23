@@ -3,6 +3,9 @@
 #include "mesh/GJK.h"
 #include "debug/Log.h"
 
+#include <algorithm>
+#include <execution>
+
 TopologyTree::TopologyTree()
 	: m_maxTetrahedronsAtNode(0)
 {
@@ -149,8 +152,12 @@ void TopologyTree::BuildTopologyRecursive(size_t parentID, const std::vector<ETe
 	// split parent bounding box into two
 	parent.boundBox.Split(left.boundBox, right.boundBox);
 
+	size_t numelems = parent.elements.size();
+
 	// search for elements in new boxes
 	std::vector<size_t> nodesLeft, nodesRight; // unique nodes in the box
+	nodesLeft.reserve(numelems*4);
+	nodesRight.reserve(numelems*4);
 
 	for (auto index : parent.elements)
 	{
@@ -160,26 +167,22 @@ void TopologyTree::BuildTopologyRecursive(size_t parentID, const std::vector<ETe
 		// left box.  check every tetrahedron node
 		if (left.boundBox.Contains(nodes.at(element.node[0]).x, nodes.at(element.node[0]).y, nodes.at(element.node[0]).z))
 		{
-			if (std::find(nodesLeft.begin(), nodesLeft.end(), element.node[0]) == nodesLeft.end()) // if unique
-				nodesLeft.push_back(element.node[0]);
+			nodesLeft.push_back(element.node[0]);
 			contains = true;
 		}
 		if (left.boundBox.Contains(nodes.at(element.node[1]).x, nodes.at(element.node[1]).y, nodes.at(element.node[1]).z))
 		{
-			if (std::find(nodesLeft.begin(), nodesLeft.end(), element.node[1]) == nodesLeft.end()) // if unique
-				nodesLeft.push_back(element.node[1]);
+			nodesLeft.push_back(element.node[1]);
 			contains = true;
 		}
 		if (left.boundBox.Contains(nodes.at(element.node[2]).x, nodes.at(element.node[2]).y, nodes.at(element.node[2]).z))
 		{
-			if (std::find(nodesLeft.begin(), nodesLeft.end(), element.node[2]) == nodesLeft.end()) // if unique
-				nodesLeft.push_back(element.node[2]);
+			nodesLeft.push_back(element.node[2]);
 			contains = true;
 		}
 		if (left.boundBox.Contains(nodes.at(element.node[3]).x, nodes.at(element.node[3]).y, nodes.at(element.node[3]).z))
 		{
-			if (std::find(nodesLeft.begin(), nodesLeft.end(), element.node[3]) == nodesLeft.end()) // if unique
-				nodesLeft.push_back(element.node[3]);
+			nodesLeft.push_back(element.node[3]);
 			contains = true;
 		}
 
@@ -195,26 +198,22 @@ void TopologyTree::BuildTopologyRecursive(size_t parentID, const std::vector<ETe
 
 		if (right.boundBox.Contains(nodes.at(element.node[0]).x, nodes.at(element.node[0]).y, nodes.at(element.node[0]).z))
 		{
-			if (std::find(nodesRight.begin(), nodesRight.end(), element.node[0]) == nodesRight.end()) // if unique
-				nodesRight.push_back(element.node[0]);
+			nodesRight.push_back(element.node[0]);
 			contains = true;
 		}
 		if (right.boundBox.Contains(nodes.at(element.node[1]).x, nodes.at(element.node[1]).y, nodes.at(element.node[1]).z))
 		{
-			if (std::find(nodesRight.begin(), nodesRight.end(), element.node[1]) == nodesRight.end()) // if unique
-				nodesRight.push_back(element.node[1]);
+			nodesRight.push_back(element.node[1]);
 			contains = true;
 		}
 		if (right.boundBox.Contains(nodes.at(element.node[2]).x, nodes.at(element.node[2]).y, nodes.at(element.node[2]).z))
 		{
-			if (std::find(nodesRight.begin(), nodesRight.end(), element.node[2]) == nodesRight.end()) // if unique
-				nodesRight.push_back(element.node[2]);
+			nodesRight.push_back(element.node[2]);
 			contains = true;
 		}
 		if (right.boundBox.Contains(nodes.at(element.node[3]).x, nodes.at(element.node[3]).y, nodes.at(element.node[3]).z))
 		{
-			if (std::find(nodesRight.begin(), nodesRight.end(), element.node[3]) == nodesRight.end()) // if unique
-				nodesRight.push_back(element.node[3]);
+			nodesRight.push_back(element.node[3]);
 			contains = true;
 		}
 
@@ -233,20 +232,57 @@ void TopologyTree::BuildTopologyRecursive(size_t parentID, const std::vector<ETe
 	}
 
 	// propagate split if there is more than 1 node in the box
-	if (nodesLeft.size() > 1)
+	if (nodesLeft.size() < 2000)
 	{
+		std::sort(nodesLeft.begin(), nodesLeft.end());
+		if (std::distance(nodesLeft.begin(), std::unique(nodesLeft.begin(), nodesLeft.end())) > 1)
 		{
-			std::vector<size_t> tmp;
-			nodesLeft.swap(tmp);
+			{
+				std::vector<size_t> tmp;
+				nodesLeft.swap(tmp);
+			}
+			BuildTopologyRecursive(leftID, elements, nodes);
 		}
-		BuildTopologyRecursive(leftID, elements , nodes);
 	}
-	if (nodesRight.size() > 1)
+	else
 	{
+		std::sort(std::execution::par, nodesLeft.begin(), nodesLeft.end());
+		auto last = std::unique(std::execution::par, nodesLeft.begin(), nodesLeft.end());
+		if (std::distance(nodesLeft.begin(), last) > 1)
 		{
-			std::vector<size_t> tmp;
-			nodesRight.swap(tmp);
+			{
+				std::vector<size_t> tmp;
+				nodesLeft.swap(tmp);
+			}
+			BuildTopologyRecursive(leftID, elements, nodes);
 		}
-		BuildTopologyRecursive(rightID, elements, nodes);
+
 	}
+
+	if (nodesRight.size() < 2000)
+	{
+		std::sort(nodesRight.begin(), nodesRight.end());
+		if (std::distance(nodesRight.begin(), std::unique(nodesRight.begin(), nodesRight.end())) > 1)
+		{
+			{
+				std::vector<size_t> tmp;
+				nodesRight.swap(tmp);
+			}
+			BuildTopologyRecursive(rightID, elements, nodes);
+		}
+	}
+	else
+	{
+		std::sort(std::execution::par, nodesRight.begin(), nodesRight.end());
+		auto last = std::unique(std::execution::par, nodesRight.begin(), nodesRight.end());
+		if (std::distance(nodesRight.begin(), last) > 1)
+		{
+			{
+				std::vector<size_t> tmp;
+				nodesRight.swap(tmp);
+			}
+			BuildTopologyRecursive(rightID, elements, nodes);
+		}
+	}
+
 }

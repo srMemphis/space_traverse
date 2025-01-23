@@ -2,6 +2,9 @@
 #include "mesh/Box.h"
 #include "mesh/ElementTypes.h"
 #include "utils/Vec3.h"
+
+#include <Eigen/Dense>
+
 #include "debug/Log.h"
 
 #include <cmath>
@@ -23,18 +26,18 @@ public:
 	static bool Check(const Box& b, const ETetrahedron& t, const std::vector<Node>& nodes)
 	{
 		// prebuild data
-		std::array<Vec3, 8> m_box;
-		std::array<Vec3, 4> m_tet;
-		
-		m_box[0] = { b.xMin, b.yMin, b.zMin};
-		m_box[1] = { b.xMax, b.yMin, b.zMin};
-		m_box[2] = { b.xMax, b.yMax, b.zMin};
-		m_box[3] = { b.xMin, b.yMax, b.zMin};
+		std::array<Eigen::Vector3d, 8> m_box;
+		std::array<Eigen::Vector3d, 4> m_tet;
 
-		m_box[4] = { b.xMin, b.yMin, b.zMax};
-		m_box[5] = { b.xMax, b.yMin, b.zMax};
-		m_box[6] = { b.xMax, b.yMax, b.zMax};
-		m_box[7] = { b.xMin, b.yMax, b.zMax};
+		m_box[0] = { b.xMin, b.yMin, b.zMin };
+		m_box[1] = { b.xMax, b.yMin, b.zMin };
+		m_box[2] = { b.xMax, b.yMax, b.zMin };
+		m_box[3] = { b.xMin, b.yMax, b.zMin };
+
+		m_box[4] = { b.xMin, b.yMin, b.zMax };
+		m_box[5] = { b.xMax, b.yMin, b.zMax };
+		m_box[6] = { b.xMax, b.yMax, b.zMax };
+		m_box[7] = { b.xMin, b.yMax, b.zMax };
 
 		m_tet[0] = { nodes.at(t.node[0]).x, nodes.at(t.node[0]).y, nodes.at(t.node[0]).z };
 		m_tet[1] = { nodes.at(t.node[1]).x, nodes.at(t.node[1]).y, nodes.at(t.node[1]).z };
@@ -42,22 +45,22 @@ public:
 		m_tet[3] = { nodes.at(t.node[3]).x, nodes.at(t.node[3]).y, nodes.at(t.node[3]).z };
 
 		// box center
-		Vec3 centerB, centerT;
-		centerB.x = (b.xMax + b.xMin) / 2.0;
-		centerB.y = (b.yMax + b.yMin) / 2.0;
-		centerB.z = (b.zMax + b.zMin) / 2.0;
+		Eigen::Vector3d centerB, centerT;
+		centerB.x() = (b.xMax + b.xMin) / 2.0;
+		centerB.y() = (b.yMax + b.yMin) / 2.0;
+		centerB.z() = (b.zMax + b.zMin) / 2.0;
 
 		// tetrahedron center
-		centerT.x = (nodes.at(t.node[0]).x + nodes.at(t.node[1]).x + nodes.at(t.node[2]).x + nodes.at(t.node[3]).x)/4.0;
-		centerT.y = (nodes.at(t.node[0]).y + nodes.at(t.node[1]).y + nodes.at(t.node[2]).y + nodes.at(t.node[3]).y)/4.0;
-		centerT.z = (nodes.at(t.node[0]).z + nodes.at(t.node[1]).z + nodes.at(t.node[2]).z + nodes.at(t.node[3]).z)/4.0;
-		
+		centerT.x() = (nodes.at(t.node[0]).x + nodes.at(t.node[1]).x + nodes.at(t.node[2]).x + nodes.at(t.node[3]).x) / 4.0;
+		centerT.y() = (nodes.at(t.node[0]).y + nodes.at(t.node[1]).y + nodes.at(t.node[2]).y + nodes.at(t.node[3]).y) / 4.0;
+		centerT.z() = (nodes.at(t.node[0]).z + nodes.at(t.node[1]).z + nodes.at(t.node[2]).z + nodes.at(t.node[3]).z) / 4.0;
+
 		// center direction
-		Vec3 dir = (centerT - centerB);
+		Eigen::Vector3d dir = centerT - centerB;
 		dir.normalize();
 
 		// find first support point
-		std::vector<Vec3> m_simplex;
+		std::vector<Eigen::Vector3d> m_simplex;
 		m_simplex.reserve(4);
 
 		m_simplex.push_back(Support(m_box, m_tet, dir));
@@ -71,15 +74,15 @@ public:
 		while (true)
 		{
 			// new support point
-			Vec3 A = Support(m_box, m_tet, dir);
-			if (A.Dot(dir) < 0) // no intersection
+			Eigen::Vector3d A = Support(m_box, m_tet, dir);
+			if (A.dot(dir) < 0) // no intersection
 			{
 				//std::cout << "No intersection" << std::endl;
 				//std::cout << "GJK iterations " << iter << std::endl;
 
 
 				// LOG
-				LOG(b, m_tet, false);
+				//LOG(b, m_tet, false);
 				return false;
 			}
 
@@ -90,7 +93,7 @@ public:
 				//std::cout << "Intersection found!" << std::endl;
 				//std::cout << "GJK iterations " << iter << std::endl;
 				// LOG
-				LOG(b, m_tet, true);
+				//LOG(b, m_tet, true);
 				return true;
 			}
 
@@ -98,7 +101,7 @@ public:
 
 			if (iter > MAX_ITER)
 			{
-				LOG_TRACE("GJK to many iterations: {}", iter);
+				//LOG_TRACE("GJK to many iterations: {}", iter);
 				//LOG(b, m_tet);
 
 				// most of the time there is no intersection
@@ -107,10 +110,9 @@ public:
 		}
 	}
 
-
 private:
 	
-	static void LOG(const Box& b, const std::array<Vec3, 4>& tet, bool result)
+	static void LOG(const Box& b, const std::array<Eigen::Vector3d, 4>& tet, bool result)
 	{
 		#if (GJK_LOG == 1)
 			std::ofstream myfile;
@@ -136,14 +138,14 @@ private:
 	}
 
 
-	static Vec3 Support(const std::array<Vec3, 8>& box, const std::array<Vec3, 4>& tet, const Vec3& dir)
+	static Eigen::Vector3d Support(const std::array<Eigen::Vector3d, 8>& box, const std::array<Eigen::Vector3d, 4>& tet, const Eigen::Vector3d& dir)
 	{
 		// box furthest point
-		double maxVal = box[0].Dot(dir);
+		double maxVal = box[0].dot(dir);
 		int maxIDbox = 0;
 		for (int i = 1; i < 8; i++)
 		{
-			double curVal = box[i].Dot(dir);
+			double curVal = box[i].dot(dir);
 			if (curVal > maxVal)
 			{
 				maxVal = curVal;
@@ -152,11 +154,11 @@ private:
 		}
 
 		// tet furthest point
-		maxVal = tet[0].Dot(-dir);
+		maxVal = tet[0].dot(-dir);
 		int maxIDtet = 0;
 		for (int i = 1; i < 4; i++)
 		{
-			double curVal = tet[i].Dot(-dir);
+			double curVal = tet[i].dot(-dir);
 			if (curVal > maxVal)
 			{
 				maxVal = curVal;
@@ -167,19 +169,19 @@ private:
 		return box[maxIDbox] - tet[maxIDtet];
 	}
 	
-	static bool LineCase(std::vector<Vec3>& simp, Vec3& dir)
+	static bool LineCase(std::vector<Eigen::Vector3d>& simp, Eigen::Vector3d& dir)
 	{
-		Vec3& A = simp[1];
-		Vec3& B = simp[0];
+		Eigen::Vector3d& A = simp[1];
+		Eigen::Vector3d& B = simp[0];
 
-		Vec3 AB = B - A;
-		Vec3 AO = -A;
+		Eigen::Vector3d AB = B - A;
+		Eigen::Vector3d AO = -A;
 
-		if (AB.Dot(AO) > 0)
+		if (AB.dot(AO) > 0)
 		{
 			// origin is in the AB region
 			// perp to a AB towards the origin
-			Vec3 ABperp = AB.Cross(AO).Cross(AB);
+			Eigen::Vector3d ABperp = AB.cross(AO).cross(AB);
 			ABperp.normalize();
 			dir = ABperp;
 		}
@@ -195,24 +197,24 @@ private:
 		return false;
 	}
 
-	static bool TriangleCase(std::vector<Vec3>& simp, Vec3& dir)
+	static bool TriangleCase(std::vector<Eigen::Vector3d>& simp, Eigen::Vector3d& dir)
 	{
-		Vec3 AB = simp[1] - simp[2];  // B - A
-		Vec3 AC = simp[0] - simp[2];  // C - A
-		Vec3 AO = -simp[2];  // -A
+		Eigen::Vector3d AB = simp[1] - simp[2];  // B - A
+		Eigen::Vector3d AC = simp[0] - simp[2];  // C - A
+		Eigen::Vector3d AO = -simp[2];  // -A
 
 		// perp of ABC triangle
-		Vec3 ABC = AB.Cross(AC);
+		Eigen::Vector3d ABC = AB.cross(AC);
 
 		// Check AC
-		if (ABC.Cross(AC).Dot(AO) > 0)
+		if (ABC.cross(AC).dot(AO) > 0)
 		{
-			if (AC.Dot(AO) > 0)
+			if (AC.dot(AO) > 0)
 			{
 				// detelete B point
 				//and set direction from AC towards the origin
 				simp.erase(std::next(simp.begin(), 1));
-				dir = AC.Cross(AO).Cross(AC);
+				dir = AC.cross(AO).cross(AC);
 			}
 			else
 			{
@@ -225,7 +227,7 @@ private:
 		// Check AB
 		else
 		{
-			if (AB.Cross(ABC).Dot(AO) > 0)
+			if (AB.cross(ABC).dot(AO) > 0)
 			{
 				// detelete C point
 				//and set direction from AB towards the origin
@@ -235,7 +237,7 @@ private:
 			else
 			{
 				// triangle contains the origin
-				if (ABC.Dot(AO) > 0)
+				if (ABC.dot(AO) > 0)
 				{
 					dir = ABC;
 				}
@@ -252,34 +254,34 @@ private:
 		return false;
 	}
 
-	static bool TetrahedronCase(std::vector<Vec3>& simp, Vec3& dir)
+	static bool TetrahedronCase(std::vector<Eigen::Vector3d>& simp, Eigen::Vector3d& dir)
 	{
-		Vec3 AB = simp[2] - simp[3]; // B - A
-		Vec3 AC = simp[1] - simp[3]; // C - A
-		Vec3 AD = simp[0] - simp[3]; // D - A
-		Vec3 AO = -simp[3]; // -A
+		Eigen::Vector3d AB = simp[2] - simp[3]; // B - A
+		Eigen::Vector3d AC = simp[1] - simp[3]; // C - A
+		Eigen::Vector3d AD = simp[0] - simp[3]; // D - A
+		Eigen::Vector3d AO = -simp[3]; // -A
 
 		// perp facing ouside of the tetrahedron
-		Vec3 ABC = AB.Cross(AC);
-		Vec3 ACD = AC.Cross(AD);
-		Vec3 ADB = AD.Cross(AB);
+		Eigen::Vector3d ABC = AB.cross(AC);
+		Eigen::Vector3d ACD = AC.cross(AD);
+		Eigen::Vector3d ADB = AD.cross(AB);
 
 		// check if origin is outside of the tetrahedron
-		if (ABC.Dot(AO) > 0)
+		if (ABC.dot(AO) > 0)
 		{
 			// Delete D point
 			simp.erase(simp.begin());
 
 			return TriangleCase(simp, dir);
 		}
-		if (ACD.Dot(AO) > 0)
+		if (ACD.dot(AO) > 0)
 		{
 			// Delete B point
 			simp.erase(std::next(simp.begin(), 2));
 
 			return TriangleCase(simp, dir);
 		}
-		if (ADB.Dot(AO) > 0)
+		if (ADB.dot(AO) > 0)
 		{
 			//  Delete C point
 			simp.erase(std::next(simp.begin(), 1));
@@ -295,7 +297,7 @@ private:
 		return true;
 	}
 
-	static bool HandleSimplex(std::vector<Vec3>& simp, Vec3& dir)
+	static bool HandleSimplex(std::vector<Eigen::Vector3d>& simp, Eigen::Vector3d& dir)
 	{
 		switch (simp.size())
 		{

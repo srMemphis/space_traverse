@@ -15,7 +15,9 @@ TopologyTree::~TopologyTree()
 bool TopologyTree::GenerateData(const std::map<int, Volume>& volumes, const std::vector<ETetrahedron>& elements, const std::vector<Node>& nodes)
 {
 	// if no geometry available
-	if (elements.size() == 0)
+	size_t numnodes = nodes.size();
+
+	if (elements.size() == 0 || numnodes == 0 || volumes.size() == 0)
 	{
 		return false;
 	}
@@ -41,6 +43,7 @@ bool TopologyTree::GenerateData(const std::map<int, Volume>& volumes, const std:
 
 	// add bounding box to the root of topology tree;
 	m_topologyTree.clear();
+	m_topologyTree.reserve(2*numnodes);
 	m_topologyTree.emplace_back();
 	m_topologyTree.at(0).boundBox = box;
 

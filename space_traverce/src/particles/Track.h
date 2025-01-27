@@ -34,6 +34,8 @@ public:
 	void ResetToStartingPosition();
 
 private:
+	void CalcDt();
+
 	double m_stepSize;		// fixed distance the particle will fly
 	double m_dt;			// time in seconds the particle flew
 

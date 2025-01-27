@@ -80,6 +80,7 @@ void Track::SetStartingPosition(Eigen::Vector3d point)
 void Track::SetStartingVelocity(Eigen::Vector3d velo)
 {
 	m_velo.first = velo;
+	CalcDt();
 }
 
 void Track::CalcNewVelocity()
@@ -97,9 +98,8 @@ void Track::ResetToStartingPosition()
 void Track::CalcDt()
 {
 	double v = m_velo.first.norm();
-	double a = m_accel.first.norm();
 
-	m_dt = std::sqrt(v*v+2*a*m_stepSize) - v;
+	m_dt = m_stepSize / v;
 }
 
 void Track::SetAcceleration(Eigen::Vector3d accel)

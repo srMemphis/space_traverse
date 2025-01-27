@@ -60,7 +60,7 @@ bool SimuControl::Prepare()
 	}
 
 	// initial charge value
-	double charge = -1e-14;
+	double charge = -1e-7;
 	double chargeDensity = charge / m_mesh->GetVolumeOfVolume("Metall");
 	m_solver->SetInitialValue("Metall", chargeDensity);
 
@@ -73,7 +73,7 @@ bool SimuControl::Prepare()
 	electron.E0 = 0.511e6;		//eV
 
 	m_beam->SetParticle(electron);
-	m_beam->SetEnergy(1e6); // eV
+	m_beam->SetEnergy(1e4); // eV
 	m_beam->SetCenterPosition(0, 0, -0.4);
 	m_beam->SetDirection(0,0,1);
 	m_beam->SetRadius(0.1);

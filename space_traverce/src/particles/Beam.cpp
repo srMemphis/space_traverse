@@ -47,7 +47,7 @@ void Beam::GeneratePrimaryPosition()
 	PROFILE_FUNCTION();
 
 	// for now this is the only option
-	GenerateUniformDisk(4);
+	GenerateUniformDisk(6);
 }
 
 void Beam::SetParticle(Particle p)
@@ -208,16 +208,16 @@ void Beam::Run()
 		auto& track = m_tracks.at(i);
 		while (true)
 		{
-			track.MakeStep();
+			auto& last = track.MakeStep();
 
 			// if we should stop
-			if (m_stoppingFunction(track.GetLastPoint().x(), track.GetLastPoint().y(), track.GetLastPoint().z()))
+			if (m_stoppingFunction(last.x(), last.y(), last.z()))
 			{
 				break;
 			}
 			
-			auto field = m_fieldFunction(track.GetLastPoint().x(), track.GetLastPoint().y(), track.GetLastPoint().z());
-			track.SetAcceleration(field * m_particle.charge);
+			auto field = m_fieldFunction(last.x(), last.y(), last.z());
+			track.SetAcceleration(field * m_particle.charge / phys::me);
 
 			track.CalcNewVelocity();
 		}

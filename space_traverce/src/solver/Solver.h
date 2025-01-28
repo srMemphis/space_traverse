@@ -18,10 +18,12 @@ public:
 	
 	void SetMesh(std::shared_ptr<Mesh> mesh);
 	void AddMaterial(const std::string& name, const Material& mat);
-	void AssignElementChargeDensity(size_t index, double value);
+	void SetElementChargeDensity(size_t index, double value);
+	void AddElementChargeDensity(size_t index, double value);
 	bool SetInitialValue(const std::string& volumeName, double value);
 	bool SetBoundaryValue(const std::string& name, double value);
 	
+
 	void AssembleLeft();
 	void AssembleRight();
 	bool Solve();

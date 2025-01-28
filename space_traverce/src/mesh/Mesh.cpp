@@ -158,7 +158,11 @@ int Mesh::NameToTag(const std::string& name) const
 {
 	int tag = 0;
 
-	tag = m_PhisicalNames.find(name)->second.tag;
+	auto iter = m_PhisicalNames.find(name);
+	if (iter != m_PhisicalNames.end())
+	{
+		tag = iter->second.tag;
+	}
 
 	return tag;
 }

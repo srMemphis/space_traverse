@@ -37,6 +37,8 @@ bool SimuControl::MeshFromFile(const std::string& filepath)
 
 	m_solver->SetMesh(m_mesh);
 
+	m_detectorTag = m_mesh->NameToTag("Detector");
+
 	return true;
 }
 
@@ -89,6 +91,10 @@ bool SimuControl::Prepare()
 	m_beam->SetFieldFunction(std::bind(&Solver::GetField2, m_solver,
 		std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
+	// beam current and delta time
+	m_deltaTime = 1e-9;		// seconds
+	m_current = 100e-9;		// ampere
+
 	return true;
 }
 
@@ -122,48 +128,31 @@ int SimuControl::Run()
 	LOG_TRACE("Propagating Tracks");
 	m_beam->Run();
 
+	// check where we hit and act accordingly
+	m_detector.Clear();
+	double charge = m_current * m_deltaTime / m_beam->GetTracks().size();	// charge per track
+	for (auto& track : m_beam->GetTracks())
+	{
+		auto& lastPoint = track.GetLastPoint();
+		auto elemIndex = m_mesh->FindElementByCoords(lastPoint.x(), lastPoint.y(), lastPoint.z());
 
-	//// check where we stoped and act accordingly
-	//for (auto& track : m_beam->GetTracks())
-	//{
-	//	auto& lastPoint = track.GetLastPoint();
-	//	auto elemIndex = m_mesh->FindElementByCoords(lastPoint.x(), lastPoint.y(), lastPoint.z());
+		auto tag = m_mesh->GetPhisicalTagOfTetrahedron(elemIndex);
 
-	//	auto& tags = m_mesh->GetPhisicalTagsOfTetrahedron(elemIndex);
+		// we hit detector
+		if (tag == m_detectorTag)
+		{
+			// TODO: calc particle energy
+			m_detector.hitsPositions.push_back(lastPoint);
+			m_detector.current += (charge / m_deltaTime);
+			m_detector.energy.push_back(0);
+		}
+		else if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), tag) != m_stoppingVolumes.end())
+		{
+			// we hit smth that needs to be charged
+			m_solver->AddElementChargeDensity(elemIndex, charge);
+		}
+	}
 
-	//	// check if should stop on this tags
-	//	for (auto tag : tags)
-	//	{
-	//		// we hit detector
-	//		if (tag == m_detectorTag)
-	//		{
-	//			
-
-
-
-
-
-	//		}else
-	//		
-	//	}
-
-
-
-
-	//}
-	
-
-
-
-
-
-
-
-
-
-
-
-	
 	// save solution to file
 	LOG_TRACE("Saving solution to file...");
 	if (!m_solver->SaveSolutionToFile(m_matlab))
@@ -177,6 +166,8 @@ int SimuControl::Run()
 		LOG_ERROR("failed to save tracks to file");
 		return 4;
 	}
+
+	// TODO: save detector data to file 
 	
 	// closing matlab file
 	// no more wrights after this

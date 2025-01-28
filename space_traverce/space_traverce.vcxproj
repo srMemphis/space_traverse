@@ -177,6 +177,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\debug\Log.h" />
+    <ClInclude Include="src\DetectorData.h" />
     <ClInclude Include="src\SimuControl.h" />
     <ClInclude Include="src\particles\Beam.h" />
     <ClInclude Include="src\solver\Material.h" />

@@ -4,6 +4,7 @@
 #include "mesh/Mesh.h"
 #include "solver/Solver.h"
 #include "particles/Beam.h"
+#include "DetectorData.h"
 
 class SimuControl
 {
@@ -26,10 +27,12 @@ private:
 	std::shared_ptr<Beam> m_beam;
 
 	std::vector<int> m_stoppingVolumes;		// tags of phys names electrons should stop in
+	int m_detectorTag = 0;
+	double m_deltaTime = 0;
+	double m_current = 0;
 
-	// per iteration data
-
-
+	// per iteration data 
+	DetectorData m_detector;
 
 	ToMatlab m_matlab;			// matlab file IO
 };

@@ -42,9 +42,14 @@ void Solver::AddMaterial(const std::string& name, const Material& mat)
 	m_materials.emplace(name, mat);
 }
 
-void Solver::AssignElementChargeDensity(size_t index, double value)
+void Solver::SetElementChargeDensity(size_t index, double value)
 {
 	m_chargeDensity(index) = value;
+}
+
+void Solver::AddElementChargeDensity(size_t index, double value)
+{
+	m_chargeDensity(index) += value;
 }
 
 bool Solver::SetInitialValue(const std::string& volumeName, double value)
@@ -65,7 +70,7 @@ bool Solver::SetInitialValue(const std::string& volumeName, double value)
 
 			for (size_t i = volume.firstElementIndex; i < volume.firstElementIndex + volume.numElements; i++)
 			{
-				AssignElementChargeDensity(i, value);
+				SetElementChargeDensity(i, value);
 			}
 		}
 	}

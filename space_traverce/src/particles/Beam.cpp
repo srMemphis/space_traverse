@@ -181,7 +181,7 @@ void Beam::Run()
 	PROFILE_FUNCTION();
 
 	// initial speed value
-	double speed = phys::c * std::sqrt(1 - 1 / std::pow((m_energy + m_particle.E0) / m_particle.E0, 2));
+	double speed = phys::c * std::sqrt(1 - std::pow(m_particle.E0 / (m_energy + m_particle.E0), 2));
 
 	// using int based loop fop future openmp support
 
@@ -198,7 +198,6 @@ void Beam::Run()
 		auto field = m_fieldFunction(track.GetLastPoint().x(), track.GetLastPoint().y(), track.GetLastPoint().z());
 		track.SetAcceleration(field * m_particle.charge / phys::me);
 	}
-
 
 	#pragma omp parallel for num_threads(3)
 	for (int i = 0; i < m_tracks.size(); i++)

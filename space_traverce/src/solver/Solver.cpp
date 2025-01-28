@@ -247,8 +247,8 @@ void Solver::AssembleLeft()
 		}
 
 		// multiply local matrix by epsilon of material
-		auto& tags = m_mesh->GetPhisicalTagsOfTetrahedron(tetraIndex);
-		auto& name = m_mesh->TagToName(tags.at(0));
+		auto tag = m_mesh->GetPhisicalTagOfTetrahedron(tetraIndex);
+		auto& name = m_mesh->TagToName(tag);
 		auto& material = m_materials.find(name)->second;
 
 		Klocal *= material.epsilon;

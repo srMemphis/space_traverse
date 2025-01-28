@@ -27,6 +27,9 @@ private:
 
 	std::vector<int> m_stoppingVolumes;		// tags of phys names electrons should stop in
 
+	// per iteration data
+
+
 
 	ToMatlab m_matlab;			// matlab file IO
 };

@@ -118,8 +118,51 @@ int SimuControl::Run()
 	}
 
 	// propagate particles in geometry
+	// multithreaded inside
 	LOG_TRACE("Propagating Tracks");
 	m_beam->Run();
+
+
+	//// check where we stoped and act accordingly
+	//for (auto& track : m_beam->GetTracks())
+	//{
+	//	auto& lastPoint = track.GetLastPoint();
+	//	auto elemIndex = m_mesh->FindElementByCoords(lastPoint.x(), lastPoint.y(), lastPoint.z());
+
+	//	auto& tags = m_mesh->GetPhisicalTagsOfTetrahedron(elemIndex);
+
+	//	// check if should stop on this tags
+	//	for (auto tag : tags)
+	//	{
+	//		// we hit detector
+	//		if (tag == m_detectorTag)
+	//		{
+	//			
+
+
+
+
+
+	//		}else
+	//		
+	//	}
+
+
+
+
+	//}
+	
+
+
+
+
+
+
+
+
+
+
+
 	
 	// save solution to file
 	LOG_TRACE("Saving solution to file...");
@@ -142,6 +185,7 @@ int SimuControl::Run()
 	return 0;
 }
 
+// called in multithread
 bool SimuControl::BeamShouldStop(double x, double y, double z) const
 {
 	// TODO: Consider narrow boundary checking to avoid infinite warnings
@@ -155,18 +199,13 @@ bool SimuControl::BeamShouldStop(double x, double y, double z) const
 	}
 
 	// get its physical tags
-	auto& tags = m_mesh->GetPhisicalTagsOfTetrahedron(elemIndex);
-
-	bool contains = false;
+	auto tag = m_mesh->GetPhisicalTagOfTetrahedron(elemIndex);
 
 	// check if should stop on this tags
-	for (auto tag : tags)
+	if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), tag) != m_stoppingVolumes.end())
 	{
-		if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), tag) != m_stoppingVolumes.end())
-		{
-			contains = true;
-		}
+		return true;
 	}
 	
-	return contains;
+	return false;
 }

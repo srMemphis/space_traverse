@@ -34,19 +34,8 @@ public:
 	Entity() {}
 	virtual ~Entity() {}
 
-	bool HasTag(int tag) const
-	{
-		for (auto& mytag : physicalTags)
-		{
-			if (mytag == tag)
-				return true;
-		}
-
-		return false;
-	}
-
 	int entytyTag = 0;
-	std::vector<int> physicalTags;
+	int physicalTag  =-1;
 
 	double minX = 0;
 	double minY = 0;
@@ -57,6 +46,14 @@ public:
 
 	size_t firstElementIndex = 0;
 	size_t numElements = 0;
+
+	bool HasTag(int tag) const
+	{
+		if (physicalTag == tag)
+			return true;
+
+		return false;
+	}
 };
 
 class Surface : public Entity

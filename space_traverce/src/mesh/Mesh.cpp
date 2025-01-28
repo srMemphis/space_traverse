@@ -135,16 +135,11 @@ double Mesh::GetVolumeOfVolume(const std::string name) const
 
 	int physTag = m_PhisicalNames.find(name)->second.tag;
 
-	for (auto& key_volume : m_volumes) // for every volume
+	// for every volume
+	for (auto& key_volume : m_volumes) 
 	{
-		bool found = false;
-		for (auto& tag : key_volume.second.physicalTags)
-		{
-			if (tag == physTag)
-				found = true;
-		}
-
-		if (found) // if it has the same physical name
+		// if it has specified physical names tag
+		if (physTag == key_volume.second.physicalTag) 
 		{
 			auto& volume = key_volume.second;
 
@@ -225,13 +220,13 @@ bool Mesh::IsInBounds(double x, double y, double z) const
 	return m_topologyTree.IsInBounds(x,y,z);
 }
 
-const std::vector<int>& Mesh::GetPhisicalTagsOfTetrahedron(size_t index) const
+int Mesh::GetPhisicalTagOfTetrahedron(size_t index) const
 {
 	for (auto& key_vol : m_volumes)
 	{
 		if (index >= key_vol.second.firstElementIndex && index < key_vol.second.firstElementIndex + key_vol.second.numElements)
 		{
-			return key_vol.second.physicalTags;
+			return key_vol.second.physicalTag;
 		}
 	}
 }
@@ -501,14 +496,18 @@ bool Mesh::ReadEntities(std::ifstream& geofile)
 
 		size_t numPhysicalTags;
 		geofile >> numPhysicalTags;
-		
-		tmp.physicalTags.reserve(numPhysicalTags);
 
+		if (numPhysicalTags > 1)
+		{
+			LOG_ERROR("Unsupported amount of physical tags. Surface {} has {} physical tags!", tmp.entytyTag, numPhysicalTags);
+		}
+		
+		// read all tags. save last one
 		for (int j = 0; j < numPhysicalTags; j++)
 		{	
 			int tmpPhysTag = 0;
 			geofile >> tmpPhysTag;
-			tmp.physicalTags.push_back(tmpPhysTag);
+			tmp.physicalTag = tmpPhysTag;
 		}
 
 		size_t numBoundingCurves;
@@ -535,12 +534,17 @@ bool Mesh::ReadEntities(std::ifstream& geofile)
 		size_t numPhysicalTags;
 		geofile >> numPhysicalTags;
 
-		tmp.physicalTags.reserve(numPhysicalTags);
+		if (numPhysicalTags > 1)
+		{
+			LOG_ERROR("Unsupported amount of physical tags. Volume {} has {} physical tags!", tmp.entytyTag, numPhysicalTags);
+		}
+
+		// read all tags. save last one
 		for (int j = 0; j < numPhysicalTags; j++)
 		{
 			int tmpPhysTag = 0;
 			geofile >> tmpPhysTag;
-			tmp.physicalTags.push_back(tmpPhysTag);
+			tmp.physicalTag = tmpPhysTag;
 		}
 
 		size_t numBoundngSurfaces;

@@ -196,7 +196,7 @@ void Beam::Run()
 
 		track.SetStartingVelocity(m_direction * speed);
 		auto field = m_fieldFunction(track.GetLastPoint().x(), track.GetLastPoint().y(), track.GetLastPoint().z());
-		track.SetAcceleration(field * m_particle.charge);
+		track.SetAcceleration(field * m_particle.charge / phys::me);
 	}
 
 

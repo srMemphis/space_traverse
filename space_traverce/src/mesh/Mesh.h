@@ -25,7 +25,7 @@ public:
 	const std::vector<Node>& GetNodes() const;
 	const std::map<int, Volume>& GetVolumes() const;
 	const std::map<int, Surface>& GetSurfaces() const;
-	const std::vector<int>& GetPhisicalTagsOfTetrahedron(size_t index) const;
+	int GetPhisicalTagOfTetrahedron(size_t index) const;
 
 	const ETriangle& GetTriangle(size_t index) const;
 	const ETetrahedron& GetTetrahedron(size_t index) const;

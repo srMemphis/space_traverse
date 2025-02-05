@@ -129,29 +129,7 @@ int SimuControl::Run()
 	m_beam->Run();
 
 	// check where we hit and act accordingly
-	m_detector.Clear();
-	double charge = m_current * m_deltaTime / m_beam->GetTracks().size();	// charge per track
-	for (auto& track : m_beam->GetTracks())
-	{
-		auto& lastPoint = track.GetLastPoint();
-		auto elemIndex = m_mesh->FindElementByCoords(lastPoint.x(), lastPoint.y(), lastPoint.z());
-
-		auto tag = m_mesh->GetPhisicalTagOfTetrahedron(elemIndex);
-
-		// we hit detector
-		if (tag == m_detectorTag)
-		{
-			// TODO: calc particle energy
-			m_detector.hitsPositions.push_back(lastPoint);
-			m_detector.current += (charge / m_deltaTime);
-			m_detector.energy.push_back(0);
-		}
-		else if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), tag) != m_stoppingVolumes.end())
-		{
-			// we hit smth that needs to be charged
-			m_solver->AddElementChargeDensity(elemIndex, charge);
-		}
-	}
+	RegisterHits();
 
 	// save solution to file
 	LOG_TRACE("Saving solution to file...");
@@ -199,4 +177,33 @@ bool SimuControl::BeamShouldStop(double x, double y, double z) const
 	}
 	
 	return false;
+}
+
+void SimuControl::RegisterHits()
+{
+	m_detector.Clear();
+	double charge = m_current * m_deltaTime / m_beam->GetTracks().size();	// charge per track
+	for (auto& track : m_beam->GetTracks())
+	{
+		auto& lastPoint = track.GetLastPoint();
+		auto elemIndex = m_mesh->FindElementByCoords(lastPoint.x(), lastPoint.y(), lastPoint.z());
+
+		auto tag = m_mesh->GetPhisicalTagOfTetrahedron(elemIndex);
+
+		// we hit detector
+		if (tag == m_detectorTag)
+		{
+			// TODO: calc particle energy
+			m_detector.hitsPositions.push_back(lastPoint);
+			m_detector.current += (charge / m_deltaTime);
+			m_detector.energy.push_back(0);
+		}
+		else if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), tag) != m_stoppingVolumes.end())
+		{
+			// TODO: generate secondary emission
+
+			// we hit smth that needs to be charged
+			m_solver->AddElementChargeDensity(elemIndex, charge);
+		}
+	}
 }

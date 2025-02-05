@@ -233,6 +233,11 @@ void TopologyTree::BuildTopologyRecursive(size_t parentID, const std::vector<ETe
 
 	auto isUnique = [](const std::vector<size_t>& vec)
 		{
+			if (vec.empty())
+			{
+				return true;
+			}
+
 			size_t prev = vec[0];
 			for (size_t i = 1; i < vec.size(); i++)
 			{

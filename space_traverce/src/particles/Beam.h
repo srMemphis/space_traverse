@@ -46,7 +46,8 @@ public:
 	void Reset();
 
 	// matlab file output
-	bool SaveTracksToFile(ToMatlab& file);
+	bool SaveTracksToFile(ToMatlab& file, uint32_t numPoints = 200);
+	bool SaveTracksToFilePresice(ToMatlab& file);
 
 private:
 	void GenerateUniformDisk(uint32_t circles);

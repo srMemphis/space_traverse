@@ -7,6 +7,7 @@
 #include "debug/Profiler.h"
 #include "debug/Log.h"
 
+
 Beam::Beam()
 	:m_particle({1.60217633e-19, 9.1093837e-31}), m_radius(1)
 {
@@ -78,7 +79,60 @@ void Beam::Reset()
 	}
 }
 
-bool Beam::SaveTracksToFile(ToMatlab& file)
+bool Beam::SaveTracksToFile(ToMatlab& file, uint32_t numPoints)
+{
+	file.StartCell("tracks", m_tracks.size());
+
+	std::vector<double> coords;
+	coords.reserve(numPoints);
+
+	for (auto& track : m_tracks)
+	{
+		auto& points = track.GetPoints();
+		auto pointsSize = points.size();
+		auto coordsSize = pointsSize;
+
+		double step = 1.0;
+		if (pointsSize > numPoints)
+		{
+			step = (double)pointsSize / (double)(numPoints - 1);
+			coordsSize = numPoints;
+		}
+
+		// reserve for x y and z
+		coords.resize(coordsSize * 3);
+
+		// writing column major matrix as vector
+
+		// writing the first point
+		coords.at(coordsSize * 0) = points.at(0).x();
+		coords.at(coordsSize * 1) = points.at(0).y();
+		coords.at(coordsSize * 2) = points.at(0).z();
+
+		// writing all between the first and the second
+		for (size_t i = 1; i < coordsSize - 1; i++)
+		{
+			coords.at(i + coordsSize *0) = points.at(i * step).x();
+			coords.at(i + coordsSize *1) = points.at(i * step).y();
+			coords.at(i + coordsSize *2) = points.at(i * step).z();
+		}
+
+		// writing the last point
+		coords.at(numPoints - 1 + coordsSize * 0) = points.at(pointsSize-1).x();
+		coords.at(numPoints - 1 + coordsSize * 1) = points.at(pointsSize-1).y();
+		coords.at(numPoints - 1 + coordsSize * 2) = points.at(pointsSize-1).z();
+
+		file.WriteCellAsMatrix(coords, coordsSize, 3);
+
+		coords.clear();
+	}
+
+	file.EndCell();
+
+	return true;
+}
+
+bool Beam::SaveTracksToFilePresice(ToMatlab& file)
 {
 	file.StartCell("tracks", m_tracks.size());
 
@@ -90,14 +144,14 @@ bool Beam::SaveTracksToFile(ToMatlab& file)
 		auto size = points.size();
 
 		// reserve for x y and z
-		coords.resize(size*3);
-		
+		coords.resize(size * 3);
+
 		// writing column major matrix as vector
 		for (size_t i = 0; i < size; i++)
 		{
-			coords.at(i + size*0) = points.at(i).x();
-			coords.at(i + size*1) = points.at(i).y();
-			coords.at(i + size*2) = points.at(i).z();
+			coords.at(i + size * 0) = points.at(i).x();
+			coords.at(i + size * 1) = points.at(i).y();
+			coords.at(i + size * 2) = points.at(i).z();
 		}
 
 		file.WriteCellAsMatrix(coords, size, 3);

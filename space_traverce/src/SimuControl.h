@@ -21,6 +21,7 @@ public:
 
 private:
 	bool BeamShouldStop(double x, double y, double z) const;
+	void RegisterHits();
 
 	std::shared_ptr<Mesh> m_mesh;
 	std::shared_ptr<Solver> m_solver;

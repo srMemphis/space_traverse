@@ -70,6 +70,9 @@ bool SimuControl::Prepare()
 	m_solver->AssembleLeft();
 
 	// beam setup
+	m_deltaTime = 1e-6;		// [s]
+	m_current = 100e-9;		// [A]
+
 	Particle electron;
 	electron.charge = phys::qe;
 	electron.E0 = 0.511e6;		//eV

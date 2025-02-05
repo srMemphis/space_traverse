@@ -28,6 +28,8 @@ private:
 
 	std::vector<int> m_stoppingVolumes;		// tags of phys names electrons should stop in
 	int m_detectorTag = 0;
+
+	// simu params
 	double m_deltaTime = 0;
 	double m_current = 0;
 

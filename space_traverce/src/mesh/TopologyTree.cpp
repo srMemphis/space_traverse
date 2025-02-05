@@ -231,58 +231,36 @@ void TopologyTree::BuildTopologyRecursive(size_t parentID, const std::vector<ETe
 		// tmp deletes here
 	}
 
-	// propagate split if there is more than 1 node in the box
-	if (nodesLeft.size() < 2000)
-	{
-		std::sort(nodesLeft.begin(), nodesLeft.end());
-		if (std::distance(nodesLeft.begin(), std::unique(nodesLeft.begin(), nodesLeft.end())) > 1)
+	auto isUnique = [](const std::vector<size_t>& vec)
 		{
+			size_t prev = vec[0];
+			for (size_t i = 1; i < vec.size(); i++)
 			{
-				std::vector<size_t> tmp;
-				nodesLeft.swap(tmp);
+				if (prev != vec[i])
+				{
+					return false;
+				}
 			}
-			BuildTopologyRecursive(leftID, elements, nodes);
-		}
-	}
-	else
-	{
-		std::sort(std::execution::par, nodesLeft.begin(), nodesLeft.end());
-		auto last = std::unique(std::execution::par, nodesLeft.begin(), nodesLeft.end());
-		if (std::distance(nodesLeft.begin(), last) > 1)
-		{
-			{
-				std::vector<size_t> tmp;
-				nodesLeft.swap(tmp);
-			}
-			BuildTopologyRecursive(leftID, elements, nodes);
-		}
 
+			return true;
+		};
+
+	if (!isUnique(nodesLeft))
+	{
+		{
+			std::vector<size_t> tmp;
+			nodesLeft.swap(tmp);
+		}
+		BuildTopologyRecursive(leftID, elements, nodes);
 	}
 
-	if (nodesRight.size() < 2000)
+	if (!isUnique(nodesRight))
 	{
-		std::sort(nodesRight.begin(), nodesRight.end());
-		if (std::distance(nodesRight.begin(), std::unique(nodesRight.begin(), nodesRight.end())) > 1)
 		{
-			{
-				std::vector<size_t> tmp;
-				nodesRight.swap(tmp);
-			}
-			BuildTopologyRecursive(rightID, elements, nodes);
+			std::vector<size_t> tmp;
+			nodesRight.swap(tmp);
 		}
-	}
-	else
-	{
-		std::sort(std::execution::par, nodesRight.begin(), nodesRight.end());
-		auto last = std::unique(std::execution::par, nodesRight.begin(), nodesRight.end());
-		if (std::distance(nodesRight.begin(), last) > 1)
-		{
-			{
-				std::vector<size_t> tmp;
-				nodesRight.swap(tmp);
-			}
-			BuildTopologyRecursive(rightID, elements, nodes);
-		}
+		BuildTopologyRecursive(rightID, elements, nodes);
 	}
 
 }

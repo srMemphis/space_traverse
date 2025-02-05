@@ -42,12 +42,12 @@ void Beam::SetDirection(double x, double y, double z)
 	m_direction.normalize();
 }
 
-void Beam::GeneratePrimaryPosition()
+void Beam::GeneratePrimaryPosition(uint32_t param)
 {
 	PROFILE_FUNCTION();
 
 	// for now this is the only option
-	GenerateUniformDisk(6);
+	GenerateUniformDisk(param);
 }
 
 void Beam::SetParticle(Particle p)

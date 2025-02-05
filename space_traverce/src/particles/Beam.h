@@ -33,7 +33,7 @@ public:
 	void SetEnergy(double ene);
 
 	// generates initial positions based on parameters set above
-	void GeneratePrimaryPosition();
+	void GeneratePrimaryPosition(uint32_t param);
 
 	// set functions to determine particle behavior in space
 	void SetStoppingFunction(std::function<bool(double, double, double)> func);

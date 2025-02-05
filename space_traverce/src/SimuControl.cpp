@@ -70,9 +70,6 @@ bool SimuControl::Prepare()
 	m_solver->AssembleLeft();
 
 	// beam setup
-	m_deltaTime = 1e-6;		// [s]
-	m_current = 100e-9;		// [A]
-
 	Particle electron;
 	electron.charge = phys::qe;
 	electron.E0 = 0.511e6;		//eV
@@ -83,7 +80,7 @@ bool SimuControl::Prepare()
 	m_beam->SetDirection(0,0,1);
 	m_beam->SetRadius(0.1);
 
-	m_beam->GeneratePrimaryPosition();
+	m_beam->GeneratePrimaryPosition(6);		// n^2 growth of number of particles
 
 	AddStoppingVolume("Metall");
 

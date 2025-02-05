@@ -7,6 +7,8 @@
 
 #include <Eigen/Dense>
 
+#include <array>
+#include <map>
 #include <fstream>
 #include <iostream>
 #include <cassert>
@@ -313,6 +315,66 @@ int64_t Mesh::FindElementByCoords(double x, double y, double z) const
 	// not crititcal if the algorythm is doing OK. Critical otherwise
 	LOG_ERROR("Can not find tetrahedron that contains the point: ({},{},{})", x,y,z);
 	return -2;
+}
+
+void Mesh::SaveSurfaceToFile(const std::string& physname, ToMatlab& file)
+{
+	auto tag = NameToTag(physname);
+
+	std::vector<double> x, y, z;
+	std::vector<std::array<size_t, 3>> newindex;
+	std::map<size_t, size_t> indexmap;			// old - new 
+
+	size_t count = 0;
+
+	for (auto& key_surf : m_surfaces)
+	{
+		auto& surf = key_surf.second;
+		if (surf.HasTag(tag))
+		{
+			for (auto& elem : surf.elements)
+			{
+				std::array<size_t, 3> newtriang;
+
+				for (int i = 0; i < 3; i++)
+				{
+					auto iter = indexmap.find(elem.node[i]);
+					if (iter == indexmap.end())		// new entry
+					{
+						indexmap.emplace(std::make_pair(elem.node[i], count));
+						newtriang[i] = count;
+						count++;
+
+						x.push_back(m_Nodes.at(elem.node[i]).x);
+						y.push_back(m_Nodes.at(elem.node[i]).y);
+						z.push_back(m_Nodes.at(elem.node[i]).z);
+					}
+					else	// existing entry
+					{
+						newtriang[i] = iter->second;
+					}
+				}
+
+				newindex.push_back(newtriang);
+			}
+		}
+	}
+
+	auto size = newindex.size();
+	std::vector<size_t> tomatlabindex;
+	tomatlabindex.resize(size * 3);
+
+	for (size_t i = 0; i < size; i++)
+	{
+		tomatlabindex.at(i + size * 0) = newindex.at(i)[0] + 1;		// +1 for matlab indexing
+		tomatlabindex.at(i + size * 1) = newindex.at(i)[1] + 1;
+		tomatlabindex.at(i + size * 2) = newindex.at(i)[2] + 1;
+	}
+
+	file.Write(x, physname + "_x");
+	file.Write(y, physname + "_y");
+	file.Write(z, physname + "_z");
+	file.WriteAsMatrix(tomatlabindex, size, 3, physname + "_T");
 }
 
 bool Mesh::ReadSection(std::ifstream& geofile, std::string s)

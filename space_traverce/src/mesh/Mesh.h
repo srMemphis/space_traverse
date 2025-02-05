@@ -1,6 +1,7 @@
 #pragma once
 #include "mesh/ElementTypes.h"
 #include "mesh/TopologyTree.h"
+#include "utils/ToMatlab.h"
 
 #include <string>
 #include <vector>
@@ -49,7 +50,7 @@ public:
 	// returns element index
 	int64_t FindElementByCoords(double x, double y, double z) const;
 
-
+	void SaveSurfaceToFile(const std::string& physname, ToMatlab& file);
 
 private:
 	std::map<std::string, PhisicalName> m_PhisicalNames;  // mapped by name

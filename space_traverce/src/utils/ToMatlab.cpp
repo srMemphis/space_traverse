@@ -60,20 +60,6 @@ bool ToMatlab::Write(const Eigen::VectorXd& vec, const std::string& name)
 	return true;
 }
 
-bool ToMatlab::Write(const std::vector<double>& vec, const std::string& name)
-{
-	if (!m_file)
-	{
-		LOG_ERROR("Unable to write vector {} to file.File is not opened.", name);
-
-		return false;
-	}
-
-	TinyMATWriter_writeContainerAsColumn(m_file, name.c_str(), vec);
-
-	return true;
-}
-
 void ToMatlab::StartCell(const std::string& name, uint32_t size)
 {
 	TinyMATWriter_startCellVectorAsCol(m_file, name.c_str(), size);
@@ -94,6 +80,8 @@ bool ToMatlab::WriteCell(const std::vector<double>& vec)
 	}
 
 	TinyMATWriter_writeContainerAsColumn(m_file, "", vec);
+
+	return true;
 }
 
 bool ToMatlab::WriteCellAsMatrix(const std::vector<double>& vec, uint32_t rows, uint32_t cols)
@@ -106,6 +94,8 @@ bool ToMatlab::WriteCellAsMatrix(const std::vector<double>& vec, uint32_t rows, 
 	}
 
 	TinyMATWriter_writeMatrix2D_colmajor(m_file, "", vec.data(), cols, rows);
+
+	return true;
 }
 
 void ToMatlab::Close()

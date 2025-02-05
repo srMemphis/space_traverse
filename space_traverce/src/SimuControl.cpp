@@ -39,6 +39,14 @@ bool SimuControl::MeshFromFile(const std::string& filepath)
 
 	m_detectorTag = m_mesh->NameToTag("Detector");
 
+	// saving geometry to dispaly at matlab
+	ToMatlab matfile;
+	matfile.OpenFile("surfacegeo.mat");
+
+	m_mesh->SaveSurfaceToFile("Metall", matfile);
+
+	matfile.Close();
+
 	return true;
 }
 

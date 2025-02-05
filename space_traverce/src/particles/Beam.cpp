@@ -61,6 +61,11 @@ void Beam::SetEnergy(double ene)
 	m_energy = ene;
 }
 
+void Beam::DetermineStepSize(double environmentSize, uint32_t desiredStepCount)
+{
+	m_stepSize = environmentSize / desiredStepCount;
+}
+
 void Beam::SetStoppingFunction(std::function<bool(double, double, double)> func)
 {
 	m_stoppingFunction = func;
@@ -118,9 +123,9 @@ bool Beam::SaveTracksToFile(ToMatlab& file, uint32_t numPoints)
 		}
 
 		// writing the last point
-		coords.at(numPoints - 1 + coordsSize * 0) = points.at(pointsSize-1).x();
-		coords.at(numPoints - 1 + coordsSize * 1) = points.at(pointsSize-1).y();
-		coords.at(numPoints - 1 + coordsSize * 2) = points.at(pointsSize-1).z();
+		coords.at(coordsSize - 1 + coordsSize * 0) = points.at(pointsSize-1).x();
+		coords.at(coordsSize - 1 + coordsSize * 1) = points.at(pointsSize-1).y();
+		coords.at(coordsSize - 1 + coordsSize * 2) = points.at(pointsSize-1).z();
 
 		file.WriteCellAsMatrix(coords, coordsSize, 3);
 
@@ -242,11 +247,8 @@ void Beam::Run()
 	// setting initial values
 	for (int i = 0; i < m_tracks.size(); i++)
 	{
-		
 		auto& track = m_tracks.at(i);
-
-		// TODO: create api to set this from outside. 
-		track.SetStepSize(0.001);
+		track.SetStepSize(m_stepSize);
 
 		track.SetStartingVelocity(m_direction * speed);
 		auto field = m_fieldFunction(track.GetLastPoint().x(), track.GetLastPoint().y(), track.GetLastPoint().z());

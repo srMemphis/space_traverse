@@ -31,6 +31,7 @@ public:
 	void SetDirection(double x, double y, double z);
 	void SetParticle(Particle p);
 	void SetEnergy(double ene);
+	void DetermineStepSize(double environmentSize, uint32_t desiredStepCount);
 
 	// generates initial positions based on parameters set above
 	void GeneratePrimaryPosition(uint32_t param);
@@ -55,6 +56,7 @@ private:
 private:
 	double m_radius;
 	double m_energy;
+	double m_stepSize;
 	Eigen::Vector3d m_direction;
 	Eigen::Vector3d m_centerPosition;
 

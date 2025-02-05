@@ -79,6 +79,7 @@ bool SimuControl::Prepare()
 	m_beam->SetCenterPosition(0, 0, -0.4);
 	m_beam->SetDirection(0,0,1);
 	m_beam->SetRadius(0.1);
+	m_beam->DetermineStepSize(1, 30000);
 
 	m_beam->GeneratePrimaryPosition(6);		// n^2 growth of number of particles
 

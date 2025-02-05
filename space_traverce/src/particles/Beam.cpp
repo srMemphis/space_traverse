@@ -9,7 +9,7 @@
 
 
 Beam::Beam()
-	:m_particle({1.60217633e-19, 9.1093837e-31}), m_radius(1)
+	:m_particle({1.60217633e-19, 0.511e6}), m_radius(1)
 {
 }
 

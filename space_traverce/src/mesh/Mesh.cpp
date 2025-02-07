@@ -56,6 +56,10 @@ bool Mesh::FromFile(std::string filepath)
 		}
 	}
 
+	// report
+	LOG_INFO("Reading done. Mesh contains:\n\tvolumes: {}\n\tsurfaces: {}\n\tnodes: {}\n\ttetrahedrons: {}\n\ttriangles: {}",
+		m_volumes.size(), m_surfaces.size(), m_Nodes.size(), m_bulkElements.size(), m_surfElements.size());
+
 	// fill datastructures
 	FillEntitiesWithElements();
 	GenerateGradientVectors();
@@ -321,6 +325,11 @@ void Mesh::SaveSurfaceToFile(const std::string& physname, ToMatlab& file)
 {
 	auto tag = NameToTag(physname);
 
+	if (tag == 0)
+	{
+		LOG_ERROR("Surface '{}' not found!", physname);
+	}
+
 	std::vector<double> x, y, z;
 	std::vector<std::array<size_t, 3>> newindex;
 	std::map<size_t, size_t> indexmap;			// old - new 
@@ -370,11 +379,16 @@ void Mesh::SaveSurfaceToFile(const std::string& physname, ToMatlab& file)
 		tomatlabindex.at(i + size * 1) = newindex.at(i)[1] + 1;
 		tomatlabindex.at(i + size * 2) = newindex.at(i)[2] + 1;
 	}
+	
+	// removing spaces from name
+	auto newname = physname;
+	auto newend = std::remove(newname.begin(), newname.end(), ' ');
+	newname.erase(newend, newname.end());
 
-	file.Write(x, physname + "_x");
-	file.Write(y, physname + "_y");
-	file.Write(z, physname + "_z");
-	file.WriteAsMatrix(tomatlabindex, size, 3, physname + "_T");
+	file.Write(x, newname + "_x");
+	file.Write(y, newname + "_y");
+	file.Write(z, newname + "_z");
+	file.WriteAsMatrix(tomatlabindex, size, 3, newname + "_T");
 }
 
 bool Mesh::ReadSection(std::ifstream& geofile, std::string s)

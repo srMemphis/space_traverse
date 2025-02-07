@@ -12,7 +12,8 @@ int main()
 	SimuControl simulation;
 
 	//std::string filepath = "msh/sphere_coarse.msh";
-	std::string filepath = "msh/sphere.msh";
+	//std::string filepath = "msh/sphere.msh";
+	std::string filepath = "msh/plane.msh";
 
 	if (!simulation.MeshFromFile(filepath))
 		return -1;

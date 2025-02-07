@@ -136,17 +136,17 @@ bool Solver::SaveSolutionToFile(ToMatlab& file)
 
 	bool res = false;
 
-	int N = 1000;
-	std::vector<double> field;
-	Eigen::ArrayXd x = Eigen::ArrayXd::LinSpaced(N, -0.45, 0.45);
+	//int N = 1000;
+	//std::vector<double> field;
+	//Eigen::ArrayXd x = Eigen::ArrayXd::LinSpaced(N, -0.45, 0.45);
 
-	for (int i = 0; i < N; i++)
-	{
-		field.push_back(GetField2(x[i], 0, 0).norm());
-	}
+	//for (int i = 0; i < N; i++)
+	//{
+	//	field.push_back(GetField2(x[i], 0, 0).norm());
+	//}
 
-	file.Write(field, "field");
-	file.Write(x, "xField");
+	//file.Write(field, "field");
+	//file.Write(x, "xField");
 
 	if(file.Write(m_u, "uPlus") &&
 		file.Write(m_mesh->GetNodesX(), "xPlus") &&
@@ -339,10 +339,11 @@ bool Solver::Solve()
 
 	if (cg.info() != Eigen::ComputationInfo::Success)
 	{
+		LOG_CRITICAL("Failed to solve");
 		return false;
 	}
-
-	LOG_TRACE("Iterations = {}", cg.iterations());
+	
+	LOG_TRACE("Solved in {} iterations with the error of {}", cg.iterations(), cg.error());
 
 	// assemble full u
 	RangeIterator iIndex(m_iIndex);

@@ -43,7 +43,7 @@ bool SimuControl::MeshFromFile(const std::string& filepath)
 	ToMatlab matfile;
 	matfile.OpenFile("surfacegeo.mat");
 
-	m_mesh->SaveSurfaceToFile("Metall", matfile);
+	m_mesh->SaveSurfaceToFile("Plane Boundary", matfile);
 
 	matfile.Close();
 
@@ -59,20 +59,21 @@ bool SimuControl::Prepare()
 	Material air, glass;
 	air.epsilon = 1;
 	glass.epsilon = 2;
-	m_solver->AddMaterial("Air", air);
-	m_solver->AddMaterial("Metall", glass);
+	m_solver->AddMaterial("World", air);
+	m_solver->AddMaterial("Detector", air);
+	m_solver->AddMaterial("Plane", glass);
 
 	// set boundary conditions
-	if (!m_solver->SetBoundaryValue("Air Boundary", 0))
+	if (!m_solver->SetBoundaryValue("World Boundary", 0))
 	{
-		LOG_ERROR("surface not found");
+		LOG_ERROR("boundary surface not found");
 		return false;
 	}
 
 	// initial charge value
-	double charge = -1e-7;
-	double chargeDensity = charge / m_mesh->GetVolumeOfVolume("Metall");
-	m_solver->SetInitialValue("Metall", chargeDensity);
+	//double charge = -1e-7;
+	//double chargeDensity = charge / m_mesh->GetVolumeOfVolume("Metall");
+	//m_solver->SetInitialValue("Metall", chargeDensity);
 
 	// assemble linear system
 	m_solver->AssembleLeft();
@@ -84,14 +85,20 @@ bool SimuControl::Prepare()
 
 	m_beam->SetParticle(electron);
 	m_beam->SetEnergy(1e4); // eV
-	m_beam->SetCenterPosition(0, 0, -0.4);
-	m_beam->SetDirection(0,0,1);
-	m_beam->SetRadius(0.1);
-	m_beam->DetermineStepSize(1, 30000);
+
+	Eigen::Vector3d beamPos = { 0, 0.05, 0.15 };
+	Eigen::Vector3d beamStare = { 0, 0, -0.02 };
+	auto dir = (beamStare - beamPos).normalized();
+
+	m_beam->SetCenterPosition(beamPos.x(), beamPos.y(), beamPos.z());
+	m_beam->SetDirection(dir.x(), dir.y(), dir.z());
+	m_beam->SetRadius(0.01);
+	m_beam->DetermineStepSize(0.5, 30000);
 
 	m_beam->GeneratePrimaryPosition(6);		// n^2 growth of number of particles
 
-	AddStoppingVolume("Metall");
+	// all volumes exept Detector
+	AddStoppingVolume("Plane");
 
 	// set beam stopping and field functions
 	m_beam->SetStoppingFunction(std::bind(&SimuControl::BeamShouldStop, this,

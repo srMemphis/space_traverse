@@ -207,6 +207,11 @@ Eigen::Vector3d Solver::GetField2(double x, double y, double z)
 	return field;
 }
 
+double Solver::GetChargeDensAtElem(size_t elemIndex)
+{
+	return m_chargeDensity(elemIndex);
+}
+
 void Solver::AssembleLeft()
 {
 	PROFILE_FUNCTION();

@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <string_view>
 
 #include "mesh/Mesh.h"
 #include "solver/Solver.h"
@@ -33,6 +34,11 @@ private:
 	// simu params
 	double m_deltaTime = 0;
 	double m_current = 0;
+
+	// serialization
+	bool GenerateSurfaceToVolumeIndexing(const std::string& physSurface, const std::string& physVolume);
+	bool SaveChargeData();
+	std::map<std::string, std::vector<size_t>> m_chargeIndexToSave;	// maped by phys surface name
 
 	// per iteration data 
 	DetectorData m_detector;

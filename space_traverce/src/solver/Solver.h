@@ -32,6 +32,7 @@ public:
 
 	Eigen::Vector3d GetField(double x, double y, double z);
 	Eigen::Vector3d GetField2(double x, double y, double z);
+	double GetChargeDensAtElem(size_t elemIndex);
 
 private:
 	const double c_epsilon0 = 8.8541878128e-12;

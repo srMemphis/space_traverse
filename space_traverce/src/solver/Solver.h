@@ -22,7 +22,7 @@ public:
 	void AddElementChargeDensity(size_t index, double value);
 	bool SetInitialValue(const std::string& volumeName, double value);
 	bool SetBoundaryValue(const std::string& name, double value);
-	
+	void SetFieldSmoothing(bool enable);
 
 	void AssembleLeft();
 	void AssembleRight();
@@ -31,11 +31,15 @@ public:
 	bool SaveSolutionToFile(ToMatlab& file);
 
 	Eigen::Vector3d GetField(double x, double y, double z);
-	Eigen::Vector3d GetField2(double x, double y, double z);
 	double GetChargeDensAtElem(size_t elemIndex);
 
 private:
+	Eigen::Vector3d GetFieldCasual(double x, double y, double z);
+	Eigen::Vector3d GetFieldSmooth(double x, double y, double z);
+
+private:
 	const double c_epsilon0 = 8.8541878128e-12;
+	bool m_fieldSmoothing = 0;;
 
 	std::shared_ptr<Mesh> m_mesh;					// finite element mesh
 	std::map<std::string, Material> m_materials;	// material data

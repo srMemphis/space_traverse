@@ -130,6 +130,11 @@ bool Solver::SetBoundaryValue(const std::string& name, double value)
 	return found;
 }
 
+void Solver::SetFieldSmoothing(bool enable)
+{
+	m_fieldSmoothing = enable;
+}
+
 bool Solver::SaveSolutionToFile(ToMatlab& file)
 {
 	PROFILE_FUNCTION();
@@ -159,7 +164,7 @@ bool Solver::SaveSolutionToFile(ToMatlab& file)
 	return res;
 }
 
-Eigen::Vector3d Solver::GetField(double x, double y, double z)
+Eigen::Vector3d Solver::GetFieldCasual(double x, double y, double z)
 {
 	auto elemIndex = m_mesh->FindElementByCoords(x, y, z);
 	auto& element = m_mesh->m_bulkElements.at(elemIndex);
@@ -174,7 +179,7 @@ Eigen::Vector3d Solver::GetField(double x, double y, double z)
 	return field;
 }
 
-Eigen::Vector3d Solver::GetField2(double x, double y, double z)
+Eigen::Vector3d Solver::GetFieldSmooth(double x, double y, double z)
 {
 	auto elemIndex = m_mesh->FindElementByCoords(x, y, z);
 	auto& element = m_mesh->m_bulkElements.at(elemIndex);
@@ -205,6 +210,16 @@ Eigen::Vector3d Solver::GetField2(double x, double y, double z)
 		+ bary(3) * m_field.at(element.node[3]);
 
 	return field;
+}
+
+Eigen::Vector3d Solver::GetField(double x, double y, double z)
+{
+	if (m_fieldSmoothing)
+	{
+		return GetFieldSmooth(x,y,z);
+	}
+
+	return GetFieldCasual(x,y,z);
 }
 
 double Solver::GetChargeDensAtElem(size_t elemIndex)
@@ -370,54 +385,55 @@ bool Solver::Solve()
 	}
 
 	// -------------------- when using avaraged field -------------------------------
-	// calc mean of field at nodes
-	//
-	m_field.resize(m_u.size());
-
-	std::vector<Eigen::Vector3d> elemField;
-	size_t numElem = m_mesh->GetBulkElements().size();
-	elemField.resize(numElem);
-
-	// first calc field at elements
-	for (size_t elemIndex = 0; elemIndex < numElem; elemIndex++)
+	if (m_fieldSmoothing)	// calc mean of field at nodes
 	{
-		auto& gradient = m_mesh->m_GradientVectors.at(elemIndex);
-		auto& element = m_mesh->m_bulkElements.at(elemIndex);
+		m_field.resize(m_u.size());
 
-		elemField.at(elemIndex) = -gradient.at(0) * m_u(element.node[0])
-			- gradient.at(1) * m_u(element.node[1])
-			- gradient.at(2) * m_u(element.node[2])
-			- gradient.at(3) * m_u(element.node[3]);
-	}
+		std::vector<Eigen::Vector3d> elemField;
+		size_t numElem = m_mesh->GetBulkElements().size();
+		elemField.resize(numElem);
 
-	// then calc mean
-	size_t numNodes = m_mesh->GetNodes().size();
-	for (size_t nodeindex = 0; nodeindex < numNodes; nodeindex++)
-	{
-		auto& node = m_mesh->GetNode(nodeindex);
-		auto& candidates = m_mesh->m_topologyTree.Find(node.x, node.y, node.z);
-
-		m_field.at(nodeindex).setZero();
-		int count = 0;
-		for (auto& candidateIndex : candidates)
+		// first calc field at elements
+		for (size_t elemIndex = 0; elemIndex < numElem; elemIndex++)
 		{
-			auto& cand = m_mesh->GetTetrahedron(candidateIndex);
+			auto& gradient = m_mesh->m_GradientVectors.at(elemIndex);
+			auto& element = m_mesh->m_bulkElements.at(elemIndex);
 
-			if (cand.node[0] == nodeindex || cand.node[1] == nodeindex 
-				|| cand.node[2] == nodeindex || cand.node[3] == nodeindex)
+			elemField.at(elemIndex) = -gradient.at(0) * m_u(element.node[0])
+				- gradient.at(1) * m_u(element.node[1])
+				- gradient.at(2) * m_u(element.node[2])
+				- gradient.at(3) * m_u(element.node[3]);
+		}
+
+		// then calc mean
+		size_t numNodes = m_mesh->GetNodes().size();
+		for (size_t nodeindex = 0; nodeindex < numNodes; nodeindex++)
+		{
+			auto& node = m_mesh->GetNode(nodeindex);
+			auto& candidates = m_mesh->m_topologyTree.Find(node.x, node.y, node.z);
+
+			m_field.at(nodeindex).setZero();
+			int count = 0;
+			for (auto& candidateIndex : candidates)
 			{
-				count++;
-				m_field.at(nodeindex) += elemField.at(candidateIndex);
+				auto& cand = m_mesh->GetTetrahedron(candidateIndex);
+
+				if (cand.node[0] == nodeindex || cand.node[1] == nodeindex
+					|| cand.node[2] == nodeindex || cand.node[3] == nodeindex)
+				{
+					count++;
+					m_field.at(nodeindex) += elemField.at(candidateIndex);
+				}
 			}
-		}
 
-		if (count == 0)
-		{
-			LOG_ERROR("SKIBIDI");
-		}
+			if (count == 0)
+			{
+				LOG_ERROR("SKIBIDI");
+			}
 
-		m_field.at(nodeindex) = m_field.at(nodeindex).array() / count;
+			m_field.at(nodeindex) = m_field.at(nodeindex).array() / count;
+		}
 	}
-
+	
 	return true;
 }

@@ -7,8 +7,10 @@ axis equal
 hold on
 grid on
 
-load("../surfacegeo.mat")
-load("../solution.mat")
+iter = 99;
+
+load("../out/surfacegeo.mat")
+load("../out/solution_" + iter + ".mat")
 
 %draw surfaces
 color = ones(1,length(PlaneBoundary_z));

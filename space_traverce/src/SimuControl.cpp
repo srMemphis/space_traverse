@@ -5,6 +5,7 @@
 #include "utils/PhysConstants.h"
 #include "utils/UnsignedRange.h"
 
+#include <filesystem>
 #include <algorithm>
 #include <string>
 
@@ -15,8 +16,6 @@ SimuControl::SimuControl()
 	m_mesh = std::make_shared<Mesh>();
 	m_solver = std::make_shared<Solver>();
 	m_beam = std::make_shared <Beam> ();
-
-	m_matlab.OpenFile("solution.mat");
 }
 
 SimuControl::~SimuControl()
@@ -48,9 +47,16 @@ bool SimuControl::Prepare()
 	PROFILE_FUNCTION();
 	LOG_TRACE("Initializing simulation parameters...");
 
+	// general
+	m_iterations = 2;
+	m_outputDir = "out";
+	m_saveInterval = 1;
+
+	std::filesystem::create_directory(m_outputDir);
+
 	// saving geometry to dispaly at matlab
 	ToMatlab matfile;
-	matfile.OpenFile("surfacegeo.mat");
+	matfile.OpenFile(m_outputDir + "/surfacegeo.mat");
 
 	m_mesh->SaveSurfaceToFile("Plane Boundary", matfile);
 	GenerateSurfaceToVolumeIndexing("Plane Boundary", "Plane");
@@ -80,6 +86,9 @@ bool SimuControl::Prepare()
 	// assemble linear system
 	m_solver->AssembleLeft();
 
+	// set field calc type
+	m_solver->SetFieldSmoothing(false);
+
 	// beam setup
 	Particle electron;
 	electron.charge = phys::qe;
@@ -106,7 +115,7 @@ bool SimuControl::Prepare()
 	m_beam->SetStoppingFunction(std::bind(&SimuControl::BeamShouldStop, this,
 		std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
-	m_beam->SetFieldFunction(std::bind(&Solver::GetField2, m_solver,
+	m_beam->SetFieldFunction(std::bind(&Solver::GetField, m_solver,
 		std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
 	// beam current and delta time
@@ -129,51 +138,64 @@ int SimuControl::Run()
 {
 	PROFILE_FUNCTION();
 	LOG_TRACE("Running simulation...");
-	
-	LOG_TRACE("Assembling ...");
-	m_solver->AssembleRight();
 
-	// solve systems
-	LOG_TRACE("Solving...");
-	if (!m_solver->Solve())
+	// main loop
+	for (size_t iter = 0; iter < m_iterations; iter++)
 	{
-		LOG_ERROR("Solving failed");
-		return 2;
+		LOG_INFO("----------- Iteration {} -----------", iter);
+
+		LOG_TRACE("Assembling ...");
+		m_solver->AssembleRight();
+
+		// solve systems
+		LOG_TRACE("Solving...");
+		if (!m_solver->Solve())
+		{
+			LOG_ERROR("Solving failed");
+			return 2;
+		}
+
+		// propagate particles in geometry
+		// multithreaded inside
+		LOG_TRACE("Propagating tracks...");
+		m_beam->Run();
+
+		// check where we hit and act accordingly
+		LOG_TRACE("Registering hits...");
+		RegisterHits();
+
+		// save solution to file
+		if (iter % m_saveInterval == 0)
+		{
+			std::string outFile = m_outputDir + "/solution_" + std::to_string(iter) + ".mat";
+			m_matlab.OpenFile(outFile);
+			
+			LOG_TRACE("Saving solution to file...");
+			if (!m_solver->SaveSolutionToFile(m_matlab))
+			{
+				LOG_ERROR("failed to save solution to file");
+				return 3;
+			}
+
+			if (!m_beam->SaveTracksToFile(m_matlab))
+			{
+				LOG_ERROR("failed to save tracks to file");
+				return 3;
+			}
+
+			if (!SaveChargeData())
+			{
+				LOG_ERROR("failed to save charge to file");
+				return 3;
+			}
+
+			// TODO: save detector data to file 
+
+			// closing matlab file
+			// no more wrights after this
+			m_matlab.Close();
+		}
 	}
-
-	// propagate particles in geometry
-	// multithreaded inside
-	LOG_TRACE("Propagating Tracks");
-	m_beam->Run();
-
-	// check where we hit and act accordingly
-	RegisterHits();
-
-	// save solution to file
-	LOG_TRACE("Saving solution to file...");
-	if (!m_solver->SaveSolutionToFile(m_matlab))
-	{
-		LOG_ERROR("failed to save solution to file");
-		return 3;
-	}
-
-	if (!m_beam->SaveTracksToFile(m_matlab))
-	{
-		LOG_ERROR("failed to save tracks to file");
-		return 3;
-	}
-
-	if (!SaveChargeData())
-	{
-		LOG_ERROR("failed to save charge to file");
-		return 3;
-	}
-
-	// TODO: save detector data to file 
-	
-	// closing matlab file
-	// no more wrights after this
-	m_matlab.Close();
 
 	return 0;
 }
@@ -234,6 +256,7 @@ void SimuControl::RegisterHits()
 
 bool SimuControl::GenerateSurfaceToVolumeIndexing(const std::string& physSurface, const std::string& physVolume)
 {
+	// slow and naive
 	PROFILE_FUNCTION();
 
 	auto surfTag = m_mesh->NameToTag(physSurface);

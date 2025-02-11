@@ -34,6 +34,9 @@ private:
 	// simu params
 	double m_deltaTime = 0;
 	double m_current = 0;
+	size_t m_iterations = 0;
+	std::string m_outputDir;
+	size_t m_saveInterval = 0;
 
 	// serialization
 	bool GenerateSurfaceToVolumeIndexing(const std::string& physSurface, const std::string& physVolume);

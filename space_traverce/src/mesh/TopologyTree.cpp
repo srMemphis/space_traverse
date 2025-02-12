@@ -84,7 +84,7 @@ const std::vector<size_t>& TopologyTree::Find(double x, double y, double z) cons
 	if (!IsInBounds(x, y, z))
 	{
 		// returns empty vector
-		LOG_ERROR("Looking for point outside of the search tree!");
+		LOG_ERROR("Looking for point outside of the bounding box!");
 		return m_emptyVector;
 	}
 

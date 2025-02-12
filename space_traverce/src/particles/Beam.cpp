@@ -255,7 +255,7 @@ void Beam::Run()
 		track.SetAcceleration(field * m_particle.charge / phys::me);
 	}
 
-	#pragma omp parallel for num_threads(3)
+	#pragma omp parallel for schedule(dynamic)
 	for (int i = 0; i < m_tracks.size(); i++)
 	{
 		PROFILE_SCOPE("ONE TRACK RUN");
@@ -263,15 +263,15 @@ void Beam::Run()
 		auto& track = m_tracks.at(i);
 		while (true)
 		{
-			auto& last = track.MakeStep();
+			auto& lastPoint = track.MakeStep();
 
 			// if we should stop
-			if (m_stoppingFunction(last.x(), last.y(), last.z()))
+			if (m_stoppingFunction(lastPoint.x(), lastPoint.y(), lastPoint.z()))
 			{
 				break;
 			}
 			
-			auto field = m_fieldFunction(last.x(), last.y(), last.z());
+			auto field = m_fieldFunction(lastPoint.x(), lastPoint.y(), lastPoint.z());
 			track.SetAcceleration(field * m_particle.charge / phys::me);
 
 			track.CalcNewVelocity();

@@ -48,10 +48,16 @@ bool SimuControl::Prepare()
 	LOG_TRACE("Initializing simulation parameters...");
 
 	// general
-	m_iterations = 2;
+	m_iterations = 1000;
 	m_outputDir = "out";
-	m_saveInterval = 1;
+	m_saveInterval = 50;
 
+	// beam current and delta time
+	m_deltaTime = 1e-4;		// seconds
+	m_current = -100e-9;	// ampere
+
+	// clearing out dir
+	std::filesystem::remove_all(m_outputDir);
 	std::filesystem::create_directory(m_outputDir);
 
 	// saving geometry to dispaly at matlab
@@ -98,15 +104,15 @@ bool SimuControl::Prepare()
 	m_beam->SetEnergy(1e4); // eV
 
 	Eigen::Vector3d beamPos = { 0, 0.05, 0.15 };
-	Eigen::Vector3d beamStare = { 0, 0, -0.02 };
+	Eigen::Vector3d beamStare = { 0, 0, 0.02 };
 	auto dir = (beamStare - beamPos).normalized();
 
 	m_beam->SetCenterPosition(beamPos.x(), beamPos.y(), beamPos.z());
 	m_beam->SetDirection(dir.x(), dir.y(), dir.z());
-	m_beam->SetRadius(0.01);
-	m_beam->DetermineStepSize(0.5, 30000);
+	m_beam->SetRadius(0.0025);
+	m_beam->DetermineStepSize(0.25, 30000);
 
-	m_beam->GeneratePrimaryPosition(6);		// n^2 growth of number of particles
+	m_beam->GeneratePrimaryPosition(10);		// 3*n^2 number of particles
 
 	// all volumes exept Detector
 	AddStoppingVolume("Plane");
@@ -117,10 +123,6 @@ bool SimuControl::Prepare()
 
 	m_beam->SetFieldFunction(std::bind(&Solver::GetField, m_solver,
 		std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-
-	// beam current and delta time
-	m_deltaTime = 1e-9;		// seconds
-	m_current = 100e-9;		// ampere
 
 	return true;
 }
@@ -158,6 +160,7 @@ int SimuControl::Run()
 		// propagate particles in geometry
 		// multithreaded inside
 		LOG_TRACE("Propagating tracks...");
+		m_beam->Reset();
 		m_beam->Run();
 
 		// check where we hit and act accordingly
@@ -165,7 +168,7 @@ int SimuControl::Run()
 		RegisterHits();
 
 		// save solution to file
-		if (iter % m_saveInterval == 0)
+		if (iter % m_saveInterval == 0 || iter == m_iterations - 1)
 		{
 			std::string outFile = m_outputDir + "/solution_" + std::to_string(iter) + ".mat";
 			m_matlab.OpenFile(outFile);
@@ -249,7 +252,7 @@ void SimuControl::RegisterHits()
 			// TODO: generate secondary emission
 
 			// we hit smth that needs to be charged
-			m_solver->AddElementChargeDensity(elemIndex, charge);
+			m_solver->AddElementCharge(elemIndex, charge);
 		}
 	}
 }
@@ -356,7 +359,7 @@ bool SimuControl::SaveChargeData()
 		}
 
 		// removing spaces from name
-		auto newname = name_indices.first;
+		std::string newname = name_indices.first;
 		auto newend = std::remove(newname.begin(), newname.end(), ' ');
 		newname.erase(newend, newname.end());
 		newname.append("_C");

@@ -19,7 +19,7 @@ public:
 	void SetMesh(std::shared_ptr<Mesh> mesh);
 	void AddMaterial(const std::string& name, const Material& mat);
 	void SetElementChargeDensity(size_t index, double value);
-	void AddElementChargeDensity(size_t index, double value);
+	void AddElementCharge(size_t index, double value);
 	bool SetInitialValue(const std::string& volumeName, double value);
 	bool SetBoundaryValue(const std::string& name, double value);
 	void SetFieldSmoothing(bool enable);
@@ -52,5 +52,6 @@ private:
 	UnsignedRange m_iIndex;							// i - non - boundary node index
 	UnsignedRange m_jIndex;							// j - boundary node index
 
-	std::vector<Eigen::Vector3d> m_field;						// mean of electric field at nodes
+	//std::vector<double> m_elemVolume;				// volumes of elements to calc charge density
+	std::vector<Eigen::Vector3d> m_field;			// mean of electric field at nodes
 };

@@ -7,7 +7,7 @@ axis equal
 hold on
 grid on
 
-iter = 99;
+iter = 999;
 
 load("../out/surfacegeo.mat")
 load("../out/solution_" + iter + ".mat")

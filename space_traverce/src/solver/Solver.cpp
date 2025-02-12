@@ -47,9 +47,9 @@ void Solver::SetElementChargeDensity(size_t index, double value)
 	m_chargeDensity(index) = value;
 }
 
-void Solver::AddElementChargeDensity(size_t index, double value)
+void Solver::AddElementCharge(size_t index, double value)
 {
-	m_chargeDensity(index) += value;
+	m_chargeDensity(index) += (value / m_mesh->GetVolumeOfTetrahedron(index));
 }
 
 bool Solver::SetInitialValue(const std::string& volumeName, double value)

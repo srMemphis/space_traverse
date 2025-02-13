@@ -2,12 +2,14 @@
 #include "mesh/ElementTypes.h"
 #include "mesh/TopologyTree.h"
 #include "utils/ToMatlab.h"
+#include "mesh/Box.h"
 
 #include <string>
 #include <vector>
 #include <map>
 
 #include <Eigen/Dense>
+
 
 class Mesh
 {
@@ -43,7 +45,8 @@ public:
 	std::vector<double> GetNodesX() const;			// creates vector of node coordinates
 	std::vector<double> GetNodesY() const;
 	std::vector<double> GetNodesZ() const;
-	bool IsInBounds(double x, double y, double z) const;						// checks if point is inside biggest bounding box 
+	bool IsInBounds(double x, double y, double z) const;						// checks if point is inside biggest bounding box
+	bool IsInNarrowBounds(double x, double y, double z) const;					// checks if point is inside samll bounding box
 	
 
 	// find element by traversing topology tree
@@ -66,6 +69,7 @@ private:
 
 	TopologyTree m_topologyTree;				// binary search tree
 	std::vector<std::array<Eigen::Vector3d, 4>> m_GradientVectors;        // four gradient vectors per element
+	Box m_tightBox;				// bounding box slightly smaller than the mesh
 
 private:
 	bool ReadSection(std::ifstream& geofile, std::string section);
@@ -86,6 +90,7 @@ private:
 	// after file is read
 	void FillEntitiesWithElements();
 	void GenerateGradientVectors();
+	void GenerateTightBox();
 
 	friend class Solver;
 };

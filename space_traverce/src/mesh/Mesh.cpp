@@ -63,6 +63,7 @@ bool Mesh::FromFile(std::string filepath)
 	// fill datastructures
 	FillEntitiesWithElements();
 	GenerateGradientVectors();
+	GenerateTightBox();
 
 	return true;
 }
@@ -230,6 +231,11 @@ bool Mesh::IsInBounds(double x, double y, double z) const
 	return m_topologyTree.IsInBounds(x,y,z);
 }
 
+bool Mesh::IsInNarrowBounds(double x, double y, double z) const
+{
+	return m_tightBox.Contains(x, y, z);
+}
+
 int Mesh::GetPhisicalTagOfTetrahedron(size_t index) const
 {
 	for (auto& key_vol : m_volumes)
@@ -343,7 +349,7 @@ void Mesh::SaveSurfaceToFile(const std::string& physname, ToMatlab& file)
 		{
 			for (auto& elem : surf.elements)
 			{
-				std::array<size_t, 3> newtriang;
+				std::array<size_t, 3> newtriang {0};
 
 				for (int i = 0; i < 3; i++)
 				{
@@ -381,7 +387,7 @@ void Mesh::SaveSurfaceToFile(const std::string& physname, ToMatlab& file)
 	}
 	
 	// removing spaces from name
-	auto newname = physname;
+	std::string newname = physname;
 	auto newend = std::remove(newname.begin(), newname.end(), ' ');
 	newname.erase(newend, newname.end());
 
@@ -699,7 +705,7 @@ bool Mesh::ReadElements(std::ifstream& geofile)
 			// read elements
 			for (int j = 0; j < numElementsInBlock; j++)
 			{
-				ETriangle element;
+				ETriangle element{0};
 
 				geofile >> elementTag >> element.node[0] >> element.node[1] >> element.node[2];
 
@@ -727,7 +733,7 @@ bool Mesh::ReadElements(std::ifstream& geofile)
 
 			for (int j = 0; j < numElementsInBlock; j++)
 			{
-				ETetrahedron element;
+				ETetrahedron element{0};
 
 				geofile >> elementTag >> element.node[0] >> element.node[1] >> element.node[2] >> element.node[3];
 
@@ -880,6 +886,33 @@ void Mesh::GenerateGradientVectors()
 		m_GradientVectors.at(i).at(2) = grad3;
 		m_GradientVectors.at(i).at(3) = grad4;
 	}
+}
+
+void Mesh::GenerateTightBox()
+{
+	// box with exact size of the mesh
+	Box exact;
+
+	for (auto& node : m_Nodes)
+	{
+		exact.xMax = exact.xMax < node.x ? node.x : exact.xMax;
+		exact.yMax = exact.yMax < node.y ? node.y : exact.yMax;
+		exact.zMax = exact.zMax < node.z ? node.z : exact.zMax;
+
+		exact.xMin = exact.xMin > node.x ? node.x : exact.xMin;
+		exact.yMin = exact.yMin > node.y ? node.y : exact.yMin;
+		exact.zMin = exact.zMin > node.z ? node.z : exact.zMin;
+	}
+
+	double mult = 0.9999;		// size multiplier
+
+	m_tightBox.xMax = exact.xMax * mult;
+	m_tightBox.yMax = exact.yMax * mult;
+	m_tightBox.zMax = exact.zMax * mult;
+
+	m_tightBox.xMin = exact.xMin * mult;
+	m_tightBox.yMin = exact.yMin * mult;
+	m_tightBox.zMin = exact.zMin * mult;
 }
 
 bool Mesh::ReadNodes(std::ifstream& geofile)

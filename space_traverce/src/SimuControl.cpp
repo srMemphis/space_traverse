@@ -206,13 +206,18 @@ int SimuControl::Run()
 // called in multithread
 bool SimuControl::BeamShouldStop(double x, double y, double z) const
 {
-	// TODO: Consider narrow boundary checking to avoid infinite warnings
+	// narrow boundary checking to ensure that we definetly inside of the tetrahedron
+	if (!m_mesh->IsInNarrowBounds(x, y, z))
+	{
+		return true;
+	}
+
 	// get element index
 	auto elemIndex = m_mesh->FindElementByCoords(x, y, z);
 
 	if (elemIndex < 0 )
 	{
-		// we are outside
+		LOG_ERROR("Narrow boundary check failed. Point was ({}, {}, {})", x, y, z);
 		return true;
 	}
 

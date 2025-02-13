@@ -9,8 +9,8 @@
 
 struct Particle
 {
-	double charge;		// C
-	double E0;			// eV
+	double charge = 0;		// C
+	double E0 = 0;			// eV
 };
 
 class Beam

@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <string_view>
 
 #include <Eigen/Dense>
 #include "debug/Log.h"
@@ -29,7 +30,8 @@ public:
 	bool WriteCell(const std::vector<double>& vec);
 	bool WriteCellAsMatrix(const std::vector<double>& vec, uint32_t rows, uint32_t cols);
 
-
+	template<typename T>
+	bool WriteReal(T val, std::string_view name);
 
 	void Close();
 
@@ -39,12 +41,25 @@ private:
 };
 
 template<typename T>
-bool ToMatlab::Write(const std::vector<T>& vec, const std::string& name)
+bool ToMatlab::WriteReal(T val, std::string_view name)
+{
+	if (!m_file)
+	{
+		LOG_ERROR("Unable to write value {} to file.File is not opened.", name);
+		return false;
+	}
+
+	TinyMATWriter_writeValue(m_file, name.data(), val);
+
+	return true;
+}
+
+template<typename T>
+inline bool ToMatlab::Write(const std::vector<T>& vec, const std::string& name)
 {
 	if (!m_file)
 	{
 		LOG_ERROR("Unable to write vector {} to file.File is not opened.", name);
-
 		return false;
 	}
 
@@ -54,12 +69,11 @@ bool ToMatlab::Write(const std::vector<T>& vec, const std::string& name)
 }
 
 template<typename T>
-bool ToMatlab::WriteAsMatrix(const std::vector<T>& vec, uint32_t rows, uint32_t cols, const std::string& name)
+inline bool ToMatlab::WriteAsMatrix(const std::vector<T>& vec, uint32_t rows, uint32_t cols, const std::string& name)
 {
 	if (!m_file)
 	{
 		LOG_ERROR("Unable to write matrix {} to file.File is not opened.", name);
-
 		return false;
 	}
 

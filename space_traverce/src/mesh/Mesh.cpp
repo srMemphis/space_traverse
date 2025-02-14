@@ -327,7 +327,7 @@ int64_t Mesh::FindElementByCoords(double x, double y, double z) const
 	return -2;
 }
 
-void Mesh::SaveSurfaceToFile(const std::string& physname, ToMatlab& file)
+void Mesh::SaveSurfaceToFile(const std::string& physname, ToMatlab& file) const
 {
 	auto tag = NameToTag(physname);
 
@@ -395,6 +395,13 @@ void Mesh::SaveSurfaceToFile(const std::string& physname, ToMatlab& file)
 	file.Write(y, newname + "_y");
 	file.Write(z, newname + "_z");
 	file.WriteAsMatrix(tomatlabindex, size, 3, newname + "_T");
+}
+
+void Mesh::SaveNodesToFile(ToMatlab& file) const
+{
+	file.Write(GetNodesX(), "nodeX");
+	file.Write(GetNodesY(), "nodeY");
+	file.Write(GetNodesZ(), "nodeZ");
 }
 
 bool Mesh::ReadSection(std::ifstream& geofile, std::string s)

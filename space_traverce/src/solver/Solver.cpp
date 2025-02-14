@@ -153,10 +153,7 @@ bool Solver::SaveSolutionToFile(ToMatlab& file)
 	//file.Write(field, "field");
 	//file.Write(x, "xField");
 
-	if(file.Write(m_u, "uPlus") &&
-		file.Write(m_mesh->GetNodesX(), "xPlus") &&
-		file.Write(m_mesh->GetNodesY(), "yPlus") &&
-		file.Write(m_mesh->GetNodesZ(), "zPlus"))
+	if(file.Write(m_u, "u"))
 	{
 		res = true;
 	}

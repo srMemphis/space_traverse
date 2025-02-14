@@ -7,7 +7,7 @@ axis equal
 hold on
 grid on
 
-iter = 999;
+iter = 200;
 
 load("../out/surfacegeo.mat")
 load("../out/solution_" + iter + ".mat")
@@ -22,3 +22,8 @@ clb.Label.String = 'Charge density';
 for i = 1:length(tracks)
     plot3(tracks{i}(:,1), tracks{i}(:,2), tracks{i}(:,3), 'r');
 end
+
+view(120, 20);
+
+
+

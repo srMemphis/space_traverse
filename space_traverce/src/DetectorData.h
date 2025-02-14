@@ -1,17 +1,33 @@
 #pragma once
 #include <vector>
 #include <Eigen/Dense>
+#include "utils/ToMatlab.h"
 
 struct DetectorData
 {
-	std::vector<Eigen::Vector3d> hitsPositions;
+	std::vector<double> hitsPositionsX;
+	std::vector<double> hitsPositionsY;
+	std::vector<double> hitsPositionsZ;
 	std::vector<double> energy;
 	double current;
 
 	void Clear()
 	{
-		hitsPositions.clear();
+		hitsPositionsX.clear();
+		hitsPositionsY.clear();
+		hitsPositionsZ.clear();
 		energy.clear();
 		current = 0;
+	}
+
+	bool ToFile(ToMatlab& file) const
+	{
+		bool res = file.Write(hitsPositionsX, "hitsX")
+			&& file.Write(hitsPositionsY, "hitsY")
+			&& file.Write(hitsPositionsZ, "hitsZ")
+			&& file.WriteReal(current, "current")
+			&& file.Write(energy, "energy");
+
+		return res;
 	}
 };

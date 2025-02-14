@@ -53,7 +53,9 @@ public:
 	// returns element index
 	int64_t FindElementByCoords(double x, double y, double z) const;
 
-	void SaveSurfaceToFile(const std::string& physname, ToMatlab& file);
+	// serialization
+	void SaveSurfaceToFile(const std::string& physname, ToMatlab& file) const;
+	void SaveNodesToFile(ToMatlab& file) const;
 
 private:
 	std::map<std::string, PhisicalName> m_PhisicalNames;  // mapped by name

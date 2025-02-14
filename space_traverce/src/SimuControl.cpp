@@ -49,7 +49,6 @@ bool SimuControl::Prepare()
 
 	// general
 	m_iterations = 1000;
-	m_outputDir = "out";
 	m_saveInterval = 50;
 
 	// beam current and delta time
@@ -57,6 +56,7 @@ bool SimuControl::Prepare()
 	m_current = -100e-9;	// ampere
 
 	// clearing out dir
+	m_outputDir = "out";
 	std::filesystem::remove_all(m_outputDir);
 	std::filesystem::create_directory(m_outputDir);
 
@@ -64,6 +64,7 @@ bool SimuControl::Prepare()
 	ToMatlab matfile;
 	matfile.OpenFile(m_outputDir + "/surfacegeo.mat");
 
+	m_mesh->SaveNodesToFile(matfile);
 	m_mesh->SaveSurfaceToFile("Plane Boundary", matfile);
 	GenerateSurfaceToVolumeIndexing("Plane Boundary", "Plane");
 
@@ -103,8 +104,8 @@ bool SimuControl::Prepare()
 	m_beam->SetParticle(electron);
 	m_beam->SetEnergy(1e4); // eV
 
-	Eigen::Vector3d beamPos = { 0, 0.05, 0.15 };
-	Eigen::Vector3d beamStare = { 0, 0, 0.02 };
+	Eigen::Vector3d beamPos = { 0, 0.05, -0.15 };
+	Eigen::Vector3d beamStare = { 0, 0, -0.02 };
 	auto dir = (beamStare - beamPos).normalized();
 
 	m_beam->SetCenterPosition(beamPos.x(), beamPos.y(), beamPos.z());
@@ -192,7 +193,11 @@ int SimuControl::Run()
 				return 3;
 			}
 
-			// TODO: save detector data to file 
+			if (!m_detector.ToFile(m_matlab))
+			{
+				LOG_ERROR("Failed to save detector data to file");
+				return 3;
+			}
 
 			// closing matlab file
 			// no more wrights after this
@@ -237,6 +242,7 @@ void SimuControl::RegisterHits()
 {
 	m_detector.Clear();
 	double charge = m_current * m_deltaTime / m_beam->GetTracks().size();	// charge per track
+
 	for (auto& track : m_beam->GetTracks())
 	{
 		auto& lastPoint = track.GetLastPoint();
@@ -247,10 +253,12 @@ void SimuControl::RegisterHits()
 		// we hit detector
 		if (tag == m_detectorTag)
 		{
-			// TODO: calc particle energy
-			m_detector.hitsPositions.push_back(lastPoint);
+			double ene = phys::me * std::pow(track.GetVelocity().norm(), 2) / (2 * 1.602e-19);
+			m_detector.energy.push_back(ene);
+			m_detector.hitsPositionsX.push_back(lastPoint.x());
+			m_detector.hitsPositionsY.push_back(lastPoint.y());
+			m_detector.hitsPositionsZ.push_back(lastPoint.z());
 			m_detector.current += (charge / m_deltaTime);
-			m_detector.energy.push_back(0);
 		}
 		else if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), tag) != m_stoppingVolumes.end())
 		{

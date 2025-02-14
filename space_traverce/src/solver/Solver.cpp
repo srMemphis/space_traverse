@@ -302,6 +302,10 @@ void Solver::AssembleLeft()
 	//finalize
 	m_Kii.finalize();
 	m_Kij.finalize();
+
+	// matrix used for solution guess
+	m_uGuess.resize(m_iIndex.Size());
+	m_uGuess.setZero();
 }
 
 void Solver::AssembleRight()
@@ -352,7 +356,9 @@ bool Solver::Solve()
 	cg.compute(m_Kii);
 
 	// solve for left side
-	Eigen::VectorXd uSolved = cg.solve(m_fi - m_Kij * m_uBound);
+	//Eigen::VectorXd uSolved = cg.solve(m_fi - m_Kij * m_uBound);
+	Eigen::VectorXd uSolved = cg.solveWithGuess(m_fi - m_Kij * m_uBound, m_uGuess);
+	m_uGuess = uSolved;
 
 	if (cg.info() != Eigen::ComputationInfo::Success)
 	{

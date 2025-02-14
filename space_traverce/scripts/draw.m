@@ -7,7 +7,7 @@ axis equal
 hold on
 grid on
 
-iter = 200;
+iter = 800;
 
 load("../out/surfacegeo.mat")
 load("../out/solution_" + iter + ".mat")
@@ -24,6 +24,12 @@ for i = 1:length(tracks)
 end
 
 view(120, 20);
+
+figure();
+
+plot(hitsX, hitsY, 'or');
+grid on
+axis equal
 
 
 

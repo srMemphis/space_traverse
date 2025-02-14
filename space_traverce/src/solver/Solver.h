@@ -45,6 +45,7 @@ private:
 	std::map<std::string, Material> m_materials;	// material data
 	Eigen::VectorXd m_chargeDensity;				// charge density in each tetrahedron
 	Eigen::VectorXd m_u;							// electric potential (solution)
+	Eigen::VectorXd m_uGuess;						// eigen iterative solution used as guess
 	Eigen::SparseMatrix<double> m_Kii;				// part of K matrix created by non-boundary nodes
 	Eigen::SparseMatrix<double> m_Kij;				// i - non-boundary node index, j - boundary node index
 	Eigen::VectorXd m_fi;							// right hand side created by non-boundary nodes

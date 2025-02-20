@@ -7,20 +7,55 @@
 #include "particles/Beam.h"
 #include "DetectorData.h"
 
+struct SimParameters
+{
+	// general
+	double deltaTime = 0;
+	size_t iterations = 0;
+	size_t saveInterval = 0;
+	std::string outputDir = "out";
+	
+	// beam
+	double current = 0;
+	double energy = 0;
+	Eigen::Vector3d pos = {0,0,0};
+	Eigen::Vector3d stare = { 0,0,0 };
+	double radius = 0;
+	uint32_t numsteps = 0;
+	uint32_t numtracks = 0;
+
+	// mesh
+	std::string meshfile;
+
+	std::string targetName;
+	std::string targetMaterialName;
+	std::string targetBoundary;
+
+	std::string worldName;
+	std::string worldMaterialName;
+	std::string worldBoundary;
+
+	// solver
+	Material targetMaterial;
+	Material worldMaterial;
+	bool smooth = false;
+};
+
 class SimuControl
 {
 public:
 	SimuControl();
 	~SimuControl();
 
-	bool MeshFromFile(const std::string& filepath);
-	bool AddStoppingVolume(const std::string& name);
+	bool ConfigFromFile(std::string_view configfile);
 
 	bool Prepare();
 
 	int Run();
 
 private:
+	bool AddStoppingVolume(const std::string& name);
+	bool MeshFromFile(const std::string& filepath);
 	bool BeamShouldStop(double x, double y, double z) const;
 	void RegisterHits();
 
@@ -32,11 +67,7 @@ private:
 	int m_detectorTag = 0;
 
 	// simu params
-	double m_deltaTime = 0;
-	double m_current = 0;
-	size_t m_iterations = 0;
-	std::string m_outputDir;
-	size_t m_saveInterval = 0;
+	SimParameters m_params;
 
 	// serialization
 	bool GenerateSurfaceToVolumeIndexing(const std::string& physSurface, const std::string& physVolume);

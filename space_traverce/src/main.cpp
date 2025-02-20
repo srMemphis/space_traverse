@@ -11,15 +11,13 @@ int main()
 
 	SimuControl simulation;
 
-	//std::string filepath = "msh/sphere_coarse.msh";
-	//std::string filepath = "msh/sphere.msh";
-	std::string filepath = "msh/plane.msh";
+	std::string configfile = "config.yaml";
 
-	if (!simulation.MeshFromFile(filepath))
-		return -1;
+	if (!simulation.ConfigFromFile(configfile))
+		return 1;
 
 	if (!simulation.Prepare())
-		return 1;
+		return 2;
 	
 	auto res = simulation.Run();
 

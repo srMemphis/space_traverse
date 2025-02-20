@@ -195,6 +195,7 @@
     <ClInclude Include="src\utils\Types.h" />
     <ClInclude Include="src\utils\UnsignedRange.h" />
     <ClInclude Include="src\utils\Vec3.h" />
+    <ClInclude Include="src\utils\yaml.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

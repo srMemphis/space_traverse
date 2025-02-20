@@ -4,6 +4,7 @@
 #include "debug/Profiler.h"
 #include "utils/PhysConstants.h"
 #include "utils/UnsignedRange.h"
+#include "utils/yaml.h"
 
 #include <filesystem>
 #include <algorithm>
@@ -45,41 +46,35 @@ bool SimuControl::MeshFromFile(const std::string& filepath)
 bool SimuControl::Prepare()
 {
 	PROFILE_FUNCTION();
+
+	if (!MeshFromFile(m_params.meshfile))
+	{
+		return false;
+	}
+
 	LOG_TRACE("Initializing simulation parameters...");
 
-	// general
-	m_iterations = 1000;
-	m_saveInterval = 50;
-
-	// beam current and delta time
-	m_deltaTime = 1e-4;		// seconds
-	m_current = -100e-9;	// ampere
-
 	// clearing out dir
-	m_outputDir = "out";
-	std::filesystem::remove_all(m_outputDir);
-	std::filesystem::create_directory(m_outputDir);
+	std::filesystem::remove_all(m_params.outputDir);
+	std::filesystem::create_directory(m_params.outputDir);
 
 	// saving geometry to dispaly at matlab
 	ToMatlab matfile;
-	matfile.OpenFile(m_outputDir + "/surfacegeo.mat");
+	matfile.OpenFile(m_params.outputDir + "/surfacegeo.mat");
 
 	m_mesh->SaveNodesToFile(matfile);
-	m_mesh->SaveSurfaceToFile("Plane Boundary", matfile);
-	GenerateSurfaceToVolumeIndexing("Plane Boundary", "Plane");
+	m_mesh->SaveSurfaceToFile(m_params.targetBoundary, matfile);
+	GenerateSurfaceToVolumeIndexing(m_params.targetBoundary, m_params.targetName);
 
 	matfile.Close();
 
 	// assign material data
-	Material air, glass;
-	air.epsilon = 1;
-	glass.epsilon = 2;
-	m_solver->AddMaterial("World", air);
-	m_solver->AddMaterial("Detector", air);
-	m_solver->AddMaterial("Plane", glass);
+	m_solver->AddMaterial(m_params.worldName, m_params.worldMaterial);
+	m_solver->AddMaterial("Detector", m_params.worldMaterial);
+	m_solver->AddMaterial(m_params.targetName, m_params.targetMaterial);
 
 	// set boundary conditions
-	if (!m_solver->SetBoundaryValue("World Boundary", 0))
+	if (!m_solver->SetBoundaryValue(m_params.worldBoundary, 0))
 	{
 		LOG_ERROR("boundary surface not found");
 		return false;
@@ -102,21 +97,21 @@ bool SimuControl::Prepare()
 	electron.E0 = 0.511e6;		//eV
 
 	m_beam->SetParticle(electron);
-	m_beam->SetEnergy(1e4); // eV
+	m_beam->SetEnergy(m_params.energy); // eV
 
-	Eigen::Vector3d beamPos = { 0, 0.05, -0.15 };
-	Eigen::Vector3d beamStare = { 0, 0, -0.02 };
+	Eigen::Vector3d beamPos = m_params.pos;
+	Eigen::Vector3d beamStare = m_params.stare;
 	auto dir = (beamStare - beamPos).normalized();
 
 	m_beam->SetCenterPosition(beamPos.x(), beamPos.y(), beamPos.z());
 	m_beam->SetDirection(dir.x(), dir.y(), dir.z());
-	m_beam->SetRadius(0.0025);
-	m_beam->DetermineStepSize(0.25, 30000);
+	m_beam->SetRadius(m_params.radius);
+	m_beam->DetermineStepSize(0.25, m_params.numsteps);
 
-	m_beam->GeneratePrimaryPosition(10);		// 3*n^2 number of particles
+	m_beam->GeneratePrimaryPosition(m_params.numtracks);		// 3*n^2 number of particles
 
 	// all volumes exept Detector
-	AddStoppingVolume("Plane");
+	AddStoppingVolume(m_params.targetName);
 
 	// set beam stopping and field functions
 	m_beam->SetStoppingFunction(std::bind(&SimuControl::BeamShouldStop, this,
@@ -137,13 +132,405 @@ bool SimuControl::AddStoppingVolume(const std::string& name)
 	return true;
 }
 
+bool SimuControl::ConfigFromFile(std::string_view configfile)
+{
+	auto node_res = yaml::FromFile(configfile);
+
+	if (!node_res.second)
+	{
+		LOG_CRITICAL("Failed to open config file {}!", configfile);
+		return false;
+	}
+
+	auto& inconfig = node_res.first;
+
+	// ----------------------------------- general ----------------------------------- 
+	if (!inconfig.contains("General"))
+	{
+		LOG_CRITICAL("Config file does not have 'General' section");
+		return false;
+	}
+
+	// outdir
+	if (!inconfig["General"].contains("outdir"))
+	{
+		LOG_CRITICAL("Config file does not have 'General:outdir' section");
+		return false;
+	}
+	else if (!yaml::NodeToString(inconfig["General"]["outdir"], m_params.outputDir))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "General:outdir", "string");
+		return false;
+	}
+
+	// iterations
+	if (!inconfig["General"].contains("iterations"))
+	{
+		LOG_CRITICAL("Config file does not have 'General:iterations' section");
+		return false;
+	}
+	else if (!yaml::NodeToInt(inconfig["General"]["iterations"], m_params.iterations))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "General:iterations", "integer");
+		return false;
+	}
+
+	// deltaTime
+	if (!inconfig["General"].contains("deltaTime"))
+	{
+		LOG_CRITICAL("Config file does not have 'General:deltaTime' section");
+		return false;
+	}
+	else if (!yaml::NodeToDouble(inconfig["General"]["deltaTime"], m_params.deltaTime))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "General:deltaTime", "floating");
+		return false;
+	}
+
+	// saveInterval
+	if (!inconfig["General"].contains("saveInterval"))
+	{
+		LOG_CRITICAL("Config file does not have 'General:saveInterval' section");
+		return false;
+	}
+	else if (!yaml::NodeToInt(inconfig["General"]["saveInterval"], m_params.saveInterval))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "General:saveInterval", "integer");
+		return false;
+	}
+	
+	// ----------------------------------- mesh ----------------------------------- 
+	if (!inconfig.contains("Mesh"))
+	{
+		LOG_CRITICAL("Config file does not have 'Mesh' section");
+		return false;
+	}
+
+	// meshfile
+	if (!inconfig["Mesh"].contains("filename"))
+	{
+		LOG_CRITICAL("Config file does not have 'Mesh:filename' section");
+		return false;
+	}
+	else if (!yaml::NodeToString(inconfig["Mesh"]["filename"], m_params.meshfile))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Mesh:filename", "string");
+		return false;
+	}
+
+	// target
+	if (!inconfig["Mesh"].contains("Target"))
+	{
+		LOG_CRITICAL("Config file does not have 'Mesh:Target' section");
+		return false;
+	}
+
+	// targetName
+	if (!inconfig["Mesh"]["Target"].contains("name"))
+	{
+		LOG_CRITICAL("Config file does not have 'Mesh:Target:name' section");
+		return false;
+	}
+	else if (!yaml::NodeToString(inconfig["Mesh"]["Target"]["name"], m_params.targetName))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Mesh:Target:name", "string");
+		return false;
+	}
+
+	// targetMaterial
+	if (!inconfig["Mesh"]["Target"].contains("material"))
+	{
+		LOG_CRITICAL("Config file does not have 'Mesh:Target:material' section");
+		return false;
+	}
+	else if (!yaml::NodeToString(inconfig["Mesh"]["Target"]["material"], m_params.targetMaterialName))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Mesh:Target:material", "string");
+		return false;
+	}
+
+	// targetBoundary
+	if (!inconfig["Mesh"]["Target"].contains("boundary"))
+	{
+		LOG_CRITICAL("Config file does not have 'Mesh:Target:boundary' section");
+		return false;
+	}
+	else if (!yaml::NodeToString(inconfig["Mesh"]["Target"]["boundary"], m_params.targetBoundary))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Mesh:Target:boundary", "string");
+		return false;
+	}
+
+	// world
+	if (!inconfig["Mesh"].contains("World"))
+	{
+		LOG_CRITICAL("Config file does not have 'Mesh:World' section");
+		return false;
+	}
+
+	// worldName
+	if (!inconfig["Mesh"]["World"].contains("name"))
+	{
+		LOG_CRITICAL("Config file does not have 'Mesh:World:name' section");
+		return false;
+	}
+	else if (!yaml::NodeToString(inconfig["Mesh"]["World"]["name"], m_params.worldName))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Mesh:World:name", "string");
+		return false;
+	}
+
+	// worldMaterial
+	if (!inconfig["Mesh"]["World"].contains("material"))
+	{
+		LOG_CRITICAL("Config file does not have 'Mesh:World:material' section");
+		return false;
+	}
+	else if (!yaml::NodeToString(inconfig["Mesh"]["World"]["material"], m_params.worldMaterialName))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Mesh:World:material", "string");
+		return false;
+	}
+
+	// worldBoundary
+	if (!inconfig["Mesh"]["World"].contains("boundary"))
+	{
+		LOG_CRITICAL("Config file does not have 'Mesh:World:boundary' section");
+		return false;
+	}
+	else if (!yaml::NodeToString(inconfig["Mesh"]["World"]["boundary"], m_params.worldBoundary))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Mesh:World:boundary", "string");
+		return false;
+	}
+
+	// ----------------------------------- beam ----------------------------------- 
+	if (!inconfig.contains("Beam"))
+	{
+		LOG_CRITICAL("Config file does not have 'Beam' section");
+		return false;
+	}
+
+	// current
+	if (!inconfig["Beam"].contains("current"))
+	{
+		LOG_CRITICAL("Config file does not have 'Beam:current' section");
+		return false;
+	}
+	else if (!yaml::NodeToDouble(inconfig["Beam"]["current"], m_params.current))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Beam:current", "floating");
+		return false;
+	}
+
+	// energy
+	if (!inconfig["Beam"].contains("energy"))
+	{
+		LOG_CRITICAL("Config file does not have 'Beam:energy' section");
+		return false;
+	}
+	else if (!yaml::NodeToDouble(inconfig["Beam"]["energy"], m_params.energy))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Beam:energy", "floating");
+		return false;
+	}
+
+	// radius
+	if (!inconfig["Beam"].contains("radius"))
+	{
+		LOG_CRITICAL("Config file does not have 'Beam:radius' section");
+		return false;
+	}
+	else if (!yaml::NodeToDouble(inconfig["Beam"]["radius"], m_params.radius))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Beam:radius", "floating");
+		return false;
+	}
+
+	// numtracks
+	if (!inconfig["Beam"].contains("numtracks"))
+	{
+		LOG_CRITICAL("Config file does not have 'Beam:numtracks' section");
+		return false;
+	}
+	else if (!yaml::NodeToInt(inconfig["Beam"]["numtracks"], m_params.numtracks))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Beam:numtracks", "integer");
+		return false;
+	}
+
+	// numsteps
+	if (!inconfig["Beam"].contains("numsteps"))
+	{
+		LOG_CRITICAL("Config file does not have 'Beam:numsteps' section");
+		return false;
+	}
+	else if (!yaml::NodeToInt(inconfig["Beam"]["numsteps"], m_params.numsteps))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Beam:numsteps", "integer");
+		return false;
+	}
+
+	// Pos
+	if (!inconfig["Beam"].contains("Pos"))
+	{
+		LOG_CRITICAL("Config file does not have 'Beam:Pos' section");
+		return false;
+	}
+
+	// Pos.x
+	if (!inconfig["Beam"]["Pos"].contains("x"))
+	{
+		LOG_CRITICAL("Config file does not have 'Beam:Pos:x' section");
+		return false;
+	}
+	else if (!yaml::NodeToDouble(inconfig["Beam"]["Pos"]["x"], m_params.pos.x()))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Beam:Pos:x", "floating");
+		return false;
+	}
+
+	// Pos.y
+	if (!inconfig["Beam"]["Pos"].contains("y"))
+	{
+		LOG_CRITICAL("Config file does not have 'Beam:Pos:y' section");
+		return false;
+	}
+	else if (!yaml::NodeToDouble(inconfig["Beam"]["Pos"]["y"], m_params.pos.y()))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Beam:Pos:y", "floating");
+		return false;
+	}
+
+	// Pos.z
+	if (!inconfig["Beam"]["Pos"].contains("z"))
+	{
+		LOG_CRITICAL("Config file does not have 'Beam:Pos:z' section");
+		return false;
+	}
+	else if (!yaml::NodeToDouble(inconfig["Beam"]["Pos"]["z"], m_params.pos.z()))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Beam:Pos:z", "floating");
+		return false;
+	}
+
+	// Stare
+	if (!inconfig["Beam"].contains("Stare"))
+	{
+		LOG_CRITICAL("Config file does not have 'Beam:Stare' section");
+		return false;
+	}
+
+	// Stare.x
+	if (!inconfig["Beam"]["Stare"].contains("x"))
+	{
+		LOG_CRITICAL("Config file does not have 'Beam:Stare:x' section");
+		return false;
+	}
+	else if (!yaml::NodeToDouble(inconfig["Beam"]["Stare"]["x"], m_params.stare.x()))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Beam:Stare:x", "floating");
+		return false;
+	}
+
+	// Stare.y
+	if (!inconfig["Beam"]["Stare"].contains("y"))
+	{
+		LOG_CRITICAL("Config file does not have 'Beam:Stare:y' section");
+		return false;
+	}
+	else if (!yaml::NodeToDouble(inconfig["Beam"]["Stare"]["y"], m_params.stare.y()))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Beam:Stare:y", "floating");
+		return false;
+	}
+
+	// Stare.z
+	if (!inconfig["Beam"]["Stare"].contains("z"))
+	{
+		LOG_CRITICAL("Config file does not have 'Beam:Stare:z' section");
+		return false;
+	}
+	else if (!yaml::NodeToDouble(inconfig["Beam"]["Stare"]["z"], m_params.stare.z()))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Beam:Stare:z", "floating");
+		return false;
+	}
+
+	// ----------------------------------- solver ----------------------------------- 
+	if (!inconfig.contains("Solver"))
+	{
+		LOG_CRITICAL("Config file does not have 'Solver' section");
+		return false;
+	}
+
+	// smooth
+	if (!inconfig["Solver"].contains("smooth"))
+	{
+		LOG_CRITICAL("Config file does not have 'Solver:smooth' section");
+		return false;
+	}
+	else if (!yaml::NodeToBool(inconfig["Solver"]["smooth"], m_params.smooth))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Solver:smooth", "boolean");
+		return false;
+	}
+
+	// Materials
+	if (!inconfig["Solver"].contains("Materials"))
+	{
+		LOG_CRITICAL("Config file does not have 'Solver:Materials' section");
+		return false;
+	}
+
+	// TargetMaterial
+	if (!inconfig["Solver"]["Materials"].contains(m_params.targetMaterialName))
+	{
+		LOG_CRITICAL("Config file does not have 'Solver:Materials:{}' section", m_params.targetMaterialName);
+		return false;
+	}
+
+	// target epsilon
+	if (!inconfig["Solver"]["Materials"][m_params.targetMaterialName].contains("epsilon"))
+	{
+		LOG_CRITICAL("Config file does not have 'Solver:Materials:{}epsilon' section", m_params.targetMaterialName);
+		return false;
+	}
+	else if (!yaml::NodeToDouble(inconfig["Solver"]["Materials"][m_params.targetMaterialName]["epsilon"], m_params.targetMaterial.epsilon))
+	{
+		LOG_CRITICAL("Config file section 'Solver:Materials:{}epsilon' has wrong type. Expected {}", m_params.targetMaterialName, "double");
+		return false;
+	}
+
+	// WorldMaterial
+	if (!inconfig["Solver"]["Materials"].contains(m_params.worldMaterialName))
+	{
+		LOG_CRITICAL("Config file does not have 'Solver:Materials:{}' section", m_params.worldMaterialName);
+		return false;
+	}
+
+	// target epsilon
+	if (!inconfig["Solver"]["Materials"][m_params.worldMaterialName].contains("epsilon"))
+	{
+		LOG_CRITICAL("Config file does not have 'Solver:Materials:{}epsilon' section", m_params.worldMaterialName);
+		return false;
+	}
+	else if (!yaml::NodeToDouble(inconfig["Solver"]["Materials"][m_params.worldMaterialName]["epsilon"], m_params.worldMaterial.epsilon))
+	{
+		LOG_CRITICAL("Config file section 'Solver:Materials:{}epsilon' has wrong type. Expected {}", m_params.worldMaterialName, "double");
+		return false;
+	}
+
+	return true;
+}
+
 int SimuControl::Run()
 {
 	PROFILE_FUNCTION();
 	LOG_TRACE("Running simulation...");
 
 	// main loop
-	for (size_t iter = 0; iter < m_iterations; iter++)
+	for (size_t iter = 0; iter < m_params.iterations; iter++)
 	{
 		LOG_INFO("----------- Iteration {} -----------", iter);
 
@@ -169,9 +556,9 @@ int SimuControl::Run()
 		RegisterHits();
 
 		// save solution to file
-		if (iter % m_saveInterval == 0 || iter == m_iterations - 1)
+		if (iter % m_params.saveInterval == 0 || iter == m_params.iterations - 1)
 		{
-			std::string outFile = m_outputDir + "/solution_" + std::to_string(iter) + ".mat";
+			std::string outFile = m_params.outputDir + "/solution_" + std::to_string(iter) + ".mat";
 			m_matlab.OpenFile(outFile);
 			
 			LOG_TRACE("Saving solution to file...");
@@ -241,7 +628,7 @@ bool SimuControl::BeamShouldStop(double x, double y, double z) const
 void SimuControl::RegisterHits()
 {
 	m_detector.Clear();
-	double charge = m_current * m_deltaTime / m_beam->GetTracks().size();	// charge per track
+	double charge = m_params.current * m_params.deltaTime / m_beam->GetTracks().size();	// charge per track
 
 	for (auto& track : m_beam->GetTracks())
 	{
@@ -258,7 +645,7 @@ void SimuControl::RegisterHits()
 			m_detector.hitsPositionsX.push_back(lastPoint.x());
 			m_detector.hitsPositionsY.push_back(lastPoint.y());
 			m_detector.hitsPositionsZ.push_back(lastPoint.z());
-			m_detector.current += (charge / m_deltaTime);
+			m_detector.current += (charge / m_params.deltaTime);
 		}
 		else if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), tag) != m_stoppingVolumes.end())
 		{

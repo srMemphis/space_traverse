@@ -14,7 +14,7 @@ Mesh:
         material: "Air"
         boundary: "World Boundary"
 Beam:
-    current: 100e-9
+    current: -100e-9
     energy: 10e3
     radius: 0.025
     numtracks: 10

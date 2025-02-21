@@ -106,7 +106,10 @@ bool SimuControl::Prepare()
 	m_beam->SetCenterPosition(beamPos.x(), beamPos.y(), beamPos.z());
 	m_beam->SetDirection(dir.x(), dir.y(), dir.z());
 	m_beam->SetRadius(m_params.radius);
-	m_beam->DetermineStepSize(0.25, m_params.numsteps);
+
+	Box boundingbox = m_mesh->GetBoundingBox();
+	double length = (Eigen::Vector3d{boundingbox.xMin, boundingbox.yMin, boundingbox.zMin } - Eigen::Vector3d{ boundingbox.xMax, boundingbox.yMax, boundingbox.zMax }).norm();
+	m_beam->DetermineStepSize(length, m_params.numsteps);
 
 	m_beam->GeneratePrimaryPosition(m_params.numtracks);		// 3*n^2 number of particles
 
@@ -640,7 +643,8 @@ void SimuControl::RegisterHits()
 		// we hit detector
 		if (tag == m_detectorTag)
 		{
-			double ene = phys::me * std::pow(track.GetVelocity().norm(), 2) / (2 * 1.602e-19);
+			auto speed = track.GetVelocity().norm();
+			double ene = phys::me * phys::c * phys::c * (1/std::sqrt(1 - (speed * speed) / (phys::c * phys::c)) - 1) / 1.602e-19;
 			m_detector.energy.push_back(ene);
 			m_detector.hitsPositionsX.push_back(lastPoint.x());
 			m_detector.hitsPositionsY.push_back(lastPoint.y());

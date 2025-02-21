@@ -15,9 +15,6 @@ Box(1) = {
     worldZ
 };
 
-// world boundary
-boundary[] = Abs(Boundary{ Volume{1}; });
-
 // glass plane
 planeX = 0.04;
 planeY = 0.005;
@@ -54,22 +51,22 @@ Box(3) = {
     detZ
 };
 
-// air volume
-BooleanDifference(4) = {Volume{1};} {Volume{2,3};};
+// world volume
+BooleanDifference(4) = {Volume{1}; Delete;} {Volume{2,3};};
 
-// deleting oldWorld volume after boolean operation to preserve boundary surface numbering
-Delete {Volume{1};}
+PlaneSurfaces = Abs(Boundary{ Volume{2}; });
+DetectorSurfaces = Abs(Boundary{ Volume{3}; });
+worldSurfaces = Abs(Boundary{ Volume{4}; });
+
+uniqueWorldSurfaces = worldSurfaces[];
+uniqueWorldSurfaces-=DetectorSurfaces[];
+uniqueWorldSurfaces-=PlaneSurfaces[];
 
 Physical Volume("World", 1) = {4};
 Physical Volume("Plane", 2) = {2};
 Physical Volume("Detector", 3) = {3};
-Physical Surface("World Boundary", 1) = {boundary};
-Physical Surface("Plane Boundary", 2) = {Abs(Boundary{ Volume{2}; })};
+Physical Surface("World Boundary", 1) = uniqueWorldSurfaces[];
+Physical Surface("Plane Boundary", 2) = PlaneSurfaces[];
 
-MeshSize{ PointsOf{ Volume{2,4}; } } = 0.01;
+MeshSize{ PointsOf{ Volume{3,4}; } } = 0.01;
 MeshSize{ PointsOf{ Volume{2}; } } = 0.001;
-
-
-
-
-

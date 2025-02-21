@@ -247,6 +247,26 @@ int Mesh::GetPhisicalTagOfTetrahedron(size_t index) const
 	}
 }
 
+Box Mesh::GetBoundingBox() const
+{
+	Box box;
+
+	for (auto& pair : m_volumes)
+	{
+		auto& v = pair.second;
+
+		box.xMax = box.xMax < v.maxX ? v.maxX : box.xMax;
+		box.yMax = box.yMax < v.maxY ? v.maxY : box.yMax;
+		box.zMax = box.zMax < v.maxZ ? v.maxZ : box.zMax;
+
+		box.xMin = box.xMin > v.minX ? v.minX : box.xMin;
+		box.yMin = box.yMin > v.minY ? v.minY : box.yMin;
+		box.zMin = box.zMin > v.minZ ? v.minZ : box.zMin;
+	}
+
+	return box;
+}
+
 bool Mesh::BuildTopologyData()
 {
 	PROFILE_FUNCTION();

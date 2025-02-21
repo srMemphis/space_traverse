@@ -2,7 +2,7 @@ clc
 clear
 close all
 
-iter = 150;
+iter = 199;
 
 load("../out/surfacegeo.mat")
 load("../out/solution_" + iter + ".mat")
@@ -13,8 +13,8 @@ axis equal
 hold on
 grid on
 
-color = ones(1,length(PlaneBoundary_z));
-trisurf(PlaneBoundary_T, PlaneBoundary_x, PlaneBoundary_y, PlaneBoundary_z, PlaneBoundary_C, 'LineStyle', 'none');
+color = ones(1,length(TubeBoundary_z));
+trisurf(TubeBoundary_T, TubeBoundary_x, TubeBoundary_y, TubeBoundary_z, TubeBoundary_C, 'LineStyle', 'none', 'FaceAlpha', 0.25);
 
 for i = 1:length(tracks)
     plot3(tracks{i}(:,1), tracks{i}(:,2), tracks{i}(:,3), 'r');
@@ -33,7 +33,7 @@ ylabel('y')
 
 %draw charge
 subplot(2,2,3)
-trisurf(PlaneBoundary_T, PlaneBoundary_x, PlaneBoundary_y, PlaneBoundary_z, PlaneBoundary_C, 'LineStyle', 'none');
+trisurf(TubeBoundary_T, TubeBoundary_x, TubeBoundary_y, TubeBoundary_z, TubeBoundary_C, 'LineStyle', 'none', 'FaceAlpha', 0.25);
 view(180, 0);
 title('Charge')
 xlabel('x')

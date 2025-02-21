@@ -1,0 +1,36 @@
+General:
+    outdir: "out"
+    iterations: 1000
+    deltaTime: 1e-4
+    saveInterval: 50
+Mesh:
+    filename: "msh/plane.msh"
+    Target:
+        name: "Plane"
+        material: "Glass"
+        boundary: "Plane Boundary"
+    World:
+        name: "World"
+        material: "Air"
+        boundary: "World Boundary"
+Beam:
+    current: -100e-9
+    energy: 10e3
+    radius: 0.025
+    numtracks: 10
+    numsteps: 30000
+    Pos:
+        x: 0
+        y: 0.05
+        z: -0.15
+    Stare:
+        x: 0
+        y: 0
+        z: -0.02
+Solver:
+    smooth: false
+    Materials:
+        Air:
+            epsilon: 1
+        Glass: 
+            epsilon: 2

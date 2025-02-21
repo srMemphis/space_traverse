@@ -29,6 +29,7 @@ public:
 	const std::map<int, Volume>& GetVolumes() const;
 	const std::map<int, Surface>& GetSurfaces() const;
 	int GetPhisicalTagOfTetrahedron(size_t index) const;
+	Box GetBoundingBox() const;
 
 	const ETriangle& GetTriangle(size_t index) const;
 	const ETetrahedron& GetTetrahedron(size_t index) const;

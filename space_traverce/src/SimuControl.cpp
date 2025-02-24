@@ -55,8 +55,10 @@ bool SimuControl::Prepare()
 	LOG_TRACE("Initializing simulation parameters...");
 
 	// clearing out dir
-	std::filesystem::remove_all(m_params.outputDir);
-	std::filesystem::create_directory(m_params.outputDir);
+	if (std::filesystem::exists(m_params.outputDir))
+		std::filesystem::remove_all(m_params.outputDir);
+
+	std::filesystem::create_directories(m_params.outputDir);
 
 	// saving geometry to dispaly at matlab
 	ToMatlab matfile;

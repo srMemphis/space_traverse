@@ -18,7 +18,7 @@ void Log::Init(const std::string& filename)
 	s_Logger = std::make_shared<spdlog::logger>("name", begin(logSinks), end(logSinks));
 	spdlog::register_logger(s_Logger);
 	s_Logger->set_level(spdlog::level::trace);
-	s_Logger->flush_on(spdlog::level::trace);
+	s_Logger->flush_on(spdlog::level::info);
 }
 
 std::shared_ptr<spdlog::logger> Log::GetLogger()

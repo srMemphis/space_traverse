@@ -176,6 +176,7 @@
     <ClCompile Include="src\utils\UnsignedRange.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\debug\Define.h" />
     <ClInclude Include="src\debug\Log.h" />
     <ClInclude Include="src\DetectorData.h" />
     <ClInclude Include="src\SimuControl.h" />

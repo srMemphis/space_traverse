@@ -1,8 +1,7 @@
 #pragma once
+#include "debug/Define.h"
 
 #include <memory>
-
-#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
 
 // This ignores all warnings raised inside External headers
 #pragma warning(push, 0)

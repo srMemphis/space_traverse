@@ -1,4 +1,6 @@
 #pragma once
+#include "debug/Define.h"
+
 #include <chrono>
 #include <ctime>
 #include <string>
@@ -109,7 +111,6 @@ constexpr auto CleanupOutputString(const char(&expr)[N], const char(&remove)[K])
 #define FUNC_SIG "HZ_FUNC_SIG unknown!"
 #endif
 
-#define PROFILER
 #ifdef PROFILER
 
 	#define PROFILE_BEGIN_SESSION(name, filepath) Profiler::Get().BeginSession(name, filepath);

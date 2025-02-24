@@ -931,7 +931,7 @@ void Mesh::GenerateTightBox()
 		exact.zMin = exact.zMin > node.z ? node.z : exact.zMin;
 	}
 
-	double mult = 0.9999;		// size multiplier
+	double mult = 0.999;		// size multiplier
 
 	m_tightBox.xMax = exact.xMax * mult;
 	m_tightBox.yMax = exact.yMax * mult;

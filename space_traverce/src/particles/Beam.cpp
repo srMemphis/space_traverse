@@ -1,5 +1,7 @@
 #include "Beam.h"
+
 #include <cmath>
+#include <random>
 
 #include <Eigen/Geometry>
 
@@ -64,6 +66,11 @@ void Beam::SetEnergy(double ene)
 void Beam::DetermineStepSize(double environmentSize, uint32_t desiredStepCount)
 {
 	m_stepSize = environmentSize / desiredStepCount;
+}
+
+void Beam::SetDivergence(double degrees)
+{
+	m_divergence = (degrees * 3.1415 / 180) / 2;		// half of the angle in radians
 }
 
 void Beam::SetStoppingFunction(std::function<bool(double, double, double)> func)
@@ -242,7 +249,14 @@ void Beam::Run()
 	// initial speed value
 	double speed = phys::c * std::sqrt(1 - std::pow(m_particle.E0 / (m_energy + m_particle.E0), 2));
 
-	// using int based loop fop future openmp support
+	std::random_device rd;  // Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+	std::uniform_real_distribution<> div(0, m_divergence);
+	std::uniform_real_distribution<> fi(0, 2 * 3.1415);
+
+	// perpendicular to direction
+	Eigen::Vector3d randomVector = Eigen::Vector3d::Random();
+	Eigen::Vector3d perp = m_direction.cross(randomVector).normalized();
 
 	// setting initial values
 	for (int i = 0; i < m_tracks.size(); i++)
@@ -250,7 +264,12 @@ void Beam::Run()
 		auto& track = m_tracks.at(i);
 		track.SetStepSize(m_stepSize);
 
-		track.SetStartingVelocity(m_direction * speed);
+		// generate divergence from direction
+		Eigen::Vector3d dirdiv = Eigen::AngleAxis<double>(fi(gen), m_direction) * perp;
+		dirdiv = dirdiv * std::tan(div(gen));
+		Eigen::Vector3d newdir = (m_direction + dirdiv).normalized();
+		track.SetStartingVelocity(newdir * speed);
+
 		auto field = m_fieldFunction(track.GetLastPoint().x(), track.GetLastPoint().y(), track.GetLastPoint().z());
 		track.SetAcceleration(field * m_particle.charge / phys::me);
 	}

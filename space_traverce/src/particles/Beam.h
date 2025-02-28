@@ -32,6 +32,7 @@ public:
 	void SetParticle(Particle p);
 	void SetEnergy(double ene);
 	void DetermineStepSize(double environmentSize, uint32_t desiredStepCount);
+	void SetDivergence(double degrees);
 
 	// generates initial positions based on parameters set above
 	void GeneratePrimaryPosition(uint32_t param);
@@ -54,6 +55,7 @@ private:
 	void GenerateUniformDisk(uint32_t circles);
 
 private:
+	double m_divergence;
 	double m_radius;
 	double m_energy;
 	double m_stepSize;

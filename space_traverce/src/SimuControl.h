@@ -21,6 +21,7 @@ struct SimParameters
 	Eigen::Vector3d pos = {0,0,0};
 	Eigen::Vector3d stare = { 0,0,0 };
 	double radius = 0;
+	double divergence = 0;
 	uint32_t numsteps = 0;
 	uint32_t numtracks = 0;
 

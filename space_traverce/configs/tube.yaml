@@ -17,6 +17,7 @@ Beam:
     current: -100e-9        # A
     energy: 10e3            # eV
     radius: 0.00045         # d =  0.9 mm
+    divergence: 0
     numtracks: 10           # 3 * n^2 tracks
     numsteps: 30000         # verlet steps
     Pos:

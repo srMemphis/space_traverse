@@ -17,6 +17,7 @@ Beam:
     current: -100e-9
     energy: 10e3
     radius: 0.025
+    divergence: 0
     numtracks: 10
     numsteps: 30000
     Pos:

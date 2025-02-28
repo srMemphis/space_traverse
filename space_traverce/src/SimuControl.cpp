@@ -108,6 +108,7 @@ bool SimuControl::Prepare()
 	m_beam->SetCenterPosition(beamPos.x(), beamPos.y(), beamPos.z());
 	m_beam->SetDirection(dir.x(), dir.y(), dir.z());
 	m_beam->SetRadius(m_params.radius);
+	m_beam->SetDivergence(m_params.divergence);
 
 	Box boundingbox = m_mesh->GetBoundingBox();
 	double length = (Eigen::Vector3d{boundingbox.xMin, boundingbox.yMin, boundingbox.zMin } - Eigen::Vector3d{ boundingbox.xMax, boundingbox.yMax, boundingbox.zMax }).norm();
@@ -349,6 +350,18 @@ bool SimuControl::ConfigFromFile(std::string_view configfile)
 	else if (!yaml::NodeToDouble(inconfig["Beam"]["radius"], m_params.radius))
 	{
 		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Beam:radius", "floating");
+		return false;
+	}
+
+	// divergence
+	if (!inconfig["Beam"].contains("divergence"))
+	{
+		LOG_CRITICAL("Config file does not have 'Beam:divergence' section");
+		return false;
+	}
+	else if (!yaml::NodeToDouble(inconfig["Beam"]["divergence"], m_params.divergence))
+	{
+		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Beam:divergence", "floating");
 		return false;
 	}
 

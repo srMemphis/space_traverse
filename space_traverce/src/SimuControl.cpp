@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <algorithm>
 #include <string>
+#include <mutex> // for call_once
 
 SimuControl::SimuControl()
 {
@@ -643,6 +644,24 @@ bool SimuControl::BeamShouldStop(double x, double y, double z) const
 	return false;
 }
 
+// FIXME: this is temporary
+std::once_flag equilibriumFlag;
+double GetSecondaryCoefficient(double energy)
+{
+	// from Механизмы зарядки диэлектриков при их облучении электронными пучками средних энергий
+	// the equlibrium energy for SiO2 is 1.7 keV
+
+	if (energy > 1700)
+	{
+		return 0;		// negative charging
+	}
+	else
+	{
+		std::call_once(equilibriumFlag, []() {LOG_INFO("Equilibrium energy reached!"); });
+		return 1;		// no charging
+	}
+}
+
 void SimuControl::RegisterHits()
 {
 	m_detector.Clear();
@@ -666,12 +685,18 @@ void SimuControl::RegisterHits()
 			m_detector.hitsPositionsZ.push_back(lastPoint.z());
 			m_detector.current += (charge / m_params.deltaTime);
 		}
-		else if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), tag) != m_stoppingVolumes.end())
+		else if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), tag) != m_stoppingVolumes.end())		// we hit the target
 		{
 			// TODO: generate secondary emission
 
+			auto speed = track.GetVelocity().norm();
+			double ene = phys::me * phys::c * phys::c * (1 / std::sqrt(1 - (speed * speed) / (phys::c * phys::c)) - 1) / 1.602e-19;
+			double secondary = GetSecondaryCoefficient(ene);
+
+			double totalCharge = charge - charge * secondary;
+
 			// we hit smth that needs to be charged
-			m_solver->AddElementCharge(elemIndex, charge);
+			m_solver->AddElementCharge(elemIndex, totalCharge);
 		}
 	}
 }

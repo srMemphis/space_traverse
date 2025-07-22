@@ -22,6 +22,7 @@ public:
 	void AddElementCharge(size_t index, double value);
 	bool SetInitialValue(const std::string& volumeName, double value);
 	bool SetBoundaryValue(const std::string& name, double value);
+	bool SetBoundaryValues(const std::vector<std::string>& names, const std::vector<double> values);
 	void SetFieldSmoothing(bool enable);
 
 	void AssembleLeft();

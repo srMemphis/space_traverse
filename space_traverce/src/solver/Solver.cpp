@@ -78,7 +78,7 @@ bool Solver::SetInitialValue(const std::string& volumeName, double value)
 	return isFound;
 }
 
-// TODO: This will work only for one boundary. Fix if needed
+// TODO: This will work only for one boundary (execute only once!). Remove it
 bool Solver::SetBoundaryValue(const std::string& name, double value)
 {
 	PROFILE_FUNCTION();
@@ -128,6 +128,97 @@ bool Solver::SetBoundaryValue(const std::string& name, double value)
 	}
 
 	return found;
+}
+
+bool Solver::SetBoundaryValues(const std::vector<std::string>& names, const std::vector<double> values)
+{
+	PROFILE_FUNCTION();
+	
+	// fool proof
+	if (names.size() != values.size())
+	{
+		LOG_CRITICAL("Boundary names and values have different sizes!");
+		return false;
+	}
+
+	// reserving local storage for boundary indices
+	std::vector<UnsignedRange> tempjIndices(names.size());
+
+	// for every boundary
+	for (int i = 0; i < names.size(); i++)
+	{
+		auto physTag = m_mesh->NameToTag(names.at(i));
+		
+		// find taged surface
+		bool found = false;
+		for (auto& key_surface : m_mesh->m_surfaces)
+		{
+			if (key_surface.second.HasTag(physTag))
+			{
+				found = true;
+
+				// write boundary indices to temp storage
+				for (auto& element : key_surface.second.elements)
+				{
+					tempjIndices.at(i).Add(element.node[0]);
+					tempjIndices.at(i).Add(element.node[1]);
+					tempjIndices.at(i).Add(element.node[2]);
+				}
+			}
+		}
+		if (!found)
+		{
+			LOG_CRITICAL("Failed to find surfaces of {} boundary with physTag {}!", names.at(i), physTag);
+		}
+	}
+
+	// combining all indices
+	for (auto& range : tempjIndices)
+	{
+		m_jIndex = m_jIndex + range;
+		m_iIndex = m_iIndex - range;
+	}
+
+	// boundary value vector resize
+	m_uBound.conservativeResize(m_jIndex.Size());
+
+
+	// for every boundary
+	for (int i = 0; i < names.size(); i++)
+	{
+		auto physTag = m_mesh->NameToTag(names.at(i));
+
+		// find taged surface
+		for (auto& key_surface : m_mesh->m_surfaces)
+		{
+			if (key_surface.second.HasTag(physTag))
+			{
+				// write boundary coefficients
+				for (auto& triangle : key_surface.second.elements)
+				{
+					// for every node in triangle
+					for (int N = 0; N < 3; N++)
+					{
+						// find its value
+						double value = 0;
+						for (int rangeIndex = 0; rangeIndex < tempjIndices.size(); rangeIndex++)
+						{
+							if (tempjIndices.at(rangeIndex).Contains(triangle.node[N]))
+							{
+								value = values.at(rangeIndex);
+								break;		// if boundaries share nodes we take first value
+							}
+						}
+
+						m_uBound.coeffRef(m_jIndex.GetPositionOf(triangle.node[N])) = value;
+						m_u.coeffRef(triangle.node[N]) = value;
+					}
+				}
+			}
+		}
+	}
+
+	return true;
 }
 
 void Solver::SetFieldSmoothing(bool enable)

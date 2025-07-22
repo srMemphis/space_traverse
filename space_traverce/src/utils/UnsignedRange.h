@@ -17,6 +17,8 @@ public:
 	size_t GetPositionOf(size_t number) const;
 	size_t Size() const;
 
+	UnsignedRange operator+(const UnsignedRange& other) const;
+	UnsignedRange operator-(const UnsignedRange& other) const;
 	friend std::ostream& operator<< (std::ostream& stream, const UnsignedRange& matrix);
 
 private:

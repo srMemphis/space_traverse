@@ -269,6 +269,30 @@ size_t UnsignedRange::Size() const
 	return result;
 }
 
+UnsignedRange UnsignedRange::operator+(const UnsignedRange& other) const
+{
+	UnsignedRange temp = *this;
+
+	for (auto& interval : other.m_data)
+	{
+		temp.AddInterval(interval.first, interval.second - 1);
+	}
+
+	return temp;
+}
+
+UnsignedRange UnsignedRange::operator-(const UnsignedRange& other) const
+{
+	UnsignedRange temp = *this;
+
+	for (auto& interval : other.m_data)
+	{
+		temp.RemoveInterval(interval.first, interval.second - 1);
+	}
+
+	return temp;
+}
+
 void UnsignedRange::ResolveCollisions(std::list<std::pair<size_t, size_t>>::iterator start)
 {
 	if (m_data.size() < 2)

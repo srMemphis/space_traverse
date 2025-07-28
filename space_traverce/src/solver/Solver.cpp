@@ -137,7 +137,7 @@ bool Solver::SetBoundaryValues(const std::vector<std::string>& names, const std:
 	// fool proof
 	if (names.size() != values.size())
 	{
-		LOG_CRITICAL("Boundary names and values have different sizes!");
+		LOG_CRITICAL("[SetBoundaryValues] Boundary names and values have different sizes!");
 		return false;
 	}
 
@@ -168,7 +168,7 @@ bool Solver::SetBoundaryValues(const std::vector<std::string>& names, const std:
 		}
 		if (!found)
 		{
-			LOG_CRITICAL("Failed to find surfaces of {} boundary with physTag {}!", names.at(i), physTag);
+			LOG_CRITICAL("[SetBoundaryValues] Failed to find surfaces of {} boundary with physTag {}!", names.at(i), physTag);
 		}
 	}
 

@@ -36,9 +36,15 @@ struct SimParameters
 	std::string worldMaterialName;
 	std::string worldBoundary;
 
+	std::string maskName;
+	std::string maskMaterialName;
+	std::string maskBoundary;
+
 	// solver
 	Material targetMaterial;
 	Material worldMaterial;
+	Material maskMaterial;
+
 	bool smooth = false;
 };
 

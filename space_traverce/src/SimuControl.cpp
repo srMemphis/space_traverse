@@ -75,18 +75,20 @@ bool SimuControl::Prepare()
 	m_solver->AddMaterial(m_params.worldName, m_params.worldMaterial);
 	m_solver->AddMaterial("Detector", m_params.worldMaterial);
 	m_solver->AddMaterial(m_params.targetName, m_params.targetMaterial);
+	m_solver->AddMaterial(m_params.maskName, m_params.maskMaterial);
 
 	// set boundary conditions
-	if (!m_solver->SetBoundaryValue(m_params.worldBoundary, 0))
-	{
-		LOG_ERROR("boundary surface not found");
-		return false;
-	}
+	//if (!m_solver->SetBoundaryValue(m_params.worldBoundary, 0))
+	//{
+	//	LOG_ERROR("boundary surface not found");
+	//	return false;
+	//}
+	m_solver->SetBoundaryValues({ m_params.worldBoundary, m_params.maskBoundary}, {0, 0});
 
 	// initial charge value
-	//double charge = -1e-7;
-	//double chargeDensity = charge / m_mesh->GetVolumeOfVolume("Metall");
-	//m_solver->SetInitialValue("Metall", chargeDensity);
+	double charge = -1e-9;
+	double chargeDensity = charge / m_mesh->GetVolumeOfVolume("Target");
+	m_solver->SetInitialValue("Target", chargeDensity);
 
 	// assemble linear system
 	m_solver->AssembleLeft();
@@ -119,6 +121,7 @@ bool SimuControl::Prepare()
 
 	// all volumes exept Detector
 	AddStoppingVolume(m_params.targetName);
+	AddStoppingVolume(m_params.maskName);
 
 	// set beam stopping and field functions
 	m_beam->SetStoppingFunction(std::bind(&SimuControl::BeamShouldStop, this,
@@ -139,6 +142,7 @@ bool SimuControl::AddStoppingVolume(const std::string& name)
 	return true;
 }
 
+// FIXME: PLS FIX ME. I NEED THAT
 bool SimuControl::ConfigFromFile(std::string_view configfile)
 {
 	auto node_res = yaml::FromFile(configfile);
@@ -309,6 +313,46 @@ bool SimuControl::ConfigFromFile(std::string_view configfile)
 	{
 		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Mesh:World:boundary", "string");
 		return false;
+	}
+
+	// mask (optional)
+	if (inconfig["Mesh"].contains("Mask"))
+	{
+		// worldName
+		if (!inconfig["Mesh"]["Mask"].contains("name"))
+		{
+			LOG_CRITICAL("Config file does not have 'Mesh:Mask:name' section");
+			return false;
+		}
+		else if (!yaml::NodeToString(inconfig["Mesh"]["Mask"]["name"], m_params.maskName))
+		{
+			LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Mesh:Mask:name", "string");
+			return false;
+		}
+
+		// worldMaterial
+		if (!inconfig["Mesh"]["Mask"].contains("material"))
+		{
+			LOG_CRITICAL("Config file does not have 'Mesh:Mask:material' section");
+			return false;
+		}
+		else if (!yaml::NodeToString(inconfig["Mesh"]["Mask"]["material"], m_params.maskMaterialName))
+		{
+			LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Mesh:Mask:material", "string");
+			return false;
+		}
+
+		// worldBoundary
+		if (!inconfig["Mesh"]["Mask"].contains("boundary"))
+		{
+			LOG_CRITICAL("Config file does not have 'Mesh:Mask:boundary' section");
+			return false;
+		}
+		else if (!yaml::NodeToString(inconfig["Mesh"]["Mask"]["boundary"], m_params.maskBoundary))
+		{
+			LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "Mesh:Mask:boundary", "string");
+			return false;
+		}
 	}
 
 	// ----------------------------------- beam ----------------------------------- 
@@ -528,7 +572,7 @@ bool SimuControl::ConfigFromFile(std::string_view configfile)
 		return false;
 	}
 
-	// target epsilon
+	// world epsilon
 	if (!inconfig["Solver"]["Materials"][m_params.worldMaterialName].contains("epsilon"))
 	{
 		LOG_CRITICAL("Config file does not have 'Solver:Materials:{}epsilon' section", m_params.worldMaterialName);
@@ -538,6 +582,29 @@ bool SimuControl::ConfigFromFile(std::string_view configfile)
 	{
 		LOG_CRITICAL("Config file section 'Solver:Materials:{}epsilon' has wrong type. Expected {}", m_params.worldMaterialName, "double");
 		return false;
+	}
+
+	// mask (optional) material
+	if (inconfig["Mesh"].contains("Mask"))
+	{
+		// MaskMaterial
+		if (!inconfig["Solver"]["Materials"].contains(m_params.maskMaterialName))
+		{
+			LOG_CRITICAL("Config file does not have 'Solver:Materials:{}' section", m_params.maskMaterialName);
+			return false;
+		}
+
+		// mask epsilon
+		if (!inconfig["Solver"]["Materials"][m_params.maskMaterialName].contains("epsilon"))
+		{
+			LOG_CRITICAL("Config file does not have 'Solver:Materials:{}epsilon' section", m_params.maskMaterialName);
+			return false;
+		}
+		else if (!yaml::NodeToDouble(inconfig["Solver"]["Materials"][m_params.maskMaterialName]["epsilon"], m_params.maskMaterial.epsilon))
+		{
+			LOG_CRITICAL("Config file section 'Solver:Materials:{}epsilon' has wrong type. Expected {}", m_params.maskMaterialName, "double");
+			return false;
+		}
 	}
 
 	return true;

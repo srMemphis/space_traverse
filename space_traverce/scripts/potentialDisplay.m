@@ -5,8 +5,8 @@ close all
 
 
 %open files
-path = "../out/capillary0.0degMultiple";
-iter = 100;
+path = "../out/sphere_mask";
+iter = 0;
 load(path + "/solution_" + iter + ".mat", "u");
 load(path + "/surfacegeo.mat", "node*");
 load(path + "/surfacegeo.mat", "TargetBoundary*");
@@ -14,21 +14,21 @@ load(path + "/surfacegeo.mat", "TargetBoundary*");
 %generade grid
 gridsize = 300;
 
-% maxX = max(nodeX);
-% maxY = max(nodeY);
-% maxZ = max(nodeZ);
+maxX = max(nodeX);
+maxY = max(nodeY);
+maxZ = max(nodeZ);
+
+minX = min(nodeX);
+minY = min(nodeY);
+minZ = min(nodeZ);
+
+% maxX = max(nodeX)/10;
+% maxY = max(nodeY)/10;
+% maxZ = max(nodeZ)/5 + 0.005;
 % 
-% minX = min(nodeX);
-% minY = min(nodeY);
-% minZ = min(nodeZ);
-
-maxX = max(nodeX)/10;
-maxY = max(nodeY)/10;
-maxZ = max(nodeZ)/5 + 0.005;
-
-minX = min(nodeX)/10;
-minY = min(nodeY)/10;
-minZ = min(nodeZ)/5 + 0.005;
+% minX = min(nodeX)/10;
+% minY = min(nodeY)/10;
+% minZ = min(nodeZ)/5 + 0.005;
 
 
 [X,Y,Z] = meshgrid(linspace(minX, maxX, gridsize),linspace(minY, maxY, gridsize),linspace(minZ, maxZ, gridsize));
@@ -49,6 +49,11 @@ zlabel("z");
 %draw body
 hold on
 trisurf(TargetBoundary_T, TargetBoundary_x, TargetBoundary_y, TargetBoundary_z, 'FaceColor', 'k', 'LineStyle', 'none', 'FaceAlpha', 0.2);
+
+lvls = max(u) + (min(u) - max(u)) * (linspace(0,1,50).^2);
+lines = contourslice(X,Y,Z,U,xslice,yslice,zslice, lvls);
+set(lines,'EdgeColor','k')
+
 
 %plot limits
 xlim([minX, maxX]);

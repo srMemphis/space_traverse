@@ -9,13 +9,21 @@ r = 0.05;
 Sphere(2) = {0, 0, 0, r};
 
 // вырезаем сферу в боксе
-v() = BooleanFragments{ Volume{1}; Delete; }{ Volume{2}; Delete; };
+BooleanDifference(3) = { Volume{1}; Delete; }{ Volume{2};};
 
-Physical Volume("Air", 1) = {3};
-Physical Volume("Metall", 2) = {2};
-Physical Surface("Air Boundary", 1) = {8:13};
-Physical Surface("Metall Boundary", 2) = {7};
+// get surfaces
+allSurfacesOfWorld[] = Abs(Boundary{ Volume{3}; });
+allSurfacesSphere[] = Abs(Boundary{ Volume{2}; });
 
-MeshSize{ PointsOf{ Volume{3}; } } = 0.01;
-MeshSize{ PointsOf{ Volume{2}; } } = r/20;
+uniqueSurfacesOfWorld = allSurfacesOfWorld[];
+uniqueSurfacesOfWorld -= allSurfacesSphere[];
 
+// create phisical volumes. Traget = sphere
+Physical Volume("World", 1) = {3};
+Physical Volume("Target", 2) = {2};
+Physical Surface("Target Boundary", 1) = uniqueSurfacesOfWorld[];
+Physical Surface("Sphere Boundary", 2) = allSurfacesSphere[];
+
+// Set mesh size
+MeshSize{ PointsOf{ Volume{3}; } } = 0.05;
+MeshSize{ PointsOf{ Volume{2}; } } = r/10;

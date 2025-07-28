@@ -21,8 +21,8 @@ uniqueSurfacesOfWorld -= allSurfacesSphere[];
 // create phisical volumes. Traget = sphere
 Physical Volume("World", 1) = {3};
 Physical Volume("Target", 2) = {2};
-Physical Surface("Target Boundary", 1) = uniqueSurfacesOfWorld[];
-Physical Surface("Sphere Boundary", 2) = allSurfacesSphere[];
+Physical Surface("World Boundary", 1) = uniqueSurfacesOfWorld[];
+Physical Surface("Target Boundary", 2) = allSurfacesSphere[];
 
 // Set mesh size
 MeshSize{ PointsOf{ Volume{3}; } } = 0.05;

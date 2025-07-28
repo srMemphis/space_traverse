@@ -1,10 +1,10 @@
 General:
-    outdir: "out/test"
-    iterations: 100000
+    outdir: "out/sphere"
+    iterations: 1
     deltaTime: 1e-5
     saveInterval: 100
 Mesh:
-    filename: "msh/cone.msh"
+    filename: "msh/sphere.msh"
     Target:
         name: "Target"
         material: "Glass"
@@ -18,7 +18,7 @@ Beam:
     energy: 10e3            # eV
     radius: 0.0005          # d =  1 mm
     divergence: 0.25        # degrees
-    numtracks: 13           # 3 * n^2 tracks
+    numtracks: 10           # 3 * n^2 tracks
     numsteps: 40000         # verlet steps
     Pos:
         x: 0

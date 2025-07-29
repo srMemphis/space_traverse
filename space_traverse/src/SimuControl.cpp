@@ -78,17 +78,12 @@ bool SimuControl::Prepare()
 	m_solver->AddMaterial(m_params.maskName, m_params.maskMaterial);
 
 	// set boundary conditions
-	//if (!m_solver->SetBoundaryValue(m_params.worldBoundary, 0))
-	//{
-	//	LOG_ERROR("boundary surface not found");
-	//	return false;
-	//}
 	m_solver->SetBoundaryValues({ m_params.worldBoundary, m_params.maskBoundary}, {0, 0});
 
 	// initial charge value
-	double charge = -1e-9;
-	double chargeDensity = charge / m_mesh->GetVolumeOfVolume("Target");
-	m_solver->SetInitialValue("Target", chargeDensity);
+	//double charge = -1e-9;
+	//double chargeDensity = charge / m_mesh->GetVolumeOfVolume("Target");
+	//m_solver->SetInitialValue("Target", chargeDensity);
 
 	// assemble linear system
 	m_solver->AssembleLeft();

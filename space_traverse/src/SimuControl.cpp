@@ -40,6 +40,7 @@ bool SimuControl::MeshFromFile(const std::string& filepath)
 	m_solver->SetMesh(m_mesh);
 
 	m_detectorTag = m_mesh->NameToTag("Detector");
+	m_targetTag = m_mesh->NameToTag("Target");
 
 	return true;
 }
@@ -729,6 +730,12 @@ void SimuControl::RegisterHits()
 	m_detector.Clear();
 	double charge = m_params.current * m_params.deltaTime / m_beam->GetTracks().size();	// charge per track
 
+	//stats
+	double s = m_beam->GetTracks().at(0).GetVelocity().norm();
+	double minEne = phys::me * phys::c * phys::c * (1 / std::sqrt(1 - (s * s) / (phys::c * phys::c)) - 1) / 1.602e-19;
+	size_t equilibriumCount = 0;
+	size_t maskCount = 0;
+
 	for (auto& track : m_beam->GetTracks())
 	{
 		auto& lastPoint = track.GetLastPoint();
@@ -747,7 +754,7 @@ void SimuControl::RegisterHits()
 			m_detector.hitsPositionsZ.push_back(lastPoint.z());
 			m_detector.current += (charge / m_params.deltaTime);
 		}
-		else if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), tag) != m_stoppingVolumes.end())		// we hit the target
+		else if (tag == m_targetTag) // we hit the target
 		{
 			// TODO: generate secondary emission
 
@@ -757,10 +764,23 @@ void SimuControl::RegisterHits()
 
 			double totalCharge = charge - charge * secondary;
 
+			equilibriumCount += secondary == 0 ? 0 : 1;
+
 			// we hit smth that needs to be charged
 			m_solver->AddElementCharge(elemIndex, totalCharge);
 		}
+		else if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), tag) != m_stoppingVolumes.end())	// mask or else
+		{
+			maskCount++;
+		}
+
+		auto speed = track.GetVelocity().norm();
+		double ene = phys::me * phys::c * phys::c * (1 / std::sqrt(1 - (speed * speed) / (phys::c * phys::c)) - 1) / 1.602e-19;
+		minEne = ene < minEne ? ene : minEne;
+		
 	}
+	LOG_INFO("Minimum impact energy is {}", minEne);
+	LOG_INFO("EquilibriumCount is {} out of {}", equilibriumCount, m_beam->GetTracks().size() - m_detector.energy.size() - maskCount);
 }
 
 bool SimuControl::GenerateSurfaceToVolumeIndexing(const std::string& physSurface, const std::string& physVolume)

@@ -72,6 +72,7 @@ private:
 
 	std::vector<int> m_stoppingVolumes;		// tags of phys names electrons should stop in
 	int m_detectorTag = 0;
+	int m_targetTag = 0;
 
 	// simu params
 	SimParameters m_params;

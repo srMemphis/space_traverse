@@ -2,7 +2,7 @@ clc
 clear
 close all
 
-iter = 1300;
+iter = 1100;
 load("../out/capillary_mask/surfacegeo.mat")
 load("../out/capillary_mask/solution_" + iter + ".mat")
 

@@ -361,9 +361,15 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/space_traverce/GJKlog.txt
-/space_traverce/solution.txt
-/space_traverce/solution.m
-/space_traverce/solution.mat
-/space_traverce/profile.json
-*.asv
+
+#my ignore
+/space_traverse/GJKlog.txt
+/space_traverse/solution.txt
+/space_traverse/solution.m
+/space_traverse/solution.mat
+/space_traverse/profile.json
+/space_traverse/out/**
+/**/*.asv
+
+!/space_traverse/src/debug/**
+

@@ -1,0 +1,4 @@
+#pragma once
+
+//#define PROFILER
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE

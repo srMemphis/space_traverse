@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <string_view>
+#include <filesystem>
 
 #include <Eigen/Dense>
 #include "debug/Log.h"
@@ -16,6 +17,7 @@ public:
 	~ToMatlab();
 
 	bool OpenFile(std::string name);
+	bool OpenFile(std::filesystem::path name);
 
 	bool Write(const Eigen::VectorXd& vec, const std::string& name);
 

@@ -60,11 +60,14 @@ bool SimuControl::Prepare()
 	if (std::filesystem::exists(m_params.outputDir))
 		std::filesystem::remove_all(m_params.outputDir);
 
-	std::filesystem::create_directories(m_params.outputDir);
+		std::filesystem::create_directories(m_params.outputDir);
+
+	// copy config file to the output folder
+	std::filesystem::copy_file("config.yaml", m_params.outputDir / "config.yaml", std::filesystem::copy_options::overwrite_existing);
 
 	// saving geometry to dispaly at matlab
 	ToMatlab matfile;
-	matfile.OpenFile(m_params.outputDir + "/surfacegeo.mat");
+	matfile.OpenFile(m_params.outputDir / "surfacegeo.mat");
 
 	m_mesh->SaveNodesToFile(matfile);
 	m_mesh->SaveSurfaceToFile(m_params.targetBoundary, matfile);
@@ -159,16 +162,18 @@ bool SimuControl::ConfigFromFile(std::string_view configfile)
 	}
 
 	// outdir
+	std::string stroutdir;
 	if (!inconfig["General"].contains("outdir"))
 	{
 		LOG_CRITICAL("Config file does not have 'General:outdir' section");
 		return false;
 	}
-	else if (!yaml::NodeToString(inconfig["General"]["outdir"], m_params.outputDir))
+	else if (!yaml::NodeToString(inconfig["General"]["outdir"], stroutdir))
 	{
 		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "General:outdir", "string");
 		return false;
 	}
+	m_params.outputDir = stroutdir;
 
 	// iterations
 	if (!inconfig["General"].contains("iterations"))
@@ -640,7 +645,7 @@ int SimuControl::Run()
 		// save solution to file
 		if (iter % m_params.saveInterval == 0 || iter == m_params.iterations - 1)
 		{
-			std::string outFile = m_params.outputDir + "/solution_" + std::to_string(iter) + ".mat";
+			std::string outFile = m_params.outputDir.string() + "/solution_" + std::to_string(iter) + ".mat";
 			m_matlab.OpenFile(outFile);
 			
 			LOG_TRACE("Saving solution to file...");

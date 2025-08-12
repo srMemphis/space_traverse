@@ -1,6 +1,8 @@
 #pragma once
+
 #include <memory>
 #include <string_view>
+#include <filesystem>
 
 #include "mesh/Mesh.h"
 #include "solver/Solver.h"
@@ -13,7 +15,7 @@ struct SimParameters
 	double deltaTime = 0;
 	size_t iterations = 0;
 	size_t saveInterval = 0;
-	std::string outputDir = "out";
+	std::filesystem::path outputDir = "out";
 	
 	// beam
 	double current = 0;

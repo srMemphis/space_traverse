@@ -1,10 +1,10 @@
 General:
-    outdir: "out/capillary_mask"
+    outdir: "out/capillary_holder_copytest"
     iterations: 100000
-    deltaTime: 1e-5
+    deltaTime: 1e-4
     saveInterval: 100
 Mesh:
-    filename: "msh/capillary_mask.msh"
+    filename: "msh/capillary_holder.msh"
     Target:
         name: "Target"
         material: "Glass"
@@ -22,7 +22,7 @@ Beam:
     energy: 10e3            # eV
     radius: 0.00045          # d =  0.9 mm
     divergence: 0.25        # degrees
-    numtracks: 10           # 3 * n^2 tracks
+    numtracks: 15           # 3 * n^2 tracks
     numsteps: 40000         # verlet steps
     Pos:
         x: 0

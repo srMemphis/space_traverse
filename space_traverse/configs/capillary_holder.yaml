@@ -1,0 +1,43 @@
+General:
+    outdir: "out/capillary_holder"
+    iterations: 100000
+    deltaTime: 1e-5
+    saveInterval: 100
+Mesh:
+    filename: "msh/capillary_holder.msh"
+    Target:
+        name: "Target"
+        material: "Glass"
+        boundary: "Target Boundary"
+    World:
+        name: "World"
+        material: "Air"
+        boundary: "World Boundary"
+    Mask:
+        name: "Mask"
+        material: "Metall"
+        boundary: "Mask Boundary"
+Beam:
+    current: -100e-9        # A
+    energy: 10e3            # eV
+    radius: 0.00045          # d =  0.9 mm
+    divergence: 0.25        # degrees
+    numtracks: 10           # 3 * n^2 tracks
+    numsteps: 40000         # verlet steps
+    Pos:
+        x: 0
+        y: 0
+        z: -0.01
+    Stare:
+        x: 0
+        y: 0
+        z: 0.002
+Solver:
+    smooth: false
+    Materials:
+        Air:
+            epsilon: 1
+        Glass: 
+            epsilon: 4
+        Metall: 
+            epsilon: 1000

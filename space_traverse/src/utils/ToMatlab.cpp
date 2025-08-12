@@ -37,6 +37,11 @@ bool ToMatlab::OpenFile(std::string name)
 	return true;
 }
 
+bool ToMatlab::OpenFile(std::filesystem::path name)
+{
+	return OpenFile(name.string());
+}
+
 bool ToMatlab::Write(const Eigen::VectorXd& vec, const std::string& name)
 {
 	if (!m_file)

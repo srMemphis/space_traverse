@@ -2,9 +2,9 @@ clc
 clear
 close all
 
-iter = 1100;
-load("../out/capillary_mask/surfacegeo.mat")
-load("../out/capillary_mask/solution_" + iter + ".mat")
+iter = 0;
+load("../out/capillary_holder/surfacegeo.mat")
+load("../out/capillary_holder/solution_" + iter + ".mat")
 
 %draw surfaces and tracks
 subplot(2,2,1)

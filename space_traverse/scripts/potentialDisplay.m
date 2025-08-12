@@ -5,7 +5,7 @@ close all
 
 
 %open files
-path = "../out/capillary_mask";
+path = "../out/capillary_holder";
 iter = 100;
 load(path + "/solution_" + iter + ".mat", "u");
 load(path + "/surfacegeo.mat", "node*");
@@ -14,21 +14,21 @@ load(path + "/surfacegeo.mat", "TargetBoundary*");
 %generade grid
 gridsize = 300;
 
-% maxX = max(nodeX);
-% maxY = max(nodeY);
-% maxZ = max(nodeZ);
+maxX = max(nodeX);
+maxY = max(nodeY);
+maxZ = max(nodeZ);
+
+minX = min(nodeX);
+minY = min(nodeY);
+minZ = min(nodeZ);
+
+% maxX = max(nodeX)/10;
+% maxY = max(nodeY)/10;
+% maxZ = max(nodeZ)/5 + 0.005;
 % 
-% minX = min(nodeX);
-% minY = min(nodeY);
-% minZ = min(nodeZ);
-
-maxX = max(nodeX)/10;
-maxY = max(nodeY)/10;
-maxZ = max(nodeZ)/5 + 0.005;
-
-minX = min(nodeX)/10;
-minY = min(nodeY)/10;
-minZ = min(nodeZ)/5 + 0.005;
+% minX = min(nodeX)/10;
+% minY = min(nodeY)/10;
+% minZ = min(nodeZ)/5 + 0.005;
 
 
 [X,Y,Z] = meshgrid(linspace(minX, maxX, gridsize),linspace(minY, maxY, gridsize),linspace(minZ, maxZ, gridsize));

@@ -18,7 +18,7 @@ Mesh:
         material: "Metall"
         boundary: "Mask Boundary"
 Beam:
-    current: -100e-9        # A
+    current: -100e-9        # Amper
     energy: 10e3            # eV
     radius: 0.00045          # d =  0.9 mm
     divergence: 0.25        # degrees

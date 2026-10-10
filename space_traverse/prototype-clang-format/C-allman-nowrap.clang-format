@@ -1,0 +1,26 @@
+# Candidate C: LLVM + Allman, tuned for the least churn.
+# Tabs, NO column limit (long lines are never re-wrapped), includes not sorted.
+BasedOnStyle: LLVM
+BreakBeforeBraces: Allman
+UseTab: ForContinuationAndIndentation
+TabWidth: 4
+IndentWidth: 4
+ContinuationIndentWidth: 4
+ColumnLimit: 0
+PointerAlignment: Left
+AccessModifierOffset: -4
+NamespaceIndentation: All
+IndentCaseLabels: false
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortLambdasOnASingleLine: All
+AlignTrailingComments: true
+SpacesBeforeTrailingComments: 1
+BreakConstructorInitializers: BeforeColon
+SpaceAfterTemplateKeyword: false
+SortIncludes: Never
+MaxEmptyLinesToKeep: 2
+KeepEmptyLines:
+  AtStartOfBlock: true

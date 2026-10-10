@@ -1,0 +1,16 @@
+# Candidate B: Microsoft tuned to the current code.
+# Tabs for indentation, 120 columns enforced, `T& x`, namespace bodies indented.
+BasedOnStyle: Microsoft
+UseTab: ForContinuationAndIndentation
+TabWidth: 4
+IndentWidth: 4
+ColumnLimit: 120
+PointerAlignment: Left
+NamespaceIndentation: All
+IndentCaseLabels: false
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: Inline
+BreakConstructorInitializers: BeforeColon
+SpaceAfterTemplateKeyword: false
+IncludeBlocks: Preserve
+SortIncludes: CaseSensitive

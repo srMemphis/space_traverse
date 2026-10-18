@@ -28,7 +28,7 @@ public:
 	const std::vector<Node>& GetNodes() const;
 	const std::map<int, Volume>& GetVolumes() const;
 	const std::map<int, Surface>& GetSurfaces() const;
-	int GetPhysicalTagOfTetrahedron(size_t index) const;
+	int GetPhysicalTagOfTetrahedron(size_t index) const; // -1 if the index is in no volume
 	Box GetBoundingBox() const;
 
 	const ETriangle& GetTriangle(size_t index) const;

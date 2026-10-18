@@ -112,6 +112,11 @@ TEST_SUITE("Mesh")
 		}
 	}
 
+	TEST_CASE_FIXTURE(CubeMesh, "an index past every Volume has no tag")
+	{
+		CHECK(mesh.GetPhysicalTagOfTetrahedron(kElementCount) == -1);
+	}
+
 	TEST_CASE_FIXTURE(CubeMesh, "a point inside the cube is found in an Element that contains it")
 	{
 		const Eigen::Vector3d p{1.23, 1.37, 1.61};

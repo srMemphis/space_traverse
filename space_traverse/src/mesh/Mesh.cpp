@@ -251,6 +251,8 @@ int Mesh::GetPhysicalTagOfTetrahedron(size_t index) const
 			return key_vol.second.physicalTag;
 		}
 	}
+
+	return -1;
 }
 
 Box Mesh::GetBoundingBox() const

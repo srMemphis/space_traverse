@@ -758,8 +758,11 @@ void SimuControl::RegisterHits()
 
 		auto tag = m_mesh->GetPhysicalTagOfTetrahedron(elemIndex);
 
-		// we hit detector
-		if (tag == m_detectorTag)
+		if (tag == -1)
+		{
+			// the track ended outside every volume: nothing to register
+		}
+		else if (tag == m_detectorTag) // we hit detector
 		{
 			auto speed = track.GetVelocity().norm();
 			double ene = phys::me * phys::c * phys::c * (1 / std::sqrt(1 - (speed * speed) / (phys::c * phys::c)) - 1) /

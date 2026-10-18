@@ -145,6 +145,10 @@ TEST_SUITE("Mesh")
 		{
 			p = {1.5, 1.5, 2.5};
 		}
+		SUBCASE("at the origin")
+		{
+			p = {0.0, 0.0, 0.0};
+		}
 
 		CHECK(mesh.FindElementByCoords(p.x(), p.y(), p.z()) < 0);
 	}
@@ -168,6 +172,11 @@ TEST_SUITE("Mesh")
 		CHECK(mesh.GetSurfaces().size() == kSurfaceCount);
 		CHECK(mesh.NameToTag("Cube") == kCubeTag);
 		CHECK_NEAR(mesh.GetVolumeOfVolume("Cube"), 1.0);
+	}
+
+	TEST_CASE_FIXTURE(CubeMesh, "the origin lies outside the mesh bounds")
+	{
+		CHECK_FALSE(mesh.IsInBounds(0.0, 0.0, 0.0));
 	}
 
 	TEST_CASE_FIXTURE(CubeMesh, "the corners of the cube lie in the mesh bounds")

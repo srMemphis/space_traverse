@@ -79,6 +79,11 @@ TEST_SUITE("Mesh")
 		CHECK(mesh.NameToTag("Target") == 0);
 	}
 
+	TEST_CASE_FIXTURE(CubeMesh, "a tag missing from the mesh has an empty name")
+	{
+		CHECK(mesh.TagToName(99).empty());
+	}
+
 	TEST_CASE_FIXTURE(CubeMesh, "the cube Volume measures one cubic metre")
 	{
 		CHECK_NEAR(mesh.GetVolumeOfVolume("Cube"), 1.0);

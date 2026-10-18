@@ -188,7 +188,8 @@ const std::string& Mesh::TagToName(int tag) const
 		}
 	}
 
-	return "";
+	static const std::string empty;
+	return empty;
 }
 
 std::vector<double> Mesh::GetNodesX() const

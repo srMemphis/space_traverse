@@ -307,8 +307,8 @@ void UnsignedRange::ResolveCollisions(std::list<std::pair<size_t, size_t>>::iter
 	{
 		if (start->second < iterator->first)
 		{
-			// no collisions
-			return;
+			// no more collisions
+			break;
 		}
 		else if (start->second <= iterator->second)
 		{

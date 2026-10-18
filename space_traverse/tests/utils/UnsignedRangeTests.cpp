@@ -125,6 +125,17 @@ TEST_SUITE("UnsignedRange")
 		CHECK(range.Size() == 10);
 	}
 
+	TEST_CASE("an interval that covers a range and stops short of the next one joins only what it covers")
+	{
+		UnsignedRange range = FromIntervals({{0, 1}, {4, 4}, {10, 11}});
+		range.AddInterval(1, 6);
+
+		// Elements 0..6 and 10 11.
+		CHECK(Print(range) == "[0,7) [10,12) ");
+		CHECK(range.Size() == 9);
+		CHECK(range.GetPositionOf(10) == 7);
+	}
+
 	TEST_CASE("an interval left of all ranges is placed first")
 	{
 		UnsignedRange range = FromIntervals({{8, 9}});

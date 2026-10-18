@@ -39,6 +39,8 @@ public:
 		m_current = 0;
 	}
 
+	bool AtEnd() const { return m_iter == m_range.m_data.end(); }
+
 	size_t Get() const { return m_iter->first + m_current; }
 
 	bool Advance()

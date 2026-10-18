@@ -25,6 +25,16 @@ namespace
 		}
 		return range;
 	}
+	// The elements a walk visits, in order.
+	std::vector<size_t> Walk(const UnsignedRange& range)
+	{
+		std::vector<size_t> elements;
+		for (RangeIterator iterator(range); !iterator.AtEnd(); iterator.Advance())
+		{
+			elements.push_back(iterator.Get());
+		}
+		return elements;
+	}
 } // namespace
 
 TEST_SUITE("UnsignedRange")
@@ -200,6 +210,24 @@ TEST_SUITE("UnsignedRange")
 
 TEST_SUITE("RangeIterator")
 {
+	TEST_CASE("a walk visits every element once in ascending order")
+	{
+		UnsignedRange range;
+
+		std::vector<size_t> expected;
+		SUBCASE("disjoint ranges")
+		{
+			range = FromIntervals({{2, 4}, {8, 9}, {15, 15}});
+			expected = {2, 3, 4, 8, 9, 15};
+		}
+		SUBCASE("a single element")
+		{
+			range.Add(5);
+			expected = {5};
+		}
+
+		CHECK(Walk(range) == expected);
+	}
 	TEST_CASE("advancing yields every element in ascending order and reports the last one")
 	{
 		UnsignedRange range;

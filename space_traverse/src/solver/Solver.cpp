@@ -471,20 +471,16 @@ bool Solver::Solve()
 	LOG_TRACE("Solved in {} iterations with the error of {}", cg.iterations(), cg.error());
 
 	// assemble full u
-	RangeIterator iIndex(m_iIndex);
-
-	for (size_t i = iIndex.Get(); i < iIndex.GetMax(); iIndex.Advance())
+	for (RangeIterator iIndex(m_iIndex); !iIndex.AtEnd(); iIndex.Advance())
 	{
-		i = iIndex.Get();
+		size_t i = iIndex.Get();
 
 		m_u(i) = uSolved(m_iIndex.GetPositionOf(i));
 	}
 
-	RangeIterator jIndex(m_jIndex);
-
-	for (size_t j = jIndex.Get(); j < jIndex.GetMax(); jIndex.Advance())
+	for (RangeIterator jIndex(m_jIndex); !jIndex.AtEnd(); jIndex.Advance())
 	{
-		j = jIndex.Get();
+		size_t j = jIndex.Get();
 
 		m_u(j) = m_uBound(m_jIndex.GetPositionOf(j));
 	}

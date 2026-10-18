@@ -33,16 +33,27 @@ class RangeIterator
 public:
 	RangeIterator(const UnsignedRange& range) : m_range(range) { Reset(); }
 
+	// A copy would keep m_iter pointing into the original's list.
+	RangeIterator(const RangeIterator&) = delete;
+	RangeIterator& operator=(const RangeIterator&) = delete;
+
 	void Reset()
 	{
 		m_iter = m_range.m_data.begin();
 		m_current = 0;
 	}
 
+	bool AtEnd() const { return m_iter == m_range.m_data.end(); }
+
 	size_t Get() const { return m_iter->first + m_current; }
 
 	bool Advance()
 	{
+		if (AtEnd())
+		{
+			return false;
+		}
+
 		m_current++;
 
 		if (Get() == m_iter->second)
@@ -62,7 +73,10 @@ public:
 	bool Advance(size_t& i)
 	{
 		bool result = Advance();
-		i = Get();
+		if (result)
+		{
+			i = Get();
+		}
 
 		return result;
 	}

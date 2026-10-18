@@ -45,6 +45,11 @@ public:
 
 	bool Advance()
 	{
+		if (AtEnd())
+		{
+			return false;
+		}
+
 		m_current++;
 
 		if (Get() == m_iter->second)
@@ -64,7 +69,10 @@ public:
 	bool Advance(size_t& i)
 	{
 		bool result = Advance();
-		i = Get();
+		if (result)
+		{
+			i = Get();
+		}
 
 		return result;
 	}

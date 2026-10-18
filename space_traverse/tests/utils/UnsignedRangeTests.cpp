@@ -225,8 +225,34 @@ TEST_SUITE("RangeIterator")
 			range.Add(5);
 			expected = {5};
 		}
+		SUBCASE("an empty range")
+		{
+		}
 
 		CHECK(Walk(range) == expected);
+	}
+
+	TEST_CASE("advancing a walk that has reached its end keeps it there")
+	{
+		UnsignedRange range;
+		SUBCASE("an empty range")
+		{
+		}
+		SUBCASE("a single element")
+		{
+			range.Add(5);
+		}
+
+		RangeIterator iterator(range);
+		while (!iterator.AtEnd())
+		{
+			iterator.Advance();
+		}
+
+		size_t element = 0;
+		CHECK_FALSE(iterator.Advance());
+		CHECK_FALSE(iterator.Advance(element));
+		CHECK(iterator.AtEnd());
 	}
 	TEST_CASE("advancing yields every element in ascending order and reports the last one")
 	{

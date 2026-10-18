@@ -1,18 +1,18 @@
 #include "mesh/Mesh.h"
 
-#include "debug/Profiler.h"
-#include "utils/Vec3.h"
-#include "utils/Geometry.h"
 #include "debug/Log.h"
+#include "debug/Profiler.h"
+#include "utils/Geometry.h"
+#include "utils/Vec3.h"
 
 #include <Eigen/Dense>
 
+#include <algorithm>
 #include <array>
-#include <map>
+#include <cassert>
 #include <fstream>
 #include <iostream>
-#include <cassert>
-#include <algorithm>
+#include <map>
 
 Mesh::Mesh()
 {
@@ -57,7 +57,8 @@ bool Mesh::FromFile(std::string filepath)
 	}
 
 	// report
-	LOG_INFO("Reading done. Mesh contains:\n\tvolumes: {}\n\tsurfaces: {}\n\tnodes: {}\n\ttetrahedrons: {}\n\ttriangles: {}",
+	LOG_INFO(
+		"Reading done. Mesh contains:\n\tvolumes: {}\n\tsurfaces: {}\n\tnodes: {}\n\ttetrahedrons: {}\n\ttriangles: {}",
 		m_volumes.size(), m_surfaces.size(), m_Nodes.size(), m_bulkElements.size(), m_surfElements.size());
 
 	// fill datastructures
@@ -119,19 +120,22 @@ uint32_t Mesh::MaxTetraAtNode() const
 			histogram.at(tetra.node[i]) += 1;
 		}
 	}
-	
+
 	return *std::max_element(histogram.begin(), histogram.end());
 }
 
 double Mesh::GetVolumeOfTetrahedron(size_t index) const
 {
 	auto& tetra = m_bulkElements.at(index);
-	Eigen::Matrix3d jacob(
-		{
-			{m_Nodes.at(tetra.node[1]).x - m_Nodes.at(tetra.node[0]).x, m_Nodes.at(tetra.node[1]).y - m_Nodes.at(tetra.node[0]).y, m_Nodes.at(tetra.node[1]).z - m_Nodes.at(tetra.node[0]).z},
-			{m_Nodes.at(tetra.node[2]).x - m_Nodes.at(tetra.node[0]).x, m_Nodes.at(tetra.node[2]).y - m_Nodes.at(tetra.node[0]).y, m_Nodes.at(tetra.node[2]).z - m_Nodes.at(tetra.node[0]).z},
-			{m_Nodes.at(tetra.node[3]).x - m_Nodes.at(tetra.node[0]).x, m_Nodes.at(tetra.node[3]).y - m_Nodes.at(tetra.node[0]).y, m_Nodes.at(tetra.node[3]).z - m_Nodes.at(tetra.node[0]).z}
-		});
+	Eigen::Matrix3d jacob({{m_Nodes.at(tetra.node[1]).x - m_Nodes.at(tetra.node[0]).x,
+							m_Nodes.at(tetra.node[1]).y - m_Nodes.at(tetra.node[0]).y,
+							m_Nodes.at(tetra.node[1]).z - m_Nodes.at(tetra.node[0]).z},
+						   {m_Nodes.at(tetra.node[2]).x - m_Nodes.at(tetra.node[0]).x,
+							m_Nodes.at(tetra.node[2]).y - m_Nodes.at(tetra.node[0]).y,
+							m_Nodes.at(tetra.node[2]).z - m_Nodes.at(tetra.node[0]).z},
+						   {m_Nodes.at(tetra.node[3]).x - m_Nodes.at(tetra.node[0]).x,
+							m_Nodes.at(tetra.node[3]).y - m_Nodes.at(tetra.node[0]).y,
+							m_Nodes.at(tetra.node[3]).z - m_Nodes.at(tetra.node[0]).z}});
 	double volume = jacob.determinant() / 6.0;
 	return volume;
 }
@@ -143,10 +147,10 @@ double Mesh::GetVolumeOfVolume(const std::string name) const
 	int physTag = m_PhisicalNames.find(name)->second.tag;
 
 	// for every volume
-	for (auto& key_volume : m_volumes) 
+	for (auto& key_volume : m_volumes)
 	{
 		// if it has specified physical names tag
-		if (physTag == key_volume.second.physicalTag) 
+		if (physTag == key_volume.second.physicalTag)
 		{
 			auto& volume = key_volume.second;
 
@@ -228,7 +232,7 @@ std::vector<double> Mesh::GetNodesZ() const
 
 bool Mesh::IsInBounds(double x, double y, double z) const
 {
-	return m_topologyTree.IsInBounds(x,y,z);
+	return m_topologyTree.IsInBounds(x, y, z);
 }
 
 bool Mesh::IsInNarrowBounds(double x, double y, double z) const
@@ -240,7 +244,8 @@ int Mesh::GetPhisicalTagOfTetrahedron(size_t index) const
 {
 	for (auto& key_vol : m_volumes)
 	{
-		if (index >= key_vol.second.firstElementIndex && index < key_vol.second.firstElementIndex + key_vol.second.numElements)
+		if (index >= key_vol.second.firstElementIndex &&
+			index < key_vol.second.firstElementIndex + key_vol.second.numElements)
 		{
 			return key_vol.second.physicalTag;
 		}
@@ -284,7 +289,7 @@ bool Mesh::BuildTopologyData()
 
 void Mesh::Clear()
 {
-	m_Version = std::pair<int,int>{ 0, 0 };
+	m_Version = std::pair<int, int>{0, 0};
 	m_Nodes.clear();
 	m_surfElements.clear();
 	m_bulkElements.clear();
@@ -293,10 +298,10 @@ void Mesh::Clear()
 	m_topologyTree.Clear();
 }
 
-int64_t Mesh::FindElementByCoords(double x, double y, double z) const 
+int64_t Mesh::FindElementByCoords(double x, double y, double z) const
 {
-	//convect coords to vector
-	Vec3 point = { x, y, z };
+	// convect coords to vector
+	Vec3 point = {x, y, z};
 
 	auto& candidates = m_topologyTree.Find(x, y, z);
 
@@ -312,15 +317,15 @@ int64_t Mesh::FindElementByCoords(double x, double y, double z) const
 	{
 		auto& elem = m_bulkElements.at(index);
 
-		// check if point is indide tetrahedron by 
+		// check if point is indide tetrahedron by
 		// checking if it is to the right side of each
 		// tetrahedrons face
 
-		Vec3 node0 = { m_Nodes.at(elem.node[0]).x, m_Nodes.at(elem.node[0]).y, m_Nodes.at(elem.node[0]).z };
-		Vec3 node1 = { m_Nodes.at(elem.node[1]).x, m_Nodes.at(elem.node[1]).y, m_Nodes.at(elem.node[1]).z };
-		Vec3 node2 = { m_Nodes.at(elem.node[2]).x, m_Nodes.at(elem.node[2]).y, m_Nodes.at(elem.node[2]).z };
-		Vec3 node3 = { m_Nodes.at(elem.node[3]).x, m_Nodes.at(elem.node[3]).y, m_Nodes.at(elem.node[3]).z };
-		
+		Vec3 node0 = {m_Nodes.at(elem.node[0]).x, m_Nodes.at(elem.node[0]).y, m_Nodes.at(elem.node[0]).z};
+		Vec3 node1 = {m_Nodes.at(elem.node[1]).x, m_Nodes.at(elem.node[1]).y, m_Nodes.at(elem.node[1]).z};
+		Vec3 node2 = {m_Nodes.at(elem.node[2]).x, m_Nodes.at(elem.node[2]).y, m_Nodes.at(elem.node[2]).z};
+		Vec3 node3 = {m_Nodes.at(elem.node[3]).x, m_Nodes.at(elem.node[3]).y, m_Nodes.at(elem.node[3]).z};
+
 		Vec3 vec01 = node1 - node0;
 		Vec3 vec02 = node2 - node0;
 		Vec3 vec03 = node3 - node0;
@@ -343,7 +348,7 @@ int64_t Mesh::FindElementByCoords(double x, double y, double z) const
 	// failed to find tetrahedron in the candidate list
 	// may happen if the point is inside of the bounding box but outside of the edge tetrahedrons
 	// not crititcal if the algorythm is doing OK. Critical otherwise
-	LOG_ERROR("Can not find tetrahedron that contains the point: ({},{},{})", x,y,z);
+	LOG_ERROR("Can not find tetrahedron that contains the point: ({},{},{})", x, y, z);
 	return -2;
 }
 
@@ -358,7 +363,7 @@ void Mesh::SaveSurfaceToFile(const std::string& physname, ToMatlab& file) const
 
 	std::vector<double> x, y, z;
 	std::vector<std::array<size_t, 3>> newindex;
-	std::map<size_t, size_t> indexmap;			// old - new 
+	std::map<size_t, size_t> indexmap; // old - new
 
 	size_t count = 0;
 
@@ -369,12 +374,12 @@ void Mesh::SaveSurfaceToFile(const std::string& physname, ToMatlab& file) const
 		{
 			for (auto& elem : surf.elements)
 			{
-				std::array<size_t, 3> newtriang {0};
+				std::array<size_t, 3> newtriang{0};
 
 				for (int i = 0; i < 3; i++)
 				{
 					auto iter = indexmap.find(elem.node[i]);
-					if (iter == indexmap.end())		// new entry
+					if (iter == indexmap.end()) // new entry
 					{
 						indexmap.emplace(std::make_pair(elem.node[i], count));
 						newtriang[i] = count;
@@ -384,7 +389,7 @@ void Mesh::SaveSurfaceToFile(const std::string& physname, ToMatlab& file) const
 						y.push_back(m_Nodes.at(elem.node[i]).y);
 						z.push_back(m_Nodes.at(elem.node[i]).z);
 					}
-					else	// existing entry
+					else // existing entry
 					{
 						newtriang[i] = iter->second;
 					}
@@ -401,11 +406,11 @@ void Mesh::SaveSurfaceToFile(const std::string& physname, ToMatlab& file) const
 
 	for (size_t i = 0; i < size; i++)
 	{
-		tomatlabindex.at(i + size * 0) = newindex.at(i)[0] + 1;		// +1 for matlab indexing
+		tomatlabindex.at(i + size * 0) = newindex.at(i)[0] + 1; // +1 for matlab indexing
 		tomatlabindex.at(i + size * 1) = newindex.at(i)[1] + 1;
 		tomatlabindex.at(i + size * 2) = newindex.at(i)[2] + 1;
 	}
-	
+
 	// removing spaces from name
 	std::string newname = physname;
 	auto newend = std::remove(newname.begin(), newname.end(), ' ');
@@ -493,7 +498,7 @@ bool Mesh::ReadSection(std::ifstream& geofile, std::string s)
 bool Mesh::ReadMeshFormat(std::ifstream& geofile)
 {
 	geofile >> m_Version.first;
-	geofile.get();    // get . symbol
+	geofile.get(); // get . symbol
 	geofile >> m_Version.second;
 
 	LOG_TRACE("MESH version {}.{}", m_Version.first, m_Version.second);
@@ -566,7 +571,6 @@ bool Mesh::ReadEntities(std::ifstream& geofile)
 		{
 			int physicalTag;
 			geofile >> physicalTag;
-
 		}
 	}
 
@@ -597,7 +601,7 @@ bool Mesh::ReadEntities(std::ifstream& geofile)
 			geofile >> pointTag;
 		}
 	}
-	
+
 	// surfaces
 	for (int i = 0; i < numSurfaces; i++)
 	{
@@ -612,12 +616,13 @@ bool Mesh::ReadEntities(std::ifstream& geofile)
 
 		if (numPhysicalTags > 1)
 		{
-			LOG_ERROR("Unsupported amount of physical tags. Surface {} has {} physical tags!", tmp.entytyTag, numPhysicalTags);
+			LOG_ERROR("Unsupported amount of physical tags. Surface {} has {} physical tags!", tmp.entytyTag,
+					  numPhysicalTags);
 		}
-		
+
 		// read all tags. save last one
 		for (int j = 0; j < numPhysicalTags; j++)
-		{	
+		{
 			int tmpPhysTag = 0;
 			geofile >> tmpPhysTag;
 			tmp.physicalTag = tmpPhysTag;
@@ -649,7 +654,8 @@ bool Mesh::ReadEntities(std::ifstream& geofile)
 
 		if (numPhysicalTags > 1)
 		{
-			LOG_ERROR("Unsupported amount of physical tags. Volume {} has {} physical tags!", tmp.entytyTag, numPhysicalTags);
+			LOG_ERROR("Unsupported amount of physical tags. Volume {} has {} physical tags!", tmp.entytyTag,
+					  numPhysicalTags);
 		}
 
 		// read all tags. save last one
@@ -668,7 +674,7 @@ bool Mesh::ReadEntities(std::ifstream& geofile)
 			geofile >> surfaceTag;
 		}
 
-		//save
+		// save
 		m_volumes.emplace(tmp.entytyTag, tmp);
 	}
 
@@ -774,7 +780,8 @@ bool Mesh::ReadElements(std::ifstream& geofile)
 			}
 			break;
 		}
-		default:break;
+		default:
+			break;
 		} // switch
 
 	} // entity block
@@ -840,7 +847,7 @@ bool Mesh::ReadElementData(std::ifstream& geofile)
 	std::getline(geofile, end);
 	if (end == "EndElementData")
 		return true;
-	
+
 	return false;
 }
 
@@ -873,15 +880,15 @@ void Mesh::FillEntitiesWithElements()
 	for (auto& surf : m_surfaces)
 	{
 		// assign a span of elements to the entity
-		surf.second.elements = { m_surfElements.begin() + surf.second.firstElementIndex,
-								m_surfElements.begin() + surf.second.firstElementIndex + surf.second.numElements };
+		surf.second.elements = {m_surfElements.begin() + surf.second.firstElementIndex,
+								m_surfElements.begin() + surf.second.firstElementIndex + surf.second.numElements};
 	}
 
 	for (auto& vol : m_volumes)
 	{
 		// assign a span of elements to the entity
-		vol.second.elements = { m_bulkElements.begin() + vol.second.firstElementIndex,
-								m_bulkElements.begin() + vol.second.firstElementIndex + vol.second.numElements };
+		vol.second.elements = {m_bulkElements.begin() + vol.second.firstElementIndex,
+							   m_bulkElements.begin() + vol.second.firstElementIndex + vol.second.numElements};
 	}
 }
 
@@ -891,15 +898,15 @@ void Mesh::GenerateGradientVectors()
 
 	m_GradientVectors.reserve(m_bulkElements.size());
 
-	//#pragma omp parallel for
-	for (size_t i = 0; i < m_bulkElements.size(); i++ )
+	// #pragma omp parallel for
+	for (size_t i = 0; i < m_bulkElements.size(); i++)
 	{
 		auto& element = m_bulkElements.at(i);
 
-		Eigen::Vector3d p1 {m_Nodes.at(element.node[0]).x, m_Nodes.at(element.node[0]).y, m_Nodes.at(element.node[0]).z};
-		Eigen::Vector3d p2 {m_Nodes.at(element.node[1]).x, m_Nodes.at(element.node[1]).y, m_Nodes.at(element.node[1]).z};
-		Eigen::Vector3d p3 {m_Nodes.at(element.node[2]).x, m_Nodes.at(element.node[2]).y, m_Nodes.at(element.node[2]).z};
-		Eigen::Vector3d p4 {m_Nodes.at(element.node[3]).x, m_Nodes.at(element.node[3]).y, m_Nodes.at(element.node[3]).z};
+		Eigen::Vector3d p1{m_Nodes.at(element.node[0]).x, m_Nodes.at(element.node[0]).y, m_Nodes.at(element.node[0]).z};
+		Eigen::Vector3d p2{m_Nodes.at(element.node[1]).x, m_Nodes.at(element.node[1]).y, m_Nodes.at(element.node[1]).z};
+		Eigen::Vector3d p3{m_Nodes.at(element.node[2]).x, m_Nodes.at(element.node[2]).y, m_Nodes.at(element.node[2]).z};
+		Eigen::Vector3d p4{m_Nodes.at(element.node[3]).x, m_Nodes.at(element.node[3]).y, m_Nodes.at(element.node[3]).z};
 
 		auto grad1 = Geometry::BarycentricGradient(p1, p2, p3, p4);
 		auto grad2 = Geometry::BarycentricGradient(p2, p1, p3, p4);
@@ -931,7 +938,7 @@ void Mesh::GenerateTightBox()
 		exact.zMin = exact.zMin > node.z ? node.z : exact.zMin;
 	}
 
-	double mult = 0.999;		// size multiplier
+	double mult = 0.999; // size multiplier
 
 	m_tightBox.xMax = exact.xMax * mult;
 	m_tightBox.yMax = exact.yMax * mult;
@@ -944,7 +951,7 @@ void Mesh::GenerateTightBox()
 
 bool Mesh::ReadNodes(std::ifstream& geofile)
 {
-	size_t numEntityBlocks; 
+	size_t numEntityBlocks;
 	size_t numNodes;
 	size_t minNodeTag;
 	size_t maxNodeTag;
@@ -977,7 +984,7 @@ bool Mesh::ReadNodes(std::ifstream& geofile)
 		size_t nodeTag;
 		for (int j = 0; j < numNodesInBlock; j++)
 		{
-			
+
 			geofile >> nodeTag;
 
 			if (nodeTag - prevNodeTag != 1)

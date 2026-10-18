@@ -23,7 +23,7 @@ void Profiler::BeginSession(const std::string& name, const std::string& filepath
 
 	if (m_OutputStream.is_open())
 	{
-		m_CurrentSession = new ProfilerSession({ name });
+		m_CurrentSession = new ProfilerSession({name});
 		WriteHeader();
 	}
 	else
@@ -64,8 +64,7 @@ void Profiler::WriteProfile(const ProfileResult& result)
 	}
 }
 
-Profiler::Profiler()
-	: m_CurrentSession(nullptr)
+Profiler::Profiler() : m_CurrentSession(nullptr)
 {
 }
 
@@ -97,8 +96,7 @@ void Profiler::InternalEndSession()
 	}
 }
 
-Timer::Timer(const char* name)
-	: m_Name(name), m_Stopped(false)
+Timer::Timer(const char* name) : m_Name(name), m_Stopped(false)
 {
 	m_StartTimepoint = std::chrono::steady_clock::now();
 }
@@ -112,10 +110,11 @@ Timer::~Timer()
 void Timer::Stop()
 {
 	auto endTimepoint = std::chrono::steady_clock::now();
-	auto highResStart = std::chrono::duration<double, std::micro>{ m_StartTimepoint.time_since_epoch() };
-	auto elapsedTime = std::chrono::time_point_cast<std::chrono::microseconds>(endTimepoint).time_since_epoch() - std::chrono::time_point_cast<std::chrono::microseconds>(m_StartTimepoint).time_since_epoch();
+	auto highResStart = std::chrono::duration<double, std::micro>{m_StartTimepoint.time_since_epoch()};
+	auto elapsedTime = std::chrono::time_point_cast<std::chrono::microseconds>(endTimepoint).time_since_epoch() -
+					   std::chrono::time_point_cast<std::chrono::microseconds>(m_StartTimepoint).time_since_epoch();
 
-	Profiler::Get().WriteProfile({ m_Name, highResStart, elapsedTime, std::this_thread::get_id() });
+	Profiler::Get().WriteProfile({m_Name, highResStart, elapsedTime, std::this_thread::get_id()});
 
 	m_Stopped = true;
 }

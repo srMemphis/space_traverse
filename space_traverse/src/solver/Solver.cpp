@@ -1,14 +1,14 @@
 #include "solver/Solver.h"
 
-#include "debug/Profiler.h"
 #include "debug/Log.h"
+#include "debug/Profiler.h"
 #include "utils/Geometry.h"
 
 #include <Eigen/Dense>
 #include <Eigen/IterativeLinearSolvers>
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 Solver::Solver()
 {
@@ -133,7 +133,7 @@ bool Solver::SetBoundaryValue(const std::string& name, double value)
 bool Solver::SetBoundaryValues(const std::vector<std::string>& names, const std::vector<double> values)
 {
 	PROFILE_FUNCTION();
-	
+
 	// fool proof
 	if (names.size() != values.size())
 	{
@@ -148,7 +148,7 @@ bool Solver::SetBoundaryValues(const std::vector<std::string>& names, const std:
 	for (int i = 0; i < names.size(); i++)
 	{
 		auto physTag = m_mesh->NameToTag(names.at(i));
-		
+
 		// find taged surface
 		bool found = false;
 		for (auto& key_surface : m_mesh->m_surfaces)
@@ -168,7 +168,8 @@ bool Solver::SetBoundaryValues(const std::vector<std::string>& names, const std:
 		}
 		if (!found)
 		{
-			LOG_CRITICAL("[SetBoundaryValues] Failed to find surfaces of {} boundary with physTag {}!", names.at(i), physTag);
+			LOG_CRITICAL("[SetBoundaryValues] Failed to find surfaces of {} boundary with physTag {}!", names.at(i),
+						 physTag);
 		}
 	}
 
@@ -206,7 +207,7 @@ bool Solver::SetBoundaryValues(const std::vector<std::string>& names, const std:
 							if (tempjIndices.at(rangeIndex).Contains(triangle.node[N]))
 							{
 								value = values.at(rangeIndex);
-								break;		// if boundaries share nodes we take first value
+								break; // if boundaries share nodes we take first value
 							}
 						}
 
@@ -232,19 +233,19 @@ bool Solver::SaveSolutionToFile(ToMatlab& file)
 
 	bool res = false;
 
-	//int N = 1000;
-	//std::vector<double> field;
-	//Eigen::ArrayXd x = Eigen::ArrayXd::LinSpaced(N, -0.45, 0.45);
+	// int N = 1000;
+	// std::vector<double> field;
+	// Eigen::ArrayXd x = Eigen::ArrayXd::LinSpaced(N, -0.45, 0.45);
 
-	//for (int i = 0; i < N; i++)
+	// for (int i = 0; i < N; i++)
 	//{
 	//	field.push_back(GetField2(x[i], 0, 0).norm());
-	//}
+	// }
 
-	//file.Write(field, "field");
-	//file.Write(x, "xField");
+	// file.Write(field, "field");
+	// file.Write(x, "xField");
 
-	if(file.Write(m_u, "u"))
+	if (file.Write(m_u, "u"))
 	{
 		res = true;
 	}
@@ -257,12 +258,10 @@ Eigen::Vector3d Solver::GetFieldCasual(double x, double y, double z)
 	auto elemIndex = m_mesh->FindElementByCoords(x, y, z);
 	auto& element = m_mesh->m_bulkElements.at(elemIndex);
 	auto& gradient = m_mesh->m_GradientVectors.at(elemIndex);
-	
+
 	// find field from weighted gradients
-	Eigen::Vector3d field = - gradient.at(0) * m_u(element.node[0])
-							- gradient.at(1) * m_u(element.node[1])
-							- gradient.at(2) * m_u(element.node[2])
-							- gradient.at(3) * m_u(element.node[3]);
+	Eigen::Vector3d field = -gradient.at(0) * m_u(element.node[0]) - gradient.at(1) * m_u(element.node[1]) -
+							gradient.at(2) * m_u(element.node[2]) - gradient.at(3) * m_u(element.node[3]);
 
 	return field;
 }
@@ -276,9 +275,10 @@ Eigen::Vector3d Solver::GetFieldSmooth(double x, double y, double z)
 	// find barycentric weights
 	/*Eigen::Matrix4d left;
 	left << 1, 1, 1, 1,
-		nodes.at(element.node[0]).x, nodes.at(element.node[1]).x, nodes.at(element.node[2]).x, nodes.at(element.node[3]).x,
-		nodes.at(element.node[0]).y, nodes.at(element.node[1]).y, nodes.at(element.node[2]).y, nodes.at(element.node[3]).y,
-		nodes.at(element.node[0]).z, nodes.at(element.node[1]).z, nodes.at(element.node[2]).z, nodes.at(element.node[3]).z;
+		nodes.at(element.node[0]).x, nodes.at(element.node[1]).x, nodes.at(element.node[2]).x,
+	nodes.at(element.node[3]).x, nodes.at(element.node[0]).y, nodes.at(element.node[1]).y, nodes.at(element.node[2]).y,
+	nodes.at(element.node[3]).y, nodes.at(element.node[0]).z, nodes.at(element.node[1]).z, nodes.at(element.node[2]).z,
+	nodes.at(element.node[3]).z;
 
 	Eigen::Vector4d right{ 1, x, y, z };
 
@@ -286,16 +286,20 @@ Eigen::Vector3d Solver::GetFieldSmooth(double x, double y, double z)
 
 	double elemVolume = m_mesh->GetVolumeOfTetrahedron(elemIndex);
 	Eigen::Vector4d bary;
-	bary(0) = Geometry::TetrahedronVolume(nodes.at(element.node[1]), nodes.at(element.node[3]), nodes.at(element.node[2]), { x,y,z }) / elemVolume;
-	bary(1) = Geometry::TetrahedronVolume(nodes.at(element.node[0]), nodes.at(element.node[2]), nodes.at(element.node[3]), { x,y,z }) / elemVolume;
-	bary(2) = Geometry::TetrahedronVolume(nodes.at(element.node[0]), nodes.at(element.node[3]), nodes.at(element.node[1]), { x,y,z }) / elemVolume;
+	bary(0) = Geometry::TetrahedronVolume(nodes.at(element.node[1]), nodes.at(element.node[3]),
+										  nodes.at(element.node[2]), {x, y, z}) /
+			  elemVolume;
+	bary(1) = Geometry::TetrahedronVolume(nodes.at(element.node[0]), nodes.at(element.node[2]),
+										  nodes.at(element.node[3]), {x, y, z}) /
+			  elemVolume;
+	bary(2) = Geometry::TetrahedronVolume(nodes.at(element.node[0]), nodes.at(element.node[3]),
+										  nodes.at(element.node[1]), {x, y, z}) /
+			  elemVolume;
 	bary(3) = 1 - bary(0) - bary(1) - bary(2);
 
 	// find field from weighted gradients
-	Eigen::Vector3d field = bary(0) * m_field.at(element.node[0])
-		+ bary(1) * m_field.at(element.node[1])
-		+ bary(2) * m_field.at(element.node[2])
-		+ bary(3) * m_field.at(element.node[3]);
+	Eigen::Vector3d field = bary(0) * m_field.at(element.node[0]) + bary(1) * m_field.at(element.node[1]) +
+							bary(2) * m_field.at(element.node[2]) + bary(3) * m_field.at(element.node[3]);
 
 	return field;
 }
@@ -304,10 +308,10 @@ Eigen::Vector3d Solver::GetField(double x, double y, double z)
 {
 	if (m_fieldSmoothing)
 	{
-		return GetFieldSmooth(x,y,z);
+		return GetFieldSmooth(x, y, z);
 	}
 
-	return GetFieldCasual(x,y,z);
+	return GetFieldCasual(x, y, z);
 }
 
 double Solver::GetChargeDensAtElem(size_t elemIndex)
@@ -335,14 +339,17 @@ void Solver::AssembleLeft()
 		auto& tetra = m_mesh->GetBulkElements().at(tetraIndex);
 
 		// assemble local matrix from tetrahedron coordinates
-		Eigen::Matrix3d jacob(
-		{
-			{nodes.at(tetra.node[1]).x - nodes.at(tetra.node[0]).x, nodes.at(tetra.node[1]).y - nodes.at(tetra.node[0]).y, nodes.at(tetra.node[1]).z - nodes.at(tetra.node[0]).z},
-			{nodes.at(tetra.node[2]).x - nodes.at(tetra.node[0]).x, nodes.at(tetra.node[2]).y - nodes.at(tetra.node[0]).y, nodes.at(tetra.node[2]).z - nodes.at(tetra.node[0]).z},
-			{nodes.at(tetra.node[3]).x - nodes.at(tetra.node[0]).x, nodes.at(tetra.node[3]).y - nodes.at(tetra.node[0]).y, nodes.at(tetra.node[3]).z - nodes.at(tetra.node[0]).z}
-		});
+		Eigen::Matrix3d jacob({{nodes.at(tetra.node[1]).x - nodes.at(tetra.node[0]).x,
+								nodes.at(tetra.node[1]).y - nodes.at(tetra.node[0]).y,
+								nodes.at(tetra.node[1]).z - nodes.at(tetra.node[0]).z},
+							   {nodes.at(tetra.node[2]).x - nodes.at(tetra.node[0]).x,
+								nodes.at(tetra.node[2]).y - nodes.at(tetra.node[0]).y,
+								nodes.at(tetra.node[2]).z - nodes.at(tetra.node[0]).z},
+							   {nodes.at(tetra.node[3]).x - nodes.at(tetra.node[0]).x,
+								nodes.at(tetra.node[3]).y - nodes.at(tetra.node[0]).y,
+								nodes.at(tetra.node[3]).z - nodes.at(tetra.node[0]).z}});
 
-		Eigen::Matrix<double,3,4> dN;
+		Eigen::Matrix<double, 3, 4> dN;
 
 		dN.col(0) = jacob.inverse() * Eigen::Vector3d(-1, -1, -1).matrix();
 		dN.col(1) = jacob.inverse() * Eigen::Vector3d(1, 0, 0).matrix();
@@ -352,7 +359,7 @@ void Solver::AssembleLeft()
 		Eigen::Matrix4d Klocal;
 
 		for (int i = 0; i < 4; i++)
-		{ 
+		{
 			for (int j = 0; j < 4; j++)
 			{
 				Klocal(i, j) = (dN.col(i).array() * dN.col(j).array()).sum() * jacob.determinant() / -6.0;
@@ -373,16 +380,18 @@ void Solver::AssembleLeft()
 			{
 				// split matrix
 				if (m_iIndex.Contains(tetra.node[i]))
-				{	
+				{
 					// ii
 					if (m_iIndex.Contains(tetra.node[j]))
 					{
-						m_Kii.coeffRef(m_iIndex.GetPositionOf(tetra.node[i]), m_iIndex.GetPositionOf(tetra.node[j])) += Klocal(i, j);
+						m_Kii.coeffRef(m_iIndex.GetPositionOf(tetra.node[i]), m_iIndex.GetPositionOf(tetra.node[j])) +=
+							Klocal(i, j);
 					}
 					// ij
 					else
 					{
-						m_Kij.coeffRef(m_iIndex.GetPositionOf(tetra.node[i]), m_jIndex.GetPositionOf(tetra.node[j])) += Klocal(i, j);
+						m_Kij.coeffRef(m_iIndex.GetPositionOf(tetra.node[i]), m_jIndex.GetPositionOf(tetra.node[j])) +=
+							Klocal(i, j);
 					}
 				}
 			}
@@ -390,7 +399,7 @@ void Solver::AssembleLeft()
 
 	} // element loop
 
-	//finalize
+	// finalize
 	m_Kii.finalize();
 	m_Kij.finalize();
 
@@ -413,15 +422,19 @@ void Solver::AssembleRight()
 	{
 		auto& tetra = m_mesh->GetBulkElements().at(tetraIndex);
 
-		Eigen::Matrix3d jacob(
-			{
-				{nodes.at(tetra.node[1]).x - nodes.at(tetra.node[0]).x, nodes.at(tetra.node[1]).y - nodes.at(tetra.node[0]).y, nodes.at(tetra.node[1]).z - nodes.at(tetra.node[0]).z},
-				{nodes.at(tetra.node[2]).x - nodes.at(tetra.node[0]).x, nodes.at(tetra.node[2]).y - nodes.at(tetra.node[0]).y, nodes.at(tetra.node[2]).z - nodes.at(tetra.node[0]).z},
-				{nodes.at(tetra.node[3]).x - nodes.at(tetra.node[0]).x, nodes.at(tetra.node[3]).y - nodes.at(tetra.node[0]).y, nodes.at(tetra.node[3]).z - nodes.at(tetra.node[0]).z}
-			});
+		Eigen::Matrix3d jacob({{nodes.at(tetra.node[1]).x - nodes.at(tetra.node[0]).x,
+								nodes.at(tetra.node[1]).y - nodes.at(tetra.node[0]).y,
+								nodes.at(tetra.node[1]).z - nodes.at(tetra.node[0]).z},
+							   {nodes.at(tetra.node[2]).x - nodes.at(tetra.node[0]).x,
+								nodes.at(tetra.node[2]).y - nodes.at(tetra.node[0]).y,
+								nodes.at(tetra.node[2]).z - nodes.at(tetra.node[0]).z},
+							   {nodes.at(tetra.node[3]).x - nodes.at(tetra.node[0]).x,
+								nodes.at(tetra.node[3]).y - nodes.at(tetra.node[0]).y,
+								nodes.at(tetra.node[3]).z - nodes.at(tetra.node[0]).z}});
 
 		// assemble local f vector
-		Eigen::Vector4d flocal = Eigen::Vector4d(1, 1, 1, 1) * (jacob.determinant() / 6.0) * -m_chargeDensity(tetraIndex) / (4 * c_epsilon0);
+		Eigen::Vector4d flocal =
+			Eigen::Vector4d(1, 1, 1, 1) * (jacob.determinant() / 6.0) * -m_chargeDensity(tetraIndex) / (4 * c_epsilon0);
 
 		// save only i-components to global f vector
 		for (int i = 0; i < 4; i++)
@@ -431,9 +444,7 @@ void Solver::AssembleRight()
 				m_fi(m_iIndex.GetPositionOf(tetra.node[i])) += flocal(i);
 			}
 		}
-
 	}
-
 }
 
 bool Solver::Solve()
@@ -447,7 +458,7 @@ bool Solver::Solve()
 	cg.compute(m_Kii);
 
 	// solve for left side
-	//Eigen::VectorXd uSolved = cg.solve(m_fi - m_Kij * m_uBound);
+	// Eigen::VectorXd uSolved = cg.solve(m_fi - m_Kij * m_uBound);
 	Eigen::VectorXd uSolved = cg.solveWithGuess(m_fi - m_Kij * m_uBound, m_uGuess);
 	m_uGuess = uSolved;
 
@@ -456,12 +467,12 @@ bool Solver::Solve()
 		LOG_CRITICAL("Failed to solve");
 		return false;
 	}
-	
+
 	LOG_TRACE("Solved in {} iterations with the error of {}", cg.iterations(), cg.error());
 
 	// assemble full u
 	RangeIterator iIndex(m_iIndex);
-	
+
 	for (size_t i = iIndex.Get(); i < iIndex.GetMax(); iIndex.Advance())
 	{
 		i = iIndex.Get();
@@ -479,7 +490,7 @@ bool Solver::Solve()
 	}
 
 	// -------------------- when using avaraged field -------------------------------
-	if (m_fieldSmoothing)	// calc mean of field at nodes
+	if (m_fieldSmoothing) // calc mean of field at nodes
 	{
 		m_field.resize(m_u.size());
 
@@ -493,10 +504,8 @@ bool Solver::Solve()
 			auto& gradient = m_mesh->m_GradientVectors.at(elemIndex);
 			auto& element = m_mesh->m_bulkElements.at(elemIndex);
 
-			elemField.at(elemIndex) = -gradient.at(0) * m_u(element.node[0])
-				- gradient.at(1) * m_u(element.node[1])
-				- gradient.at(2) * m_u(element.node[2])
-				- gradient.at(3) * m_u(element.node[3]);
+			elemField.at(elemIndex) = -gradient.at(0) * m_u(element.node[0]) - gradient.at(1) * m_u(element.node[1]) -
+									  gradient.at(2) * m_u(element.node[2]) - gradient.at(3) * m_u(element.node[3]);
 		}
 
 		// then calc mean
@@ -512,8 +521,8 @@ bool Solver::Solve()
 			{
 				auto& cand = m_mesh->GetTetrahedron(candidateIndex);
 
-				if (cand.node[0] == nodeindex || cand.node[1] == nodeindex
-					|| cand.node[2] == nodeindex || cand.node[3] == nodeindex)
+				if (cand.node[0] == nodeindex || cand.node[1] == nodeindex || cand.node[2] == nodeindex ||
+					cand.node[3] == nodeindex)
 				{
 					count++;
 					m_field.at(nodeindex) += elemField.at(candidateIndex);
@@ -528,6 +537,6 @@ bool Solver::Solve()
 			m_field.at(nodeindex) = m_field.at(nodeindex).array() / count;
 		}
 	}
-	
+
 	return true;
 }

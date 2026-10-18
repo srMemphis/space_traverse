@@ -1,11 +1,11 @@
 #pragma once
-#include <vector>
 #include <Eigen/Dense>
+
+#include <vector>
 
 class Track
 {
 public:
-
 	Track();
 	~Track();
 
@@ -19,10 +19,11 @@ public:
 	// modifiers
 
 	// set this as initial values before macking step
-	void SetStepSize(double step);							// step can be changed after each MakeStep() call
+	void SetStepSize(double step); // step can be changed after each MakeStep() call
 	void SetStartingPosition(Eigen::Vector3d point);
 	void SetStartingVelocity(Eigen::Vector3d velo);
-	void SetAcceleration(Eigen::Vector3d accel);			// use this to set starting value and to set new values after each MakeStep() call
+	void SetAcceleration(
+		Eigen::Vector3d accel); // use this to set starting value and to set new values after each MakeStep() call
 
 	// make step
 	const Eigen::Vector3d& MakeStep();
@@ -36,10 +37,10 @@ public:
 private:
 	void CalcDt();
 
-	double m_stepSize;		// fixed distance the particle will fly
-	double m_dt;			// time in seconds the particle flew
+	double m_stepSize; // fixed distance the particle will fly
+	double m_dt;       // time in seconds the particle flew
 
-	std::vector<Eigen::Vector3d> m_points;					// particle coordinates
-	std::pair<Eigen::Vector3d, Eigen::Vector3d> m_velo;		// previous and current velocity
-	std::pair<Eigen::Vector3d, Eigen::Vector3d> m_accel;	// previous and current acceleration
+	std::vector<Eigen::Vector3d> m_points;               // particle coordinates
+	std::pair<Eigen::Vector3d, Eigen::Vector3d> m_velo;  // previous and current velocity
+	std::pair<Eigen::Vector3d, Eigen::Vector3d> m_accel; // previous and current acceleration
 };

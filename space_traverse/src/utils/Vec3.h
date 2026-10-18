@@ -15,17 +15,11 @@ struct Vec3
 		z *= ivnLength;
 	}
 
-	double Dot(const Vec3& v) const
-	{
-		return x * v.x + y * v.y + z * v.z;
-	}
+	double Dot(const Vec3& v) const { return x * v.x + y * v.y + z * v.z; }
 
-	Vec3 Cross(const Vec3& v) const
-	{
-		return { y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x };
-	}
+	Vec3 Cross(const Vec3& v) const { return {y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x}; }
 
-	//binary -
+	// binary -
 	Vec3 operator-(Vec3 const& v) const
 	{
 		Vec3 res;
@@ -54,5 +48,4 @@ struct Vec3
 		res.z = -this->z;
 		return res;
 	}
-
 };

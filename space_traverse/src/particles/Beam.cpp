@@ -1,17 +1,16 @@
 #include "Beam.h"
 
-#include <cmath>
-#include <random>
+#include "debug/Log.h"
+#include "debug/Profiler.h"
+#include "utils/PhysConstants.h"
 
 #include <Eigen/Geometry>
 
-#include "utils/PhysConstants.h"
-#include "debug/Profiler.h"
-#include "debug/Log.h"
+#include <cmath>
+#include <random>
 
 
-Beam::Beam()
-	:m_particle({1.60217633e-19, 0.511e6}), m_radius(1)
+Beam::Beam() : m_particle({1.60217633e-19, 0.511e6}), m_radius(1)
 {
 }
 
@@ -70,7 +69,7 @@ void Beam::DetermineStepSize(double environmentSize, uint32_t desiredStepCount)
 
 void Beam::SetDivergence(double degrees)
 {
-	m_divergence = (degrees * 3.1415 / 180) / 2;		// half of the angle in radians
+	m_divergence = (degrees * 3.1415 / 180) / 2; // half of the angle in radians
 }
 
 void Beam::SetStoppingFunction(std::function<bool(double, double, double)> func)
@@ -124,15 +123,15 @@ bool Beam::SaveTracksToFile(ToMatlab& file, uint32_t numPoints)
 		// writing all between the first and the second
 		for (size_t i = 1; i < coordsSize - 1; i++)
 		{
-			coords.at(i + coordsSize *0) = points.at(i * step).x();
-			coords.at(i + coordsSize *1) = points.at(i * step).y();
-			coords.at(i + coordsSize *2) = points.at(i * step).z();
+			coords.at(i + coordsSize * 0) = points.at(i * step).x();
+			coords.at(i + coordsSize * 1) = points.at(i * step).y();
+			coords.at(i + coordsSize * 2) = points.at(i * step).z();
 		}
 
 		// writing the last point
-		coords.at(coordsSize - 1 + coordsSize * 0) = points.at(pointsSize-1).x();
-		coords.at(coordsSize - 1 + coordsSize * 1) = points.at(pointsSize-1).y();
-		coords.at(coordsSize - 1 + coordsSize * 2) = points.at(pointsSize-1).z();
+		coords.at(coordsSize - 1 + coordsSize * 0) = points.at(pointsSize - 1).x();
+		coords.at(coordsSize - 1 + coordsSize * 1) = points.at(pointsSize - 1).y();
+		coords.at(coordsSize - 1 + coordsSize * 2) = points.at(pointsSize - 1).z();
 
 		file.WriteCellAsMatrix(coords, coordsSize, 3);
 
@@ -188,15 +187,9 @@ void Beam::GenerateUniformDisk(uint32_t circles)
 	double dr = Rfacke / n;
 	double A1 = phys::pi * dr * dr / N1;
 
-	auto centermass = [](const double R, const double phi)
-		{
-			return 4.0 / 3.0 * R * std::sin(phi / 2) / phi;
-		};
+	auto centermass = [](const double R, const double phi) { return 4.0 / 3.0 * R * std::sin(phi / 2) / phi; };
 
-	auto area = [](const double R, const double phi)
-		{
-			return R * R * phi / 2;
-		};
+	auto area = [](const double R, const double phi) { return R * R * phi / 2; };
 
 	std::vector<double> x;
 	std::vector<double> y;
@@ -204,7 +197,7 @@ void Beam::GenerateUniformDisk(uint32_t circles)
 
 	x.reserve(numtracks);
 	y.reserve(numtracks);
-	z.resize(numtracks);		// zero initialized
+	z.resize(numtracks); // zero initialized
 
 	for (int i = 1; i < n + 1; i++)
 	{
@@ -217,7 +210,7 @@ void Beam::GenerateUniformDisk(uint32_t circles)
 		double AR = area(dr * i, dphi);
 		double Ar = area(dr * (i - 1), dphi);
 
-		double Rtotal = (AR * Rc - Ar * rc) / (AR - Ar);	// radius to centermass of a sector
+		double Rtotal = (AR * Rc - Ar * rc) / (AR - Ar); // radius to centermass of a sector
 
 		for (int Ni = 1; Ni < N + 1; Ni++)
 		{
@@ -231,15 +224,14 @@ void Beam::GenerateUniformDisk(uint32_t circles)
 	m_tracks.reserve(numtracks);
 
 	// rotate point to designated direction
-	auto rotation = Eigen::Quaterniond::FromTwoVectors(Eigen::Vector3d{0,0,1}, m_direction);
+	auto rotation = Eigen::Quaterniond::FromTwoVectors(Eigen::Vector3d{0, 0, 1}, m_direction);
 
 	for (int i = 0; i < numtracks; i++)
 	{
 		Track t;
-		t.SetStartingPosition(rotation * Eigen::Vector3d{ x.at(i), y.at(i), z.at(i) } + m_centerPosition);
+		t.SetStartingPosition(rotation * Eigen::Vector3d{x.at(i), y.at(i), z.at(i)} + m_centerPosition);
 		m_tracks.push_back(t);
 	}
-
 }
 
 void Beam::Run()
@@ -274,7 +266,7 @@ void Beam::Run()
 		track.SetAcceleration(field * m_particle.charge / phys::me);
 	}
 
-	#pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for schedule(dynamic)
 	for (int i = 0; i < m_tracks.size(); i++)
 	{
 		PROFILE_SCOPE("ONE TRACK RUN");
@@ -289,7 +281,7 @@ void Beam::Run()
 			{
 				break;
 			}
-			
+
 			auto field = m_fieldFunction(lastPoint.x(), lastPoint.y(), lastPoint.z());
 			track.SetAcceleration(field * m_particle.charge / phys::me);
 

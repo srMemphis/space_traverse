@@ -1,29 +1,28 @@
 #pragma once
-#include <Eigen/Dense>
-
-#include <vector>
-#include <functional>
-
 #include "particles/Track.h"
 #include "utils/ToMatlab.h"
 
+#include <Eigen/Dense>
+
+#include <functional>
+#include <vector>
+
 struct Particle
 {
-	double charge = 0;		// C
-	double E0 = 0;			// eV
+	double charge = 0; // C
+	double E0 = 0;     // eV
 };
 
 class Beam
 {
 public:
-
 	Beam();
 	~Beam();
 
 	// accessors
 	const std::vector<Track>& GetTracks() const;
 
-	//modifiers
+	// modifiers
 
 	// set this before generating
 	void SetRadius(double rad);
@@ -40,7 +39,7 @@ public:
 	// set functions to determine particle behavior in space
 	void SetStoppingFunction(std::function<bool(double, double, double)> func);
 	void SetFieldFunction(std::function<Eigen::Vector3d(double x, double y, double z)> func);
-	
+
 	// run vasya run
 	void Run();
 
@@ -62,9 +61,10 @@ private:
 	Eigen::Vector3d m_direction;
 	Eigen::Vector3d m_centerPosition;
 
-	std::vector<Eigen::Vector3d> m_startPos;	// starting positions of particles
-	std::vector<Track> m_tracks;				// particle tracks
-	std::function<bool(double, double, double)> m_stoppingFunction;		// returns true when the particle should stop
-	std::function<Eigen::Vector3d(double x, double y, double z)> m_fieldFunction;	// returns electic field at the position
+	std::vector<Eigen::Vector3d> m_startPos;                        // starting positions of particles
+	std::vector<Track> m_tracks;                                    // particle tracks
+	std::function<bool(double, double, double)> m_stoppingFunction; // returns true when the particle should stop
+	std::function<Eigen::Vector3d(double x, double y, double z)>
+		m_fieldFunction; // returns electic field at the position
 	Particle m_particle;
 };

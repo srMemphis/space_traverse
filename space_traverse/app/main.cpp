@@ -1,6 +1,6 @@
-#include "SimuControl.h"
 #include "debug/Log.h"
 #include "debug/Profiler.h"
+#include "SimuControl.h"
 
 #include <string>
 
@@ -18,7 +18,7 @@ int main()
 
 	if (!simulation.Prepare())
 		return 2;
-	
+
 	auto res = simulation.Run();
 
 	PROFILE_END_SESSION();

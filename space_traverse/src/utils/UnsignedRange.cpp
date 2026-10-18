@@ -20,7 +20,7 @@ void UnsignedRange::Add(size_t number)
 			// expand right
 			iterator->second = number + 1;
 
-			//check if ranges overlap
+			// check if ranges overlap
 			iterator++;
 			std::list<std::pair<size_t, size_t>>::iterator next = iterator;
 			iterator--;
@@ -44,7 +44,7 @@ void UnsignedRange::Add(size_t number)
 				// expand left
 				iterator->first = number;
 
-				//check if ranges overlap
+				// check if ranges overlap
 				if (iterator != m_data.begin())
 				{
 					iterator--;
@@ -63,7 +63,7 @@ void UnsignedRange::Add(size_t number)
 			else
 			{
 				// create new range left
-				m_data.insert(iterator, { number, number + 1 });
+				m_data.insert(iterator, {number, number + 1});
 				return;
 			}
 		}
@@ -75,7 +75,7 @@ void UnsignedRange::Add(size_t number)
 	} // ranges loop
 
 	// create new range right
-	m_data.push_back({ number, number + 1 });
+	m_data.push_back({number, number + 1});
 }
 
 void UnsignedRange::AddInterval(size_t first, size_t last)
@@ -95,7 +95,7 @@ void UnsignedRange::AddInterval(size_t first, size_t last)
 			if (last < iterator->first)
 			{
 				// insert new range to the left of current
-				m_data.insert(iterator, { first, last + 1 });
+				m_data.insert(iterator, {first, last + 1});
 				return;
 			}
 			// SECOND is inside or to the left of current range
@@ -132,7 +132,6 @@ void UnsignedRange::AddInterval(size_t first, size_t last)
 			// else SECOND is inide of the current range
 
 			return;
-
 		}
 		// FIRST is to the right of the current range
 		else
@@ -142,11 +141,11 @@ void UnsignedRange::AddInterval(size_t first, size_t last)
 		}
 
 
-	} //loop over ranges
+	} // loop over ranges
 
 	// FIRST is to the right of the last range
 	// insert new range in the end position
-	m_data.insert(m_data.end(), { first, last + 1 });
+	m_data.insert(m_data.end(), {first, last + 1});
 }
 
 void UnsignedRange::RemoveInterval(size_t first, size_t last)
@@ -180,7 +179,6 @@ void UnsignedRange::RemoveInterval(size_t first, size_t last)
 				// mark current range for deletion
 				delEnd++;
 			}
-
 		}
 		// FIRST is inside of the current range
 		else if (first < iterator->second)
@@ -194,7 +192,7 @@ void UnsignedRange::RemoveInterval(size_t first, size_t last)
 				iterator->second = first;
 
 				iterator++;
-				m_data.insert(iterator, { last + 1, tmp });
+				m_data.insert(iterator, {last + 1, tmp});
 
 				break;
 			}
@@ -251,7 +249,6 @@ size_t UnsignedRange::GetPositionOf(size_t number) const
 			result += number - iterator->first;
 			break;
 		}
-
 	}
 
 	return result;
@@ -260,7 +257,7 @@ size_t UnsignedRange::GetPositionOf(size_t number) const
 size_t UnsignedRange::Size() const
 {
 	size_t result = 0;
-	
+
 	for (auto iterator = m_data.begin(); iterator != m_data.end(); iterator++)
 	{
 		result += iterator->second - iterator->first;
@@ -318,7 +315,7 @@ void UnsignedRange::ResolveCollisions(std::list<std::pair<size_t, size_t>>::iter
 			// expand start to the right
 			start->second = iterator->second;
 
-			// remove iterator 
+			// remove iterator
 			delEnd = iterator;
 			break;
 		}

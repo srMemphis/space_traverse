@@ -1,7 +1,9 @@
 #pragma once
-#include <vector>
-#include <Eigen/Dense>
 #include "utils/ToMatlab.h"
+
+#include <Eigen/Dense>
+
+#include <vector>
 
 struct DetectorData
 {
@@ -22,11 +24,9 @@ struct DetectorData
 
 	bool ToFile(ToMatlab& file) const
 	{
-		bool res = file.Write(hitsPositionsX, "hitsX")
-			&& file.Write(hitsPositionsY, "hitsY")
-			&& file.Write(hitsPositionsZ, "hitsZ")
-			&& file.WriteReal(current, "current")
-			&& file.Write(energy, "energy");
+		bool res = file.Write(hitsPositionsX, "hitsX") && file.Write(hitsPositionsY, "hitsY") &&
+				   file.Write(hitsPositionsZ, "hitsZ") && file.WriteReal(current, "current") &&
+				   file.Write(energy, "energy");
 
 		return res;
 	}

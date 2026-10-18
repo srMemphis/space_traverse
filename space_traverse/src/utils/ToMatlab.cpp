@@ -6,8 +6,7 @@
 
 #include <vector>
 
-ToMatlab::ToMatlab()
-	:m_file(nullptr)
+ToMatlab::ToMatlab() : m_file(nullptr)
 {
 }
 

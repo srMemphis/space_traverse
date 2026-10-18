@@ -4,12 +4,12 @@
 class Box
 {
 public:
-
 	Box(double xmin, double ymin, double zmin, double xmax, double ymax, double zmax)
-		: xMin(xmin), yMin(ymin), zMin(zmin), xMax(xmax), yMax(ymax), zMax(zmax) {}
+		: xMin(xmin), yMin(ymin), zMin(zmin), xMax(xmax), yMax(ymax), zMax(zmax)
+	{
+	}
 
-	Box()
-		: xMin(0), yMin(0), zMin(0), xMax(0), yMax(0), zMax(0) {}
+	Box() : xMin(0), yMin(0), zMin(0), xMax(0), yMax(0), zMax(0) {}
 
 	double xMin;
 	double yMin;
@@ -37,13 +37,13 @@ public:
 		{
 			// split perpendicular to X
 			// Y and Z coordinates remain the same
-			
+
 			double newX = (xMax + xMin) / 2;
 
 			// lower box
 			out1.xMax = newX;
 
-			// upper box 
+			// upper box
 			out2.xMin = newX;
 		}
 		else if (lenY >= lenX && lenY >= lenZ)
@@ -56,7 +56,7 @@ public:
 			// lower box
 			out1.yMax = newY;
 
-			// upper box 
+			// upper box
 			out2.yMin = newY;
 		}
 		else if (lenZ >= lenY && lenZ >= lenX)
@@ -69,14 +69,14 @@ public:
 			// lower box
 			out1.zMax = newZ;
 
-			// upper box 
+			// upper box
 			out2.zMin = newZ;
 		}
 		else
 		{
 			return false;
 		}
-		
+
 		return true;
 	}
 };

@@ -1,0 +1,38 @@
+# Code style chosen in issue #7 (candidate E): LLVM base, Allman braces, tabs, 120 columns,
+# includes regrouped as own header / project / third-party / std.
+BasedOnStyle: LLVM
+BreakBeforeBraces: Allman
+UseTab: ForContinuationAndIndentation
+TabWidth: 4
+IndentWidth: 4
+ContinuationIndentWidth: 4
+ColumnLimit: 120
+PointerAlignment: Left
+AccessModifierOffset: -4
+NamespaceIndentation: All
+IndentCaseLabels: false
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortLambdasOnASingleLine: All
+AlignTrailingComments: true
+SpacesBeforeTrailingComments: 1
+BreakConstructorInitializers: BeforeColon
+SpaceAfterTemplateKeyword: false
+BreakTemplateDeclarations: Yes
+SortIncludes: CaseInsensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^<(Eigen|spdlog|fkYAML|doctest)/|^"TinyMAT/'
+    Priority: 3
+  - Regex: '^"'
+    Priority: 2
+  - Regex: '^<'
+    Priority: 4
+MaxEmptyLinesToKeep: 2
+KeepEmptyLines:
+  AtStartOfBlock: true
+SpacesInLineCommentPrefix:
+  Minimum: 1
+  Maximum: -1

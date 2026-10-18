@@ -54,12 +54,12 @@ private:
 	void GenerateUniformDisk(uint32_t circles);
 
 private:
-	double m_divergence;
+	double m_divergence = 0;
 	double m_radius;
-	double m_energy;
-	double m_stepSize;
-	Eigen::Vector3d m_direction;
-	Eigen::Vector3d m_centerPosition;
+	double m_energy = 0;
+	double m_stepSize = 0;
+	Eigen::Vector3d m_direction = Eigen::Vector3d::Zero();
+	Eigen::Vector3d m_centerPosition = Eigen::Vector3d::Zero();
 
 	std::vector<Eigen::Vector3d> m_startPos;                        // starting positions of particles
 	std::vector<Track> m_tracks;                                    // particle tracks

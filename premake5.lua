@@ -70,3 +70,24 @@ project "space_traverse"
         links { "TinyMAT_Release" }
 
     filter {}
+
+project "space_traverse_core_tests"
+    kind "ConsoleApp"
+    location "build/projects"
+    openmp "On"
+
+    files { "space_traverse/tests/**" }
+    includedirs { "space_traverse/tests" }
+    -- Absolute, so the tests find their fixture from any working directory.
+    defines { 'TEST_DATA_DIR="' .. path.getabsolute("space_traverse/tests/data") .. '"' }
+
+    links { "space_traverse_core" }
+    libdirs { "space_traverse/lib/TinyMAT" }
+
+    filter "configurations:Debug"
+        links { "TinyMAT_Debug" }
+
+    filter "configurations:Profile or Release"
+        links { "TinyMAT_Release" }
+
+    filter {}

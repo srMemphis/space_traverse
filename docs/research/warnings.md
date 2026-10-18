@@ -12,7 +12,7 @@ Source conventions:
 
 **Measured on the current code (§8):**
 - **`/W3` (today) → `/W4` costs 2 new warnings in own code** (`C4100`, `C4189`) and 5 in Eigen (`C5054`). `/external:W0` on `space_traverse/include` removes the Eigen ones. The baseline is not clean: `/W3` already reports 16 warnings in `src/` (13 narrowing conversions, 2 non-UTF-8 files, 1 `IsRowMajor()` called as a function), and Debug adds 2 more that are known bugs from #6.
-- **`/Wall`: 954 unique warnings, 792 of them vendored.** With `/external:W0`, 162 remain in own code, mostly `C4365`/`C4388` signed/unsigned (98) and `C4514` (26).
+- **`/Wall`: 954 unique warnings, 791 of them outside `src/` (778 vendored, 13 STL/SDK).** With `/external:W0`, 162 remain in own code, mostly `C4365`/`C4388` signed/unsigned (98) and `C4514` (26).
 - **MSVC `/analyze`** (the default `NativeRecommendedRules`) takes about 3× the Debug build time and finds 4 issues in own code. It also reports 25 in vendored headers, because `/external:W0` doesn't cover analysis and that needs `/analyze:external-`. It skips OpenMP regions (`C6993`).
 - **clang-tidy 22.1.3, bundled with VS, runs on a hand-made cl-mode `compile_commands.json` with the project's MSVC flags.** But every TU hits a compile error in the bundled fmt 11.0.2 (spdlog 1.15.0), so **`clang-analyzer-*` silently finds nothing**. AST checks still work: 962 own-code diagnostics with a broad check set, mostly style.
 - **Release doesn't link with the current toolset.** `TinyMAT_Release.lib` has `/GL` objects from another compiler version (`C1047`). This is independent of warnings and concerns #11 and #9.
@@ -490,7 +490,7 @@ Symptom observed in the §8 trial run:
 - **The Debug build shows two more, both already in the inventory ([#6](https://github.com/srMemphis/space_traverse/issues/6)):** `C4172` (returning the address of a temporary, `Mesh.cpp:187`, the dangling reference in `TagToName`) and `C4715` (not all control paths return a value, `Mesh.cpp:248`, the missing return in `GetPhisicalTagOfTetrahedron`). In Release with `/GL`, code generation runs at the LTCG link step, which fails here (see the side finding below), so a compile-only Release count misses these two.
 - **Vendor noise at `/W4` is tiny:** 5 × `C5054` (`operator '|'` between enumerations of different types, deprecated in C++20) in `Eigen/src/Core/Matrix.h:46` and `TriangularMatrix.h:211-214`. `/external:W0` removes them.
 - **`/external:templates-` brings exactly those 5 back.** The Eigen templates are instantiated from our code, so with `templates-` the warnings in them are reported again. With the default (`/external:templates`, on) they stay suppressed.
-- **`/Wall` is dominated by vendor headers (792 of 954) and by off-by-default informational warnings.** With `/external:W0`, own code still has 162:
+- **`/Wall` is dominated by headers outside `src/` (791 of 954: 778 vendored, 13 STL/SDK) and by off-by-default informational warnings.** With `/external:W0`, own code still has 162:
   - `C4365` ×75 (signed/unsigned conversion; 48 of them in `solver/Solver.cpp`), `C4388` ×23 (signed/unsigned comparison; 17 in `mesh/Mesh.cpp`).
   - `C4514` ×26 (unreferenced inline function removed), `C4820` ×4 (padding), `C5219` ×4, `C4061` ×3, `C4626`/`C4800`/`C5266`/`C5267` ×2–3 each.
   - `C5038` ×1 in `particles/Beam.cpp:14`: the constructor's init list names `m_particle` before `m_radius`, but `m_radius` is declared first. The initializers are independent constants, so this is cosmetic.

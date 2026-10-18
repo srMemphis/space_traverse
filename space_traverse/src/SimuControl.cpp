@@ -710,7 +710,7 @@ bool SimuControl::BeamShouldStop(double x, double y, double z) const
 	}
 
 	// get its physical tags
-	auto tag = m_mesh->GetPhisicalTagOfTetrahedron(elemIndex);
+	auto tag = m_mesh->GetPhysicalTagOfTetrahedron(elemIndex);
 
 	// check if should stop on this tags
 	if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), tag) != m_stoppingVolumes.end() ||
@@ -756,7 +756,7 @@ void SimuControl::RegisterHits()
 		auto& lastPoint = track.GetLastPoint();
 		auto elemIndex = m_mesh->FindElementByCoords(lastPoint.x(), lastPoint.y(), lastPoint.z());
 
-		auto tag = m_mesh->GetPhisicalTagOfTetrahedron(elemIndex);
+		auto tag = m_mesh->GetPhysicalTagOfTetrahedron(elemIndex);
 
 		// we hit detector
 		if (tag == m_detectorTag)

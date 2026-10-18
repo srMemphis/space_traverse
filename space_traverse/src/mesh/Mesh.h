@@ -28,7 +28,7 @@ public:
 	const std::vector<Node>& GetNodes() const;
 	const std::map<int, Volume>& GetVolumes() const;
 	const std::map<int, Surface>& GetSurfaces() const;
-	int GetPhisicalTagOfTetrahedron(size_t index) const;
+	int GetPhysicalTagOfTetrahedron(size_t index) const;
 	Box GetBoundingBox() const;
 
 	const ETriangle& GetTriangle(size_t index) const;
@@ -59,7 +59,7 @@ public:
 	void SaveNodesToFile(ToMatlab& file) const;
 
 private:
-	std::map<std::string, PhisicalName> m_PhisicalNames; // mapped by name
+	std::map<std::string, PhysicalName> m_PhysicalNames; // mapped by name
 
 	std::vector<Node> m_Nodes;                // points
 	std::vector<ETriangle> m_surfElements;    // triangles

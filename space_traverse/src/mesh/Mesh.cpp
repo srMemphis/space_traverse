@@ -144,7 +144,7 @@ double Mesh::GetVolumeOfVolume(const std::string name) const
 {
 	double result = 0;
 
-	int physTag = m_PhisicalNames.find(name)->second.tag;
+	int physTag = m_PhysicalNames.find(name)->second.tag;
 
 	// for every volume
 	for (auto& key_volume : m_volumes)
@@ -169,8 +169,8 @@ int Mesh::NameToTag(const std::string& name) const
 {
 	int tag = 0;
 
-	auto iter = m_PhisicalNames.find(name);
-	if (iter != m_PhisicalNames.end())
+	auto iter = m_PhysicalNames.find(name);
+	if (iter != m_PhysicalNames.end())
 	{
 		tag = iter->second.tag;
 	}
@@ -180,7 +180,7 @@ int Mesh::NameToTag(const std::string& name) const
 
 const std::string& Mesh::TagToName(int tag) const
 {
-	for (auto& name : m_PhisicalNames)
+	for (auto& name : m_PhysicalNames)
 	{
 		if (name.second.tag == tag)
 		{
@@ -240,7 +240,7 @@ bool Mesh::IsInNarrowBounds(double x, double y, double z) const
 	return m_tightBox.Contains(x, y, z);
 }
 
-int Mesh::GetPhisicalTagOfTetrahedron(size_t index) const
+int Mesh::GetPhysicalTagOfTetrahedron(size_t index) const
 {
 	for (auto& key_vol : m_volumes)
 	{
@@ -524,7 +524,7 @@ bool Mesh::ReadPhysicalNames(std::ifstream& geofile)
 
 	for (int i = 0; i < numNames; i++)
 	{
-		PhisicalName pname;
+		PhysicalName pname;
 
 		geofile >> pname.dimention;
 		geofile >> pname.tag;
@@ -534,7 +534,7 @@ bool Mesh::ReadPhysicalNames(std::ifstream& geofile)
 		pname.name.erase(0, 2);                  // erase the first two characters
 		pname.name.erase(pname.name.size() - 1); // erase the last character
 
-		m_PhisicalNames.emplace(pname.name, pname);
+		m_PhysicalNames.emplace(pname.name, pname);
 
 		LOG_TRACE("dim: {}, tag: {}, name: {}", pname.dimention, pname.tag, pname.name);
 	}

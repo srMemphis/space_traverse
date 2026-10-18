@@ -301,12 +301,15 @@ bool Mesh::BuildTopologyData()
 void Mesh::Clear()
 {
 	m_Version = std::pair<int, int>{0, 0};
+	m_PhysicalNames.clear();
 	m_Nodes.clear();
 	m_surfElements.clear();
 	m_bulkElements.clear();
 	m_surfaces.clear();
 	m_volumes.clear();
 	m_topologyTree.Clear();
+	m_GradientVectors.clear();
+	m_tightBox = Box();
 }
 
 int64_t Mesh::FindElementByCoords(double x, double y, double z) const

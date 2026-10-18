@@ -149,6 +149,14 @@ TEST_SUITE("Mesh")
 		CHECK(mesh.FindElementByCoords(p.x(), p.y(), p.z()) < 0);
 	}
 
+	TEST_CASE_FIXTURE(CubeMesh, "a cleared mesh knows no names")
+	{
+		mesh.Clear();
+
+		CHECK(mesh.NameToTag("Cube") == 0);
+		CHECK(mesh.TagToName(kCubeTag).empty());
+	}
+
 	TEST_CASE_FIXTURE(CubeMesh, "loading the same file again gives the same mesh")
 	{
 		REQUIRE(mesh.FromFile(FixturePath("cube.msh").string()));

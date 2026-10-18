@@ -10,13 +10,19 @@ A Windows C++20 console app that simulates electron-beam charging of dielectric 
 
 ## Build and run
 
-- The only build system is Visual Studio: `space_traverse.sln` → `space_traverse/space_traverse.vcxproj`. It uses platform toolset `v145` (VS 2026), C++20 and OpenMP. Use the `x64` configurations. `TinyMAT_Debug.lib`/`TinyMAT_Release.lib` are prebuilt for x64 in `space_traverse/lib/TinyMAT/`; `lib/TinyMAT/License/SOURCE.txt` records how to rebuild them.
-- Command-line build from a VS Developer shell:
+- The build is defined in `premake5.lua` and generated with premake 5.0.0, vendored as `tools/premake/premake5.exe`. Visual Studio files are not checked in; everything generated goes to `build/` (ignored).
+- Generate, then build from a VS Developer shell:
   ```
-  msbuild space_traverse.sln /p:Configuration=Release /p:Platform=x64
+  generate_vs2026.bat
+  msbuild build/space_traverse.slnx /p:Configuration=Release /p:Platform=x64
   ```
-- The output goes to `x64/<Config>/space_traverse.exe`.
-- The executable takes no arguments. It reads `config.yaml` from the **current working directory**, and relative paths in the config (`msh/...`, `out/...`) resolve from there. Run it with `space_traverse/` as the working directory; this is the VS debugger default.
+  Re-run `generate_vs2026.bat` after editing `premake5.lua` or adding/removing source files. It writes `build/space_traverse.slnx` and `build/projects/*.vcxproj`. Always pass the `.slnx` explicitly to MSBuild.
+- Toolset `v145` (VS 2026), C++20, OpenMP, x64 only. Projects:
+  - `space_traverse_core` (StaticLib): everything in `space_traverse/src/`.
+  - `space_traverse` (ConsoleApp): `space_traverse/app/main.cpp`, links `space_traverse_core` and TinyMAT. `TinyMAT_Debug.lib`/`TinyMAT_Release.lib` are prebuilt for x64 in `space_traverse/lib/TinyMAT/`; `lib/TinyMAT/License/SOURCE.txt` records how to rebuild them.
+- Configurations: `Debug`, `Release` (optimized, `/GL`), and `Profile` (Release plus `PROFILER`, which turns on the Chrome-trace profiler). All three have debug symbols.
+- The exe goes to `build/<Config>/space_traverse.exe`; intermediates go to `build/obj/<Config>/<project>/`.
+- The executable takes no arguments. It reads `config.yaml` from the **current working directory**, and relative paths in the config (`msh/...`, `out/...`) resolve from there. Run it with `space_traverse/` as the working directory; `debugdir` in `premake5.lua` makes that the VS debugger default.
 - To switch scenarios, copy one of `space_traverse/configs/*.yaml` over `space_traverse/config.yaml`. Each config names a `.msh` file in `space_traverse/msh/`.
 - There is no test suite and no linter. The smoke check below is the regression gate.
 
@@ -24,19 +30,19 @@ A Windows C++20 console app that simulates electron-beam charging of dielectric 
 
 Use it to prove that a change keeps the simulation output bit-identical. It runs `space_traverse/configs/smoke.yaml` (sphere_mask, beam aimed at the Target so charge deposits, `divergence: 0`, about 1.5 min in Release) and compares the `.mat` files.
 
-1. Build Release before the change and save the exe outside the repository, e.g. `x64/Release/space_traverse.exe` → a temp folder.
+1. Build Release before the change and save the exe outside the repository, e.g. `build/Release/space_traverse.exe` → a temp folder.
 2. Make the change and build Release again.
 3. From the repository root, run both and compare:
    ```
    py tools/smoke/run.py <saved>/space_traverse.exe before
-   py tools/smoke/run.py x64/Release/space_traverse.exe after
+   py tools/smoke/run.py build/Release/space_traverse.exe after
    py tools/smoke/compare.py space_traverse/out/smoke_before space_traverse/out/smoke_after
    ```
    `run.py` swaps `config.yaml` for the smoke config, runs the exe from `space_traverse/`, moves the output to `space_traverse/out/smoke_<label>` and restores `config.yaml`. `compare.py` exits 0 on a match; on a mismatch it lists the differing files and the first differing byte offset.
 
 Two runs of the same Release exe match bit for bit with OpenMP at its default thread count, so any mismatch comes from the change. `compare.py` skips the first 116 bytes of each file: that MAT header holds TinyMAT's creation timestamp.
 
-## Pipeline (`src/main.cpp` → `SimuControl`)
+## Pipeline (`app/main.cpp` → `SimuControl`)
 
 1. `ConfigFromFile` parses `config.yaml` (fkYAML, helpers in `utils/yaml.h`) into `SimParameters`.
 2. `Prepare`:
@@ -56,7 +62,7 @@ Two runs of the same Release exe match bit for bit with OpenMP at its default th
 - `solver/`: linear-tetrahedron FEM for Poisson's equation. Matrices are split into the interior (`Kii`) and boundary-coupled (`Kij`) blocks; `UnsignedRange` maps global node indices to i/j indices. Material = relative permittivity (`epsilon`).
 - `particles/`: `Beam` generates `3·n²` starting points on a disk with divergence. `Track` integrates relativistic electron motion with a Verlet-style scheme using a **fixed spatial step size**, deriving `dt` from it.
 - `utils/ToMatlab`: wraps TinyMAT for writing `.mat` files.
-- `debug/`: spdlog setup (`LOG_*` macros, `simulog.log`) and a Chrome-trace profiler that writes `profile.json`. The profiler only runs when `#define PROFILER` in `debug/Define.h` is uncommented.
+- `debug/`: spdlog setup (`LOG_*` macros, `simulog.log`) and a Chrome-trace profiler that writes `profile.json`. The profiler only runs in the `Profile` configuration, which defines `PROFILER`.
 
 ## Mesh and config conventions
 
@@ -67,7 +73,7 @@ Two runs of the same Release exe match bit for bit with OpenMP at its default th
 
 ## Third-party code
 
-Everything under `space_traverse/include/` (Eigen, fkYAML, spdlog, TinyMAT) and `space_traverse/lib/` is vendored. Don't edit it.
+Everything under `space_traverse/include/` (Eigen, fkYAML, spdlog, TinyMAT), `space_traverse/lib/` and `tools/premake/` (premake 5.0.0, BSD-3) is vendored. Don't edit it.
 
 ## Post-processing
 

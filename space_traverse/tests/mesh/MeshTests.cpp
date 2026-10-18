@@ -176,6 +176,45 @@ TEST_SUITE("Mesh")
 		CHECK(mesh.IsInBounds(2.0, 2.0, 2.0));
 	}
 
+	// The narrow bounds of the cube are [1.0005, 1.9995]^3: the cube shrunk by 0.1% about its centre.
+	TEST_CASE_FIXTURE(CubeMesh, "the narrow bounds keep a thin margin inside every face of the cube")
+	{
+		Eigen::Vector3d p;
+		SUBCASE("near the low corner")
+		{
+			p = {1.0001, 1.0001, 1.0001};
+		}
+		SUBCASE("near the high corner")
+		{
+			p = {1.9999, 1.9999, 1.9999};
+		}
+		SUBCASE("outside the cube")
+		{
+			p = {0.999, 1.5, 1.5};
+		}
+
+		CHECK_FALSE(mesh.IsInNarrowBounds(p.x(), p.y(), p.z()));
+	}
+
+	TEST_CASE_FIXTURE(CubeMesh, "the narrow bounds cover the cube except that margin")
+	{
+		Eigen::Vector3d p;
+		SUBCASE("the centre")
+		{
+			p = {1.5, 1.5, 1.5};
+		}
+		SUBCASE("near the low corner")
+		{
+			p = {1.001, 1.001, 1.001};
+		}
+		SUBCASE("near the high corner")
+		{
+			p = {1.999, 1.999, 1.999};
+		}
+
+		CHECK(mesh.IsInNarrowBounds(p.x(), p.y(), p.z()));
+	}
+
 	// Known bug: https://github.com/srMemphis/space_traverse/issues/36
 	// Now: a point on a face shared by two Elements is in neither (-2). Correct: it is found in one of them.
 	TEST_CASE_FIXTURE(CubeMesh, "a point on a face shared by two Elements is found" * doctest::expected_failures(1))

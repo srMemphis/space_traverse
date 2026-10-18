@@ -12,6 +12,7 @@
 #include <cassert>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <stdexcept>
 
@@ -939,7 +940,8 @@ void Mesh::GenerateGradientVectors()
 void Mesh::GenerateTightBox()
 {
 	// box with exact size of the mesh
-	Box exact;
+	const double inf = std::numeric_limits<double>::infinity();
+	Box exact(inf, inf, inf, -inf, -inf, -inf);
 
 	for (auto& node : m_Nodes)
 	{
@@ -954,13 +956,18 @@ void Mesh::GenerateTightBox()
 
 	double mult = 0.999; // size multiplier
 
-	m_tightBox.xMax = exact.xMax * mult;
-	m_tightBox.yMax = exact.yMax * mult;
-	m_tightBox.zMax = exact.zMax * mult;
+	// shrink about the centre of the box
+	double xMid = (exact.xMax + exact.xMin) / 2;
+	double yMid = (exact.yMax + exact.yMin) / 2;
+	double zMid = (exact.zMax + exact.zMin) / 2;
 
-	m_tightBox.xMin = exact.xMin * mult;
-	m_tightBox.yMin = exact.yMin * mult;
-	m_tightBox.zMin = exact.zMin * mult;
+	m_tightBox.xMax = xMid + (exact.xMax - xMid) * mult;
+	m_tightBox.yMax = yMid + (exact.yMax - yMid) * mult;
+	m_tightBox.zMax = zMid + (exact.zMax - zMid) * mult;
+
+	m_tightBox.xMin = xMid + (exact.xMin - xMid) * mult;
+	m_tightBox.yMin = yMid + (exact.yMin - yMid) * mult;
+	m_tightBox.zMin = zMid + (exact.zMin - zMid) * mult;
 }
 
 bool Mesh::ReadNodes(std::ifstream& geofile)

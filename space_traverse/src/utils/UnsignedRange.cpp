@@ -91,14 +91,14 @@ void UnsignedRange::AddInterval(size_t first, size_t last)
 		// FIRST is to the left of current range
 		if (first < iterator->first)
 		{
-			// SECOND is to the left of a curent range
-			if (last < iterator->first)
+			// SECOND is to the left of a curent range and does not touch it
+			if (last + 1 < iterator->first)
 			{
 				// insert new range to the left of current
 				m_data.insert(iterator, {first, last + 1});
 				return;
 			}
-			// SECOND is inside or to the left of current range
+			// SECOND is inside of current range or right before it
 			else
 			{
 				// expand current range to the left

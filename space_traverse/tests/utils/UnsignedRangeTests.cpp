@@ -136,6 +136,16 @@ TEST_SUITE("UnsignedRange")
 		CHECK(range.GetPositionOf(10) == 7);
 	}
 
+	TEST_CASE("an interval that ends right before a range joins it")
+	{
+		UnsignedRange range = FromIntervals({{5, 7}, {2, 4}});
+		// 5 is already in the range, so adding it changes nothing.
+		range.Add(5);
+
+		CHECK(Print(range) == "[2,8) ");
+		CHECK(range.Size() == 6);
+	}
+
 	TEST_CASE("an interval left of all ranges is placed first")
 	{
 		UnsignedRange range = FromIntervals({{8, 9}});

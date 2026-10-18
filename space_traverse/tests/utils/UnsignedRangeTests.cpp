@@ -215,9 +215,9 @@ TEST_SUITE("UnsignedRange")
 		CHECK(Print(left - right) == "[2,5) [6,9) ");
 	}
 
-	TEST_CASE("splitting nodes into interior and boundary numbers each set from zero")
+	TEST_CASE("a range and its complement each number their elements from zero")
 	{
-		// Nodes 0..9, of which 0 1 2 8 9 lie on a Boundary.
+		// The solver's split of mesh nodes 0..9, of which 0 1 2 8 9 lie on a Boundary.
 		UnsignedRange all = FromIntervals({{0, 9}});
 		UnsignedRange boundary = FromIntervals({{0, 2}, {8, 9}});
 
@@ -283,6 +283,7 @@ TEST_SUITE("RangeIterator")
 		CHECK_FALSE(iterator.Advance(element));
 		CHECK(iterator.AtEnd());
 	}
+
 	TEST_CASE("advancing yields every element in ascending order and reports the last one")
 	{
 		UnsignedRange range;

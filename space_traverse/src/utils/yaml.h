@@ -136,7 +136,7 @@ namespace yaml
 		{
 			std::istringstream is(node.as_str());
 			is >> std::boolalpha >> boolean;
-			return true;
+			return !is.fail();
 		}
 		default:
 			return false;

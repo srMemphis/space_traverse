@@ -10,7 +10,7 @@ A Windows C++20 console app that simulates electron-beam charging of dielectric 
 
 ## Build and run
 
-- The only build system is Visual Studio: `space_traverse.sln` → `space_traverse/space_traverse.vcxproj`. It uses platform toolset `v145` (VS 2026), C++20 and OpenMP. Use the `x64` configurations. `TinyMAT_Debug.lib`/`TinyMAT_Release.lib` are prebuilt for x64 in `space_traverse/lib/TinyMAT/`.
+- The only build system is Visual Studio: `space_traverse.sln` → `space_traverse/space_traverse.vcxproj`. It uses platform toolset `v145` (VS 2026), C++20 and OpenMP. Use the `x64` configurations. `TinyMAT_Debug.lib`/`TinyMAT_Release.lib` are prebuilt for x64 in `space_traverse/lib/TinyMAT/`; `lib/TinyMAT/License/SOURCE.txt` records how to rebuild them.
 - Command-line build from a VS Developer shell:
   ```
   msbuild space_traverse.sln /p:Configuration=Release /p:Platform=x64
@@ -18,7 +18,23 @@ A Windows C++20 console app that simulates electron-beam charging of dielectric 
 - The output goes to `x64/<Config>/space_traverse.exe`.
 - The executable takes no arguments. It reads `config.yaml` from the **current working directory**, and relative paths in the config (`msh/...`, `out/...`) resolve from there. Run it with `space_traverse/` as the working directory; this is the VS debugger default.
 - To switch scenarios, copy one of `space_traverse/configs/*.yaml` over `space_traverse/config.yaml`. Each config names a `.msh` file in `space_traverse/msh/`.
-- There is no test suite and no linter.
+- There is no test suite and no linter. The smoke check below is the regression gate.
+
+## Smoke check
+
+Use it to prove that a change keeps the simulation output bit-identical. It runs `space_traverse/configs/smoke.yaml` (sphere_mask, beam aimed at the Target so charge deposits, `divergence: 0`, about 1.5 min in Release) and compares the `.mat` files.
+
+1. Build Release before the change and save the exe outside the repository, e.g. `x64/Release/space_traverse.exe` → a temp folder.
+2. Make the change and build Release again.
+3. From the repository root, run both and compare:
+   ```
+   py tools/smoke/run.py <saved>/space_traverse.exe before
+   py tools/smoke/run.py x64/Release/space_traverse.exe after
+   py tools/smoke/compare.py space_traverse/out/smoke_before space_traverse/out/smoke_after
+   ```
+   `run.py` swaps `config.yaml` for the smoke config, runs the exe from `space_traverse/`, moves the output to `space_traverse/out/smoke_<label>` and restores `config.yaml`. `compare.py` exits 0 on a match; on a mismatch it lists the differing files and the first differing byte offset.
+
+Two runs of the same Release exe match bit for bit with OpenMP at its default thread count, so any mismatch comes from the change. `compare.py` skips the first 116 bytes of each file: that MAT header holds TinyMAT's creation timestamp.
 
 ## Pipeline (`src/main.cpp` → `SimuControl`)
 

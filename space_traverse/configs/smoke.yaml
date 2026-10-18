@@ -1,0 +1,47 @@
+# Smoke scenario: sphere_mask.yaml tuned for a fast, deterministic Release run.
+# Run it with tools/smoke/run.py, compare runs with tools/smoke/compare.py.
+General:
+    outdir: "out/smoke"     # never "out": Prepare deletes outdir entirely
+    iterations: 250         # ~1.5 min in Release
+    deltaTime: 1e-5
+    saveInterval: 50        # saves 0, 50, 100, 150, 200 plus the last one (249)
+Mesh:
+    filename: "msh/sphere_mask.msh"
+    Target:
+        name: "Target"
+        material: "Glass"
+        boundary: "Target Boundary"
+    World:
+        name: "World"
+        material: "Air"
+        boundary: "World Boundary"
+    Mask:
+        name: "Mask"
+        material: "Metall"
+        boundary: "Mask Boundary"
+Beam:
+    current: -100e-9        # A
+    energy: 10e3            # eV
+    radius: 0.0005          # d =  1 mm
+    divergence: 0           # degrees; 0 keeps start directions independent of std::random_device
+    numtracks: 20           # 3 * n^2 = 1200 tracks
+    numsteps: 40000         # verlet steps
+    # sphere_mask.yaml starts the beam at the sphere's center, inside the Target,
+    # so nothing is deposited. Here it starts above the sphere and aims at its center.
+    Pos:
+        x: 0
+        y: 0
+        z: 0.3
+    Stare:
+        x: 0
+        y: 0
+        z: 0
+Solver:
+    smooth: false
+    Materials:
+        Air:
+            epsilon: 1
+        Glass:
+            epsilon: 2
+        Metall:
+            epsilon: 1000

@@ -1,0 +1,42 @@
+TinyMAT_Debug.lib and TinyMAT_Release.lib are built from:
+
+  Repository: https://github.com/jkriege2/TinyMAT
+  Commit:     e398f7532401eb5bbe284b1a60cb2c07bb99e1e1 ("modernized Qt6 code", 2024-05-21)
+
+src/tinymatwriter.h at that commit matches include/TinyMAT/tinymatwriter.h up
+to whitespace. Its parent c5ab9ed matches too; the two differ only in
+Qt-specific code, which is not built here.
+
+The headers in include/TinyMAT/ are not regenerated: tinymat_export.h there
+hardcodes TINYMAT_STATIC_DEFINE.
+
+Toolchain: Visual Studio 2026 (CMake 4.3.1-msvc1, MSVC 19.51.36260, toolset v145).
+
+Build settings:
+  - static library, x64, no Qt, no OpenCV, no examples
+  - CRT /MDd in Debug, /MD in Release (same as space_traverse.vcxproj)
+  - Debug: debug info embedded in the objects (/Z7), so linking needs no TinyMAT pdb
+  - Release: no /GL (no LTCG), so the library does not depend on the exact
+    compiler version; space_traverse links it with /GL as usual
+  - TinyMAT_FILEBACKEND_USE_MEMORY_CACHE left at its default (ON)
+
+Build commands (Git Bash, outside the repository; MSBuild's FileTracker fails
+on long paths, so keep the build directory short):
+
+  git clone https://github.com/jkriege2/TinyMAT.git src
+  git -C src checkout e398f7532401eb5bbe284b1a60cb2c07bb99e1e1
+
+  CMAKE="/c/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe"
+  "$CMAKE" -S src -B build -G "Visual Studio 18 2026" -A x64 -T v145 \
+      -DBUILD_SHARED_LIBS=OFF \
+      -DTinyMAT_QT_SUPPORT=OFF \
+      -DTinyMAT_OPENCV_SUPPORT=OFF \
+      -DTinyMAT_BUILD_EXAMPLES=OFF \
+      -DCMAKE_POLICY_DEFAULT_CMP0091=NEW \
+      -DCMAKE_POLICY_DEFAULT_CMP0141=NEW \
+      '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>DLL' \
+      '-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=$<$<CONFIG:Debug>:Embedded>'
+  "$CMAKE" --build build --config Debug
+  "$CMAKE" --build build --config Release
+
+  cp build/src/Debug/TinyMAT_Debug.lib build/src/Release/TinyMAT_Release.lib <repo>/space_traverse/lib/TinyMAT/

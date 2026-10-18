@@ -20,15 +20,34 @@ A Windows C++20 console app that simulates electron-beam charging of dielectric 
 - Toolset `v145` (VS 2026), C++20, OpenMP, x64 only. Projects:
   - `space_traverse_core` (StaticLib): everything in `space_traverse/src/`.
   - `space_traverse` (ConsoleApp): `space_traverse/app/main.cpp`, links `space_traverse_core` and TinyMAT. `TinyMAT_Debug.lib`/`TinyMAT_Release.lib` are prebuilt for x64 in `space_traverse/lib/TinyMAT/`; `lib/TinyMAT/License/SOURCE.txt` records how to rebuild them.
+  - `space_traverse_core_tests` (ConsoleApp): the doctest unit tests in `space_traverse/tests/`, links the same libraries as `space_traverse`. See [Tests](#tests).
 - Configurations: `Debug`, `Release` (optimized, `/GL`), and `Profile` (Release plus `PROFILER`, which turns on the Chrome-trace profiler). All three have debug symbols.
 - The exe goes to `build/<Config>/space_traverse.exe`; intermediates go to `build/obj/<Config>/<project>/`.
 - The executable takes no arguments. It reads `config.yaml` from the **current working directory**, and relative paths in the config (`msh/...`, `out/...`) resolve from there. Run it with `space_traverse/` as the working directory; `debugdir` in `premake5.lua` makes that the VS debugger default.
 - To switch scenarios, copy one of `space_traverse/configs/*.yaml` over `space_traverse/config.yaml`. Each config names a `.msh` file in `space_traverse/msh/`.
-- There is no test suite. The smoke check below is the regression gate.
+- Unit tests cover single units of `space_traverse_core` (see [Tests](#tests)). The smoke check below is the regression gate for simulation output.
 - Code style is set by `.clang-format` in the repository root. `.clang-format-ignore` excludes the vendored `space_traverse/include/` and `space_traverse/lib/`; it needs clang-format 18 or newer. VS 2026 ships one at `C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\Llvm\x64\bin\clang-format.exe`. Format everything from the repository root (Git Bash), then check that `--dry-run --Werror` prints nothing:
   ```
   git ls-files '*.cpp' '*.h' | xargs "/c/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/Llvm/x64/bin/clang-format.exe" -i
   ```
+
+## Tests
+
+- The framework is doctest v2.5.3, vendored as `space_traverse/include/doctest/doctest.h`.
+- Build any configuration as above; the tests go to `build/<Config>/space_traverse_core_tests.exe`. Run it from any working directory. It exits 0 when every test passes. Filter by unit with `-ts=<Unit>`, e.g. `build/Debug/space_traverse_core_tests.exe -ts=approx`; `--help` lists the other doctest options.
+- Layout:
+  - `space_traverse/tests/main.cpp` calls `Log::Init("tests.log")`, then runs doctest. The `LOG_*` macros dereference a null logger before `Log::Init`, so code under test needs it.
+  - One test file per unit, mirroring `src/`: `tests/mesh/GJKTests.cpp` tests `src/mesh/GJK.h`.
+  - `tests/support/approx.h`: tolerance checks (below). `tests/support/fixture.h`: `FixturePath(name)` gives the absolute path of a file in `tests/data/`. premake defines `TEST_DATA_DIR` as that folder's absolute path.
+- Conventions are in [#13](https://github.com/srMemphis/space_traverse/issues/13) (resolution comment). In short:
+  - `TEST_SUITE` is the unit's name in code (`"GJK"`, `"Mesh"`), so `-ts=` filters by it. `TEST_CASE` is a lowercase sentence that states observable behavior in the `CONTEXT.md` vocabulary, with no method names or bug IDs. `SUBCASE` is only for parametric variants of one assertion.
+  - Never use bare `doctest::Approx`. Compare `double`s with `CHECK_NEAR(a, e)` (relative, 1e-9), `CHECK_NEAR_REL(a, e, rel)` or `CHECK_NEAR_ABS(a, e, abs)`, and Eigen vectors with `CHECK_VEC_NEAR`, `CHECK_VEC_NEAR_REL` or `CHECK_VEC_NEAR_ABS` (relative to the expected vector's largest component). A zero expected value needs the `_ABS` form, with a tolerance sized to the quantity's scale. Loosen a tolerance only with a comment that says why. Compare exact values (integers, tags, indices) with `CHECK(a == b)`.
+  - A known bug is tested for the **correct** behavior and marked with `* doctest::expected_failures(n)`, `n` being the number of its failing assertions, so the run stays green and any fix turns the case red. The case holds only the bug's assertions, and this marker goes directly above it:
+    ```cpp
+    // Known bug: https://github.com/srMemphis/space_traverse/issues/NN
+    // Now: <current behavior>. Correct: <what the test asserts>.
+    ```
+    Find them with `grep -rn "// Known bug:" space_traverse/tests`.
 
 ## Smoke check
 
@@ -77,7 +96,7 @@ Two runs of the same Release exe match bit for bit with OpenMP at its default th
 
 ## Third-party code
 
-Everything under `space_traverse/include/` (Eigen, fkYAML, spdlog, TinyMAT), `space_traverse/lib/` and `tools/premake/` (premake 5.0.0, BSD-3) is vendored. Don't edit it.
+Everything under `space_traverse/include/` (doctest, Eigen, fkYAML, spdlog, TinyMAT), `space_traverse/lib/` and `tools/premake/` (premake 5.0.0, BSD-3) is vendored. Don't edit it.
 
 ## Post-processing
 

@@ -13,6 +13,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <stdexcept>
 
 Mesh::Mesh()
 {
@@ -144,7 +145,14 @@ double Mesh::GetVolumeOfVolume(const std::string name) const
 {
 	double result = 0;
 
-	int physTag = m_PhysicalNames.find(name)->second.tag;
+	auto iter = m_PhysicalNames.find(name);
+	if (iter == m_PhysicalNames.end())
+	{
+		LOG_CRITICAL("Volume '{}' is not found in the mesh!", name);
+		throw std::runtime_error("Volume '" + name + "' is not found in the mesh");
+	}
+
+	int physTag = iter->second.tag;
 
 	// for every volume
 	for (auto& key_volume : m_volumes)

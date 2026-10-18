@@ -103,6 +103,11 @@ TEST_SUITE("Mesh")
 		CHECK_NEAR(total, 1.0);
 	}
 
+	TEST_CASE_FIXTURE(CubeMesh, "measuring a Volume missing from the mesh is an error")
+	{
+		CHECK_THROWS_AS(mesh.GetVolumeOfVolume("Target"), std::runtime_error);
+	}
+
 	TEST_CASE_FIXTURE(CubeMesh, "every Element of the cube carries the cube's tag")
 	{
 		for (size_t i = 0; i < mesh.GetBulkElements().size(); i++)

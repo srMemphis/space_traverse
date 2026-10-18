@@ -174,6 +174,16 @@ TEST_SUITE("Mesh")
 		CHECK_NEAR(mesh.GetVolumeOfVolume("Cube"), 1.0);
 	}
 
+	// Known bug: https://github.com/srMemphis/space_traverse/issues/36
+	// Now: the mesh bounds grow from the origin over the Gmsh entity boxes, [0, 2.0000001]^3. Correct: [1, 2]^3.
+	TEST_CASE_FIXTURE(CubeMesh, "the mesh bounds are the cube" * doctest::expected_failures(2))
+	{
+		const Box box = mesh.GetBoundingBox();
+
+		CHECK_VEC_NEAR(Eigen::Vector3d(box.xMin, box.yMin, box.zMin), Eigen::Vector3d(1.0, 1.0, 1.0));
+		CHECK_VEC_NEAR(Eigen::Vector3d(box.xMax, box.yMax, box.zMax), Eigen::Vector3d(2.0, 2.0, 2.0));
+	}
+
 	TEST_CASE_FIXTURE(CubeMesh, "the origin lies outside the mesh bounds")
 	{
 		CHECK_FALSE(mesh.IsInBounds(0.0, 0.0, 0.0));

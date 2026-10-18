@@ -5,6 +5,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace
@@ -230,6 +231,13 @@ TEST_SUITE("RangeIterator")
 		}
 
 		CHECK(Walk(range) == expected);
+	}
+
+	TEST_CASE("a walk cannot be copied")
+	{
+		// A copy would keep walking the original's elements.
+		CHECK_FALSE(std::is_copy_constructible_v<RangeIterator>);
+		CHECK_FALSE(std::is_copy_assignable_v<RangeIterator>);
 	}
 
 	TEST_CASE("advancing a walk that has reached its end keeps it there")

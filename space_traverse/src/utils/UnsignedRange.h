@@ -33,6 +33,10 @@ class RangeIterator
 public:
 	RangeIterator(const UnsignedRange& range) : m_range(range) { Reset(); }
 
+	// A copy would keep m_iter pointing into the original's list.
+	RangeIterator(const RangeIterator&) = delete;
+	RangeIterator& operator=(const RangeIterator&) = delete;
+
 	void Reset()
 	{
 		m_iter = m_range.m_data.begin();

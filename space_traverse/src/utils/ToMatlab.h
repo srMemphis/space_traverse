@@ -1,18 +1,18 @@
 #pragma once
+#include "debug/Log.h"
+
+#include "TinyMAT/tinymatwriter.h"
+#include <Eigen/Dense>
+
+#include <filesystem>
 #include <string>
 #include <string_view>
-#include <filesystem>
-
-#include <Eigen/Dense>
-#include "debug/Log.h"
-#include "TinyMAT/tinymatwriter.h"
 
 struct TinyMATWriterFile;
 
 class ToMatlab
 {
 public:
-
 	ToMatlab();
 	~ToMatlab();
 
@@ -38,7 +38,6 @@ public:
 	void Close();
 
 private:
-
 	TinyMATWriterFile* m_file;
 };
 

@@ -6,10 +6,10 @@
 #include "utils/UnsignedRange.h"
 #include "utils/yaml.h"
 
-#include <filesystem>
 #include <algorithm>
-#include <string>
+#include <filesystem>
 #include <mutex> // for call_once
+#include <string>
 
 SimuControl::SimuControl()
 {
@@ -17,7 +17,7 @@ SimuControl::SimuControl()
 
 	m_mesh = std::make_shared<Mesh>();
 	m_solver = std::make_shared<Solver>();
-	m_beam = std::make_shared <Beam> ();
+	m_beam = std::make_shared<Beam>();
 }
 
 SimuControl::~SimuControl()
@@ -60,10 +60,11 @@ bool SimuControl::Prepare()
 	if (std::filesystem::exists(m_params.outputDir))
 		std::filesystem::remove_all(m_params.outputDir);
 
-		std::filesystem::create_directories(m_params.outputDir);
+	std::filesystem::create_directories(m_params.outputDir);
 
 	// copy config file to the output folder
-	std::filesystem::copy_file("config.yaml", m_params.outputDir / "config.yaml", std::filesystem::copy_options::overwrite_existing);
+	std::filesystem::copy_file("config.yaml", m_params.outputDir / "config.yaml",
+							   std::filesystem::copy_options::overwrite_existing);
 
 	// saving geometry to dispaly at matlab
 	ToMatlab matfile;
@@ -82,12 +83,12 @@ bool SimuControl::Prepare()
 	m_solver->AddMaterial(m_params.maskName, m_params.maskMaterial);
 
 	// set boundary conditions
-	m_solver->SetBoundaryValues({ m_params.worldBoundary, m_params.maskBoundary}, {0, 0});
+	m_solver->SetBoundaryValues({m_params.worldBoundary, m_params.maskBoundary}, {0, 0});
 
 	// initial charge value
-	//double charge = -1e-9;
-	//double chargeDensity = charge / m_mesh->GetVolumeOfVolume("Target");
-	//m_solver->SetInitialValue("Target", chargeDensity);
+	// double charge = -1e-9;
+	// double chargeDensity = charge / m_mesh->GetVolumeOfVolume("Target");
+	// m_solver->SetInitialValue("Target", chargeDensity);
 
 	// assemble linear system
 	m_solver->AssembleLeft();
@@ -98,7 +99,7 @@ bool SimuControl::Prepare()
 	// beam setup
 	Particle electron;
 	electron.charge = phys::qe;
-	electron.E0 = 0.511e6;		//eV
+	electron.E0 = 0.511e6; // eV
 
 	m_beam->SetParticle(electron);
 	m_beam->SetEnergy(m_params.energy); // eV
@@ -113,31 +114,33 @@ bool SimuControl::Prepare()
 	m_beam->SetDivergence(m_params.divergence);
 
 	Box boundingbox = m_mesh->GetBoundingBox();
-	double length = (Eigen::Vector3d{boundingbox.xMin, boundingbox.yMin, boundingbox.zMin } - Eigen::Vector3d{ boundingbox.xMax, boundingbox.yMax, boundingbox.zMax }).norm();
+	double length = (Eigen::Vector3d{boundingbox.xMin, boundingbox.yMin, boundingbox.zMin} -
+					 Eigen::Vector3d{boundingbox.xMax, boundingbox.yMax, boundingbox.zMax})
+						.norm();
 	m_beam->DetermineStepSize(length, m_params.numsteps);
 
-	m_beam->GeneratePrimaryPosition(m_params.numtracks);		// 3*n^2 number of particles
+	m_beam->GeneratePrimaryPosition(m_params.numtracks); // 3*n^2 number of particles
 
 	// all volumes exept Detector
 	AddStoppingVolume(m_params.targetName);
 	AddStoppingVolume(m_params.maskName);
 
 	// set beam stopping and field functions
-	m_beam->SetStoppingFunction(std::bind(&SimuControl::BeamShouldStop, this,
-		std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+	m_beam->SetStoppingFunction(std::bind(&SimuControl::BeamShouldStop, this, std::placeholders::_1,
+										  std::placeholders::_2, std::placeholders::_3));
 
-	m_beam->SetFieldFunction(std::bind(&Solver::GetField, m_solver,
-		std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+	m_beam->SetFieldFunction(
+		std::bind(&Solver::GetField, m_solver, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
 	return true;
 }
 
 bool SimuControl::AddStoppingVolume(const std::string& name)
-{	
+{
 	auto physTag = m_mesh->NameToTag(name);
 
 	m_stoppingVolumes.push_back(physTag);
-	
+
 	return true;
 }
 
@@ -154,7 +157,7 @@ bool SimuControl::ConfigFromFile(std::string_view configfile)
 
 	auto& inconfig = node_res.first;
 
-	// ----------------------------------- general ----------------------------------- 
+	// ----------------------------------- general -----------------------------------
 	if (!inconfig.contains("General"))
 	{
 		LOG_CRITICAL("Config file does not have 'General' section");
@@ -210,8 +213,8 @@ bool SimuControl::ConfigFromFile(std::string_view configfile)
 		LOG_CRITICAL("Config file section '{}' has wrong type. Expected {}", "General:saveInterval", "integer");
 		return false;
 	}
-	
-	// ----------------------------------- mesh ----------------------------------- 
+
+	// ----------------------------------- mesh -----------------------------------
 	if (!inconfig.contains("Mesh"))
 	{
 		LOG_CRITICAL("Config file does not have 'Mesh' section");
@@ -356,7 +359,7 @@ bool SimuControl::ConfigFromFile(std::string_view configfile)
 		}
 	}
 
-	// ----------------------------------- beam ----------------------------------- 
+	// ----------------------------------- beam -----------------------------------
 	if (!inconfig.contains("Beam"))
 	{
 		LOG_CRITICAL("Config file does not have 'Beam' section");
@@ -521,7 +524,7 @@ bool SimuControl::ConfigFromFile(std::string_view configfile)
 		return false;
 	}
 
-	// ----------------------------------- solver ----------------------------------- 
+	// ----------------------------------- solver -----------------------------------
 	if (!inconfig.contains("Solver"))
 	{
 		LOG_CRITICAL("Config file does not have 'Solver' section");
@@ -560,9 +563,11 @@ bool SimuControl::ConfigFromFile(std::string_view configfile)
 		LOG_CRITICAL("Config file does not have 'Solver:Materials:{}epsilon' section", m_params.targetMaterialName);
 		return false;
 	}
-	else if (!yaml::NodeToDouble(inconfig["Solver"]["Materials"][m_params.targetMaterialName]["epsilon"], m_params.targetMaterial.epsilon))
+	else if (!yaml::NodeToDouble(inconfig["Solver"]["Materials"][m_params.targetMaterialName]["epsilon"],
+								 m_params.targetMaterial.epsilon))
 	{
-		LOG_CRITICAL("Config file section 'Solver:Materials:{}epsilon' has wrong type. Expected {}", m_params.targetMaterialName, "double");
+		LOG_CRITICAL("Config file section 'Solver:Materials:{}epsilon' has wrong type. Expected {}",
+					 m_params.targetMaterialName, "double");
 		return false;
 	}
 
@@ -579,9 +584,11 @@ bool SimuControl::ConfigFromFile(std::string_view configfile)
 		LOG_CRITICAL("Config file does not have 'Solver:Materials:{}epsilon' section", m_params.worldMaterialName);
 		return false;
 	}
-	else if (!yaml::NodeToDouble(inconfig["Solver"]["Materials"][m_params.worldMaterialName]["epsilon"], m_params.worldMaterial.epsilon))
+	else if (!yaml::NodeToDouble(inconfig["Solver"]["Materials"][m_params.worldMaterialName]["epsilon"],
+								 m_params.worldMaterial.epsilon))
 	{
-		LOG_CRITICAL("Config file section 'Solver:Materials:{}epsilon' has wrong type. Expected {}", m_params.worldMaterialName, "double");
+		LOG_CRITICAL("Config file section 'Solver:Materials:{}epsilon' has wrong type. Expected {}",
+					 m_params.worldMaterialName, "double");
 		return false;
 	}
 
@@ -601,9 +608,11 @@ bool SimuControl::ConfigFromFile(std::string_view configfile)
 			LOG_CRITICAL("Config file does not have 'Solver:Materials:{}epsilon' section", m_params.maskMaterialName);
 			return false;
 		}
-		else if (!yaml::NodeToDouble(inconfig["Solver"]["Materials"][m_params.maskMaterialName]["epsilon"], m_params.maskMaterial.epsilon))
+		else if (!yaml::NodeToDouble(inconfig["Solver"]["Materials"][m_params.maskMaterialName]["epsilon"],
+									 m_params.maskMaterial.epsilon))
 		{
-			LOG_CRITICAL("Config file section 'Solver:Materials:{}epsilon' has wrong type. Expected {}", m_params.maskMaterialName, "double");
+			LOG_CRITICAL("Config file section 'Solver:Materials:{}epsilon' has wrong type. Expected {}",
+						 m_params.maskMaterialName, "double");
 			return false;
 		}
 	}
@@ -647,7 +656,7 @@ int SimuControl::Run()
 		{
 			std::string outFile = m_params.outputDir.string() + "/solution_" + std::to_string(iter) + ".mat";
 			m_matlab.OpenFile(outFile);
-			
+
 			LOG_TRACE("Saving solution to file...");
 			if (!m_solver->SaveSolutionToFile(m_matlab))
 			{
@@ -694,7 +703,7 @@ bool SimuControl::BeamShouldStop(double x, double y, double z) const
 	// get element index
 	auto elemIndex = m_mesh->FindElementByCoords(x, y, z);
 
-	if (elemIndex < 0 )
+	if (elemIndex < 0)
 	{
 		LOG_ERROR("Narrow boundary check failed. Point was ({}, {}, {})", x, y, z);
 		return true;
@@ -704,11 +713,12 @@ bool SimuControl::BeamShouldStop(double x, double y, double z) const
 	auto tag = m_mesh->GetPhisicalTagOfTetrahedron(elemIndex);
 
 	// check if should stop on this tags
-	if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), tag) != m_stoppingVolumes.end() || tag == m_detectorTag)
+	if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), tag) != m_stoppingVolumes.end() ||
+		tag == m_detectorTag)
 	{
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -716,26 +726,26 @@ bool SimuControl::BeamShouldStop(double x, double y, double z) const
 std::once_flag equilibriumFlag;
 double GetSecondaryCoefficient(double energy)
 {
-	// from Механизмы зарядки диэлектриков при их облучении электронными пучками средних энергий
+	// from "Mechanisms of charging of dielectrics irradiated with medium-energy electron beams"
 	// the equlibrium energy for SiO2 is 1.7 keV
 
 	if (energy > 1700)
 	{
-		return 0;		// negative charging
+		return 0; // negative charging
 	}
 	else
 	{
-		std::call_once(equilibriumFlag, []() {LOG_INFO("Equilibrium energy reached!"); });
-		return 1;		// no charging
+		std::call_once(equilibriumFlag, []() { LOG_INFO("Equilibrium energy reached!"); });
+		return 1; // no charging
 	}
 }
 
 void SimuControl::RegisterHits()
 {
 	m_detector.Clear();
-	double charge = m_params.current * m_params.deltaTime / m_beam->GetTracks().size();	// charge per track
+	double charge = m_params.current * m_params.deltaTime / m_beam->GetTracks().size(); // charge per track
 
-	//stats
+	// stats
 	double s = m_beam->GetTracks().at(0).GetVelocity().norm();
 	double minEne = phys::me * phys::c * phys::c * (1 / std::sqrt(1 - (s * s) / (phys::c * phys::c)) - 1) / 1.602e-19;
 	size_t equilibriumCount = 0;
@@ -752,7 +762,8 @@ void SimuControl::RegisterHits()
 		if (tag == m_detectorTag)
 		{
 			auto speed = track.GetVelocity().norm();
-			double ene = phys::me * phys::c * phys::c * (1/std::sqrt(1 - (speed * speed) / (phys::c * phys::c)) - 1) / 1.602e-19;
+			double ene = phys::me * phys::c * phys::c * (1 / std::sqrt(1 - (speed * speed) / (phys::c * phys::c)) - 1) /
+						 1.602e-19;
 			m_detector.energy.push_back(ene);
 			m_detector.hitsPositionsX.push_back(lastPoint.x());
 			m_detector.hitsPositionsY.push_back(lastPoint.y());
@@ -764,7 +775,8 @@ void SimuControl::RegisterHits()
 			// TODO: generate secondary emission
 
 			auto speed = track.GetVelocity().norm();
-			double ene = phys::me * phys::c * phys::c * (1 / std::sqrt(1 - (speed * speed) / (phys::c * phys::c)) - 1) / 1.602e-19;
+			double ene = phys::me * phys::c * phys::c * (1 / std::sqrt(1 - (speed * speed) / (phys::c * phys::c)) - 1) /
+						 1.602e-19;
 			double secondary = GetSecondaryCoefficient(ene);
 
 			double totalCharge = charge - charge * secondary;
@@ -774,18 +786,20 @@ void SimuControl::RegisterHits()
 			// we hit smth that needs to be charged
 			m_solver->AddElementCharge(elemIndex, totalCharge);
 		}
-		else if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), tag) != m_stoppingVolumes.end())	// mask or else
+		else if (std::find(m_stoppingVolumes.begin(), m_stoppingVolumes.end(), tag) !=
+				 m_stoppingVolumes.end()) // mask or else
 		{
 			maskCount++;
 		}
 
 		auto speed = track.GetVelocity().norm();
-		double ene = phys::me * phys::c * phys::c * (1 / std::sqrt(1 - (speed * speed) / (phys::c * phys::c)) - 1) / 1.602e-19;
+		double ene =
+			phys::me * phys::c * phys::c * (1 / std::sqrt(1 - (speed * speed) / (phys::c * phys::c)) - 1) / 1.602e-19;
 		minEne = ene < minEne ? ene : minEne;
-		
 	}
 	LOG_INFO("Minimum impact energy is {}", minEne);
-	LOG_INFO("EquilibriumCount is {} out of {}", equilibriumCount, m_beam->GetTracks().size() - m_detector.energy.size() - maskCount);
+	LOG_INFO("EquilibriumCount is {} out of {}", equilibriumCount,
+			 m_beam->GetTracks().size() - m_detector.energy.size() - maskCount);
 }
 
 bool SimuControl::GenerateSurfaceToVolumeIndexing(const std::string& physSurface, const std::string& physVolume)
@@ -825,25 +839,25 @@ bool SimuControl::GenerateSurfaceToVolumeIndexing(const std::string& physSurface
 
 	// true if tetrahedron contains the triangle
 	auto hasTriang = [](const ETetrahedron& tet, const ETriangle& tri)
+	{
+		int count = 0;
+		for (int i = 0; i < 3; i++) // tri node
 		{
-			int count = 0;
-			for (int i = 0; i < 3; i++)		// tri node
+			for (int j = 0; j < 4; j++) // tet node
 			{
-				for (int j = 0; j < 4; j++)	// tet node
+				if (tri.node[i] == tet.node[j])
 				{
-					if (tri.node[i] == tet.node[j])
-					{
-						count++;
-						break;	// jump to the next triangle node
-					}
+					count++;
+					break; // jump to the next triangle node
 				}
 			}
+		}
 
-			if (count == 3)
-				return true;
+		if (count == 3)
+			return true;
 
-			return false;
-		};
+		return false;
+	};
 
 	// for every volume
 	for (const auto& key_vol : m_mesh->GetVolumes())
@@ -852,10 +866,11 @@ bool SimuControl::GenerateSurfaceToVolumeIndexing(const std::string& physSurface
 		if (key_vol.second.physicalTag == volTag)
 		{
 			// for every tet index in this volume
-			for (size_t tetIndex = key_vol.second.firstElementIndex; tetIndex < key_vol.second.firstElementIndex + key_vol.second.numElements; tetIndex++)
+			for (size_t tetIndex = key_vol.second.firstElementIndex;
+				 tetIndex < key_vol.second.firstElementIndex + key_vol.second.numElements; tetIndex++)
 			{
 				const auto& tet = m_mesh->GetTetrahedron(tetIndex);
-				
+
 				// for every triangle
 				for (size_t triIndex = 0; triIndex < triangles.size(); triIndex++)
 				{
@@ -863,7 +878,7 @@ bool SimuControl::GenerateSurfaceToVolumeIndexing(const std::string& physSurface
 					if (hasTriang(tet, triangles[triIndex]))
 					{
 						indexForSaving.at(triIndex) = tetIndex;
-						break;	// jump to the next tetrahedron
+						break; // jump to the next tetrahedron
 					}
 				}
 			}

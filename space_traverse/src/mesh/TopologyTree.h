@@ -2,8 +2,8 @@
 #include "mesh/Box.h"
 #include "mesh/ElementTypes.h"
 
-#include <vector>
 #include <map>
+#include <vector>
 
 
 class TopologyTree
@@ -13,11 +13,12 @@ public:
 	~TopologyTree();
 
 	// modifiers
-	bool GenerateData(const std::map<int, Volume>& volumes, const std::vector<ETetrahedron>& elements, const std::vector<Node>& nodes);
-	
-	// utils 
-	const std::vector<size_t>& Find(double x, double y, double z) const;	// returns candidate vector;
-	bool IsInBounds(double x, double y, double z) const;						// check if point is inside bounding box
+	bool GenerateData(const std::map<int, Volume>& volumes, const std::vector<ETetrahedron>& elements,
+					  const std::vector<Node>& nodes);
+
+	// utils
+	const std::vector<size_t>& Find(double x, double y, double z) const; // returns candidate vector;
+	bool IsInBounds(double x, double y, double z) const;                 // check if point is inside bounding box
 
 	// stats
 	const uint32_t MaxTetraAtNode() const;
@@ -35,11 +36,12 @@ private:
 	};
 
 	std::vector<treeNode> m_topologyTree;
-	void BuildTopologyRecursive(size_t parentID, const std::vector<ETetrahedron>& elements, const std::vector<Node>& nodes);
+	void BuildTopologyRecursive(size_t parentID, const std::vector<ETetrahedron>& elements,
+								const std::vector<Node>& nodes);
 
-	//statistics
+	// statistics
 	size_t m_maxTetrahedronsAtNode;
 
-	// utils 
-	std::vector<size_t> m_emptyVector;		// empty vector for returning as const&
+	// utils
+	std::vector<size_t> m_emptyVector; // empty vector for returning as const&
 };

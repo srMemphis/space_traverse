@@ -1,13 +1,13 @@
 #pragma once
 
+#include "DetectorData.h"
+#include "mesh/Mesh.h"
+#include "particles/Beam.h"
+#include "solver/Solver.h"
+
+#include <filesystem>
 #include <memory>
 #include <string_view>
-#include <filesystem>
-
-#include "mesh/Mesh.h"
-#include "solver/Solver.h"
-#include "particles/Beam.h"
-#include "DetectorData.h"
 
 struct SimParameters
 {
@@ -16,12 +16,12 @@ struct SimParameters
 	size_t iterations = 0;
 	size_t saveInterval = 0;
 	std::filesystem::path outputDir = "out";
-	
+
 	// beam
 	double current = 0;
 	double energy = 0;
-	Eigen::Vector3d pos = {0,0,0};
-	Eigen::Vector3d stare = { 0,0,0 };
+	Eigen::Vector3d pos = {0, 0, 0};
+	Eigen::Vector3d stare = {0, 0, 0};
 	double radius = 0;
 	double divergence = 0;
 	uint32_t numsteps = 0;
@@ -72,7 +72,7 @@ private:
 	std::shared_ptr<Solver> m_solver;
 	std::shared_ptr<Beam> m_beam;
 
-	std::vector<int> m_stoppingVolumes;		// tags of phys names electrons should stop in
+	std::vector<int> m_stoppingVolumes; // tags of phys names electrons should stop in
 	int m_detectorTag = 0;
 	int m_targetTag = 0;
 
@@ -82,10 +82,10 @@ private:
 	// serialization
 	bool GenerateSurfaceToVolumeIndexing(const std::string& physSurface, const std::string& physVolume);
 	bool SaveChargeData();
-	std::map<std::string, std::vector<size_t>> m_chargeIndexToSave;	// maped by phys surface name
+	std::map<std::string, std::vector<size_t>> m_chargeIndexToSave; // maped by phys surface name
 
-	// per iteration data 
+	// per iteration data
 	DetectorData m_detector;
 
-	ToMatlab m_matlab;			// matlab file IO
+	ToMatlab m_matlab; // matlab file IO
 };

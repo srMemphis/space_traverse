@@ -3,10 +3,10 @@
 
 #include <chrono>
 #include <ctime>
-#include <string>
 #include <fstream>
-#include <thread>
 #include <mutex>
+#include <string>
+#include <thread>
 
 struct ProfileResult
 {
@@ -66,14 +66,14 @@ private:
 	bool m_Stopped;
 };
 
-template <size_t N>
+template<size_t N>
 struct ChangeResult
 {
 	char Data[N];
 };
 
-template <size_t N, size_t K>
-constexpr auto CleanupOutputString(const char(&expr)[N], const char(&remove)[K])
+template<size_t N, size_t K>
+constexpr auto CleanupOutputString(const char (&expr)[N], const char (&remove)[K])
 {
 	ChangeResult<N> result = {};
 
@@ -93,7 +93,8 @@ constexpr auto CleanupOutputString(const char(&expr)[N], const char(&remove)[K])
 }
 
 // Resolve which function signature macro will be used
-#if defined(__GNUC__) || (defined(__MWERKS__) && (__MWERKS__ >= 0x3000)) || (defined(__ICC) && (__ICC >= 600)) || defined(__ghs__)
+#if defined(__GNUC__) || (defined(__MWERKS__) && (__MWERKS__ >= 0x3000)) || (defined(__ICC) && (__ICC >= 600)) ||      \
+	defined(__ghs__)
 #define FUNC_SIG __PRETTY_FUNCTION__
 #elif defined(__DMC__) && (__DMC__ >= 0x810)
 #define FUNC_SIG __PRETTY_FUNCTION__
@@ -113,20 +114,21 @@ constexpr auto CleanupOutputString(const char(&expr)[N], const char(&remove)[K])
 
 #ifdef PROFILER
 
-	#define PROFILE_BEGIN_SESSION(name, filepath) Profiler::Get().BeginSession(name, filepath);
-	#define PROFILE_END_SESSION() Profiler::Get().EndSession();
+#define PROFILE_BEGIN_SESSION(name, filepath) Profiler::Get().BeginSession(name, filepath);
+#define PROFILE_END_SESSION() Profiler::Get().EndSession();
 
-	#define PROFILE_SCOPE_LINE_EXPAND(name, line) auto fixedName##line = CleanupOutputString(name, "__cdecl ");\
-												   Timer timer##line(fixedName##line.Data);
-	#define PROFILE_SCOPE_LINE(name, line) PROFILE_SCOPE_LINE_EXPAND(name, line)
+#define PROFILE_SCOPE_LINE_EXPAND(name, line)                                                                          \
+	auto fixedName##line = CleanupOutputString(name, "__cdecl ");                                                      \
+	Timer timer##line(fixedName##line.Data);
+#define PROFILE_SCOPE_LINE(name, line) PROFILE_SCOPE_LINE_EXPAND(name, line)
 
-	#define PROFILE_SCOPE(name) PROFILE_SCOPE_LINE(name, __LINE__)
-	#define PROFILE_FUNCTION() PROFILE_SCOPE(FUNC_SIG)
+#define PROFILE_SCOPE(name) PROFILE_SCOPE_LINE(name, __LINE__)
+#define PROFILE_FUNCTION() PROFILE_SCOPE(FUNC_SIG)
 
 #else
-	#define PROFILE_SCOPE(name)
-	#define PROFILE_FUNCTION()
-	#define PROFILE_BEGIN_SESSION(name, filepath)
-	#define PROFILE_END_SESSION()
+#define PROFILE_SCOPE(name)
+#define PROFILE_FUNCTION()
+#define PROFILE_BEGIN_SESSION(name, filepath)
+#define PROFILE_END_SESSION()
 
 #endif

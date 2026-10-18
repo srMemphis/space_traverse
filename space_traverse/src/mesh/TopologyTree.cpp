@@ -1,13 +1,12 @@
 #include "mesh/TopologyTree.h"
 
-#include "mesh/GJK.h"
 #include "debug/Log.h"
+#include "mesh/GJK.h"
 
 #include <algorithm>
 #include <execution>
 
-TopologyTree::TopologyTree()
-	: m_maxTetrahedronsAtNode(0)
+TopologyTree::TopologyTree() : m_maxTetrahedronsAtNode(0)
 {
 }
 
@@ -15,7 +14,8 @@ TopologyTree::~TopologyTree()
 {
 }
 
-bool TopologyTree::GenerateData(const std::map<int, Volume>& volumes, const std::vector<ETetrahedron>& elements, const std::vector<Node>& nodes)
+bool TopologyTree::GenerateData(const std::map<int, Volume>& volumes, const std::vector<ETetrahedron>& elements,
+								const std::vector<Node>& nodes)
 {
 	// if no geometry available
 	size_t numnodes = nodes.size();
@@ -26,7 +26,7 @@ bool TopologyTree::GenerateData(const std::map<int, Volume>& volumes, const std:
 	}
 
 	// create root node
-	// 
+	//
 	// bounding box
 	Box box;
 
@@ -46,7 +46,7 @@ bool TopologyTree::GenerateData(const std::map<int, Volume>& volumes, const std:
 
 	// add bounding box to the root of topology tree;
 	m_topologyTree.clear();
-	m_topologyTree.reserve(2*numnodes);
+	m_topologyTree.reserve(2 * numnodes);
 	m_topologyTree.emplace_back();
 	m_topologyTree.at(0).boundBox = box;
 
@@ -57,13 +57,13 @@ bool TopologyTree::GenerateData(const std::map<int, Volume>& volumes, const std:
 	}
 
 	// make box slightly bigger to ensure that edges are inside
-	//m_topologyTree.at(0).boundBox.xMax += 0.01;
-	//m_topologyTree.at(0).boundBox.yMax += 0.01;
-	//m_topologyTree.at(0).boundBox.zMax += 0.01;
+	// m_topologyTree.at(0).boundBox.xMax += 0.01;
+	// m_topologyTree.at(0).boundBox.yMax += 0.01;
+	// m_topologyTree.at(0).boundBox.zMax += 0.01;
 
-	//m_topologyTree.at(0).boundBox.xMin -= 0.01;
-	//m_topologyTree.at(0).boundBox.yMin -= 0.01;
-	//m_topologyTree.at(0).boundBox.zMin -= 0.01;
+	// m_topologyTree.at(0).boundBox.xMin -= 0.01;
+	// m_topologyTree.at(0).boundBox.yMin -= 0.01;
+	// m_topologyTree.at(0).boundBox.zMin -= 0.01;
 
 	BuildTopologyRecursive(0, elements, nodes);
 
@@ -72,7 +72,8 @@ bool TopologyTree::GenerateData(const std::map<int, Volume>& volumes, const std:
 
 	for (auto& node : m_topologyTree)
 	{
-		m_maxTetrahedronsAtNode = node.elements.size() > m_maxTetrahedronsAtNode ? node.elements.size() : m_maxTetrahedronsAtNode;
+		m_maxTetrahedronsAtNode =
+			node.elements.size() > m_maxTetrahedronsAtNode ? node.elements.size() : m_maxTetrahedronsAtNode;
 	}
 
 	return true;
@@ -97,7 +98,7 @@ const std::vector<size_t>& TopologyTree::Find(double x, double y, double z) cons
 
 		if (m_topologyTree.at(left).boundBox.Contains(x, y, z))
 		{
-			// search left 
+			// search left
 			currTreeNode = left;
 		}
 		else
@@ -133,7 +134,8 @@ bool TopologyTree::IsEmpty() const
 }
 
 // TODO: rewrite this SHIT
-void TopologyTree::BuildTopologyRecursive(size_t parentID, const std::vector<ETetrahedron>& elements, const std::vector<Node>& nodes)
+void TopologyTree::BuildTopologyRecursive(size_t parentID, const std::vector<ETetrahedron>& elements,
+										  const std::vector<Node>& nodes)
 {
 	// create new tree branches
 	m_topologyTree.emplace_back();
@@ -156,8 +158,8 @@ void TopologyTree::BuildTopologyRecursive(size_t parentID, const std::vector<ETe
 
 	// search for elements in new boxes
 	std::vector<size_t> nodesLeft, nodesRight; // unique nodes in the box
-	nodesLeft.reserve(numelems*4);
-	nodesRight.reserve(numelems*4);
+	nodesLeft.reserve(numelems * 4);
+	nodesRight.reserve(numelems * 4);
 
 	for (auto index : parent.elements)
 	{
@@ -165,22 +167,26 @@ void TopologyTree::BuildTopologyRecursive(size_t parentID, const std::vector<ETe
 
 		bool contains = false;
 		// left box.  check every tetrahedron node
-		if (left.boundBox.Contains(nodes.at(element.node[0]).x, nodes.at(element.node[0]).y, nodes.at(element.node[0]).z))
+		if (left.boundBox.Contains(nodes.at(element.node[0]).x, nodes.at(element.node[0]).y,
+								   nodes.at(element.node[0]).z))
 		{
 			nodesLeft.push_back(element.node[0]);
 			contains = true;
 		}
-		if (left.boundBox.Contains(nodes.at(element.node[1]).x, nodes.at(element.node[1]).y, nodes.at(element.node[1]).z))
+		if (left.boundBox.Contains(nodes.at(element.node[1]).x, nodes.at(element.node[1]).y,
+								   nodes.at(element.node[1]).z))
 		{
 			nodesLeft.push_back(element.node[1]);
 			contains = true;
 		}
-		if (left.boundBox.Contains(nodes.at(element.node[2]).x, nodes.at(element.node[2]).y, nodes.at(element.node[2]).z))
+		if (left.boundBox.Contains(nodes.at(element.node[2]).x, nodes.at(element.node[2]).y,
+								   nodes.at(element.node[2]).z))
 		{
 			nodesLeft.push_back(element.node[2]);
 			contains = true;
 		}
-		if (left.boundBox.Contains(nodes.at(element.node[3]).x, nodes.at(element.node[3]).y, nodes.at(element.node[3]).z))
+		if (left.boundBox.Contains(nodes.at(element.node[3]).x, nodes.at(element.node[3]).y,
+								   nodes.at(element.node[3]).z))
 		{
 			nodesLeft.push_back(element.node[3]);
 			contains = true;
@@ -196,22 +202,26 @@ void TopologyTree::BuildTopologyRecursive(size_t parentID, const std::vector<ETe
 		// right box. check every tetrahedron node
 		contains = false;
 
-		if (right.boundBox.Contains(nodes.at(element.node[0]).x, nodes.at(element.node[0]).y, nodes.at(element.node[0]).z))
+		if (right.boundBox.Contains(nodes.at(element.node[0]).x, nodes.at(element.node[0]).y,
+									nodes.at(element.node[0]).z))
 		{
 			nodesRight.push_back(element.node[0]);
 			contains = true;
 		}
-		if (right.boundBox.Contains(nodes.at(element.node[1]).x, nodes.at(element.node[1]).y, nodes.at(element.node[1]).z))
+		if (right.boundBox.Contains(nodes.at(element.node[1]).x, nodes.at(element.node[1]).y,
+									nodes.at(element.node[1]).z))
 		{
 			nodesRight.push_back(element.node[1]);
 			contains = true;
 		}
-		if (right.boundBox.Contains(nodes.at(element.node[2]).x, nodes.at(element.node[2]).y, nodes.at(element.node[2]).z))
+		if (right.boundBox.Contains(nodes.at(element.node[2]).x, nodes.at(element.node[2]).y,
+									nodes.at(element.node[2]).z))
 		{
 			nodesRight.push_back(element.node[2]);
 			contains = true;
 		}
-		if (right.boundBox.Contains(nodes.at(element.node[3]).x, nodes.at(element.node[3]).y, nodes.at(element.node[3]).z))
+		if (right.boundBox.Contains(nodes.at(element.node[3]).x, nodes.at(element.node[3]).y,
+									nodes.at(element.node[3]).z))
 		{
 			nodesRight.push_back(element.node[3]);
 			contains = true;
@@ -232,23 +242,23 @@ void TopologyTree::BuildTopologyRecursive(size_t parentID, const std::vector<ETe
 	}
 
 	auto isUnique = [](const std::vector<size_t>& vec)
+	{
+		if (vec.empty())
 		{
-			if (vec.empty())
-			{
-				return true;
-			}
-
-			size_t prev = vec[0];
-			for (size_t i = 1; i < vec.size(); i++)
-			{
-				if (prev != vec[i])
-				{
-					return false;
-				}
-			}
-
 			return true;
-		};
+		}
+
+		size_t prev = vec[0];
+		for (size_t i = 1; i < vec.size(); i++)
+		{
+			if (prev != vec[i])
+			{
+				return false;
+			}
+		}
+
+		return true;
+	};
 
 	if (!isUnique(nodesLeft))
 	{
@@ -267,5 +277,4 @@ void TopologyTree::BuildTopologyRecursive(size_t parentID, const std::vector<ETe
 		}
 		BuildTopologyRecursive(rightID, elements, nodes);
 	}
-
 }

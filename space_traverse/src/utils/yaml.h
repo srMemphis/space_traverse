@@ -1,14 +1,13 @@
 #pragma once
+#include "debug/Log.h"
 #include "fkYAML/node.hpp"
 
-#include "debug/Log.h"
-
-#include <string_view>
+#include <cassert>
 #include <fstream>
 #include <sstream>
 #include <streambuf>
+#include <string_view>
 #include <type_traits>
-#include <cassert>
 
 namespace yaml
 {
@@ -21,14 +20,14 @@ namespace yaml
 
 		if (!file.is_open())
 		{
-			return { node(), false };
+			return {node(), false};
 		}
 
 		std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
 		auto res = fkyaml::node::deserialize(str);
 
-		return { res, true };
+		return {res, true};
 	}
 
 	bool NodeToString(const fkyaml::basic_node<>& node, std::string& str)
@@ -49,31 +48,32 @@ namespace yaml
 
 		switch (node.get_type())
 		{
-			case fkyaml::node_type::INTEGER:
+		case fkyaml::node_type::INTEGER:
+		{
+			integer = node.as_int();
+			return true;
+		}
+		case fkyaml::node_type::FLOAT:
+		{
+			integer = node.as_float();
+			return true;
+		}
+		case fkyaml::node_type::STRING:
+		{
+			try
 			{
-				integer = node.as_int();
-				return true;
+				integer = std::stoi(node.as_str());
 			}
-			case fkyaml::node_type::FLOAT:
+			catch (...)
 			{
-				integer = node.as_float();
-				return true;
+				LOG_CRITICAL("String to int failed. The string was: {}", node.as_str());
+				return false;
 			}
-			case fkyaml::node_type::STRING:
-			{
-				try
-				{
-					integer = std::stoi(node.as_str());
-				}
-				catch (...)
-				{
-					LOG_CRITICAL("String to int failed. The string was: {}", node.as_str());
-					return false;
-				}
 
-				return true;
-			}
-			default: return false;
+			return true;
+		}
+		default:
+			return false;
 		}
 	}
 
@@ -84,31 +84,32 @@ namespace yaml
 
 		switch (node.get_type())
 		{
-			case fkyaml::node_type::INTEGER:
+		case fkyaml::node_type::INTEGER:
+		{
+			floating = node.as_int();
+			return true;
+		}
+		case fkyaml::node_type::FLOAT:
+		{
+			floating = node.as_float();
+			return true;
+		}
+		case fkyaml::node_type::STRING:
+		{
+			try
 			{
-				floating = node.as_int();
-				return true;
+				floating = std::stod(node.as_str());
 			}
-			case fkyaml::node_type::FLOAT:
+			catch (...)
 			{
-				floating = node.as_float();
-				return true;
+				LOG_CRITICAL("String to double failed. The string was: {}", node.as_str());
+				return false;
 			}
-			case fkyaml::node_type::STRING:
-			{
-				try
-				{
-					floating = std::stod(node.as_str());
-				}
-				catch (...)
-				{
-					LOG_CRITICAL("String to double failed. The string was: {}", node.as_str());
-					return false;
-				}
 
-				return true;
-			}
-			default: return false;
+			return true;
+		}
+		default:
+			return false;
 		}
 	}
 
@@ -116,29 +117,30 @@ namespace yaml
 	{
 		switch (node.get_type())
 		{
-			case fkyaml::node_type::BOOLEAN:
-			{
-				boolean = node.as_bool();
-				return true;
-			}
-			case fkyaml::node_type::INTEGER:
-			{
-				boolean = node.as_int();
-				return true;
-			}
-			case fkyaml::node_type::FLOAT:
-			{
-				boolean = node.as_float();
-				return true;
-			}
-			case fkyaml::node_type::STRING:
-			{
-				std::istringstream is(node.as_str());
-				is >> std::boolalpha >> boolean;
-				return true;
-			}
-			default: return false;
+		case fkyaml::node_type::BOOLEAN:
+		{
+			boolean = node.as_bool();
+			return true;
+		}
+		case fkyaml::node_type::INTEGER:
+		{
+			boolean = node.as_int();
+			return true;
+		}
+		case fkyaml::node_type::FLOAT:
+		{
+			boolean = node.as_float();
+			return true;
+		}
+		case fkyaml::node_type::STRING:
+		{
+			std::istringstream is(node.as_str());
+			is >> std::boolalpha >> boolean;
+			return true;
+		}
+		default:
+			return false;
 		}
 	}
 
-}
+} // namespace yaml

@@ -1,14 +1,14 @@
 #pragma once
+#include "mesh/Box.h"
 #include "mesh/ElementTypes.h"
 #include "mesh/TopologyTree.h"
 #include "utils/ToMatlab.h"
-#include "mesh/Box.h"
-
-#include <string>
-#include <vector>
-#include <map>
 
 #include <Eigen/Dense>
+
+#include <map>
+#include <string>
+#include <vector>
 
 
 class Mesh
@@ -18,7 +18,7 @@ public:
 	~Mesh();
 
 	// modifiers
-	bool FromFile(std::string filepath); 	// initialize mesh data from file
+	bool FromFile(std::string filepath); // initialize mesh data from file
 	bool BuildTopologyData();
 	void Clear();
 
@@ -39,16 +39,16 @@ public:
 	uint32_t MaxTetraAtNode() const;
 	double GetVolumeOfTetrahedron(size_t index) const;
 	double GetVolumeOfVolume(const std::string name) const;
-	
+
 	// utils
-	int NameToTag(const std::string& name) const;	// physical name to tag
-	const std::string& TagToName(int tag) const;	// physical tag to name
-	std::vector<double> GetNodesX() const;			// creates vector of node coordinates
+	int NameToTag(const std::string& name) const; // physical name to tag
+	const std::string& TagToName(int tag) const;  // physical tag to name
+	std::vector<double> GetNodesX() const;        // creates vector of node coordinates
 	std::vector<double> GetNodesY() const;
 	std::vector<double> GetNodesZ() const;
-	bool IsInBounds(double x, double y, double z) const;						// checks if point is inside biggest bounding box
-	bool IsInNarrowBounds(double x, double y, double z) const;					// checks if point is inside samll bounding box
-	
+	bool IsInBounds(double x, double y, double z) const;       // checks if point is inside biggest bounding box
+	bool IsInNarrowBounds(double x, double y, double z) const; // checks if point is inside samll bounding box
+
 
 	// find element by traversing topology tree
 	// returns element index
@@ -59,20 +59,20 @@ public:
 	void SaveNodesToFile(ToMatlab& file) const;
 
 private:
-	std::map<std::string, PhisicalName> m_PhisicalNames;  // mapped by name
+	std::map<std::string, PhisicalName> m_PhisicalNames; // mapped by name
 
-	std::vector<Node> m_Nodes;                 // points
-	std::vector<ETriangle> m_surfElements;     // triangles
-	std::vector<ETetrahedron> m_bulkElements;  // tetrahedrons
+	std::vector<Node> m_Nodes;                // points
+	std::vector<ETriangle> m_surfElements;    // triangles
+	std::vector<ETetrahedron> m_bulkElements; // tetrahedrons
 
-	std::map<int, Surface> m_surfaces;         // mapped by entity tags
+	std::map<int, Surface> m_surfaces; // mapped by entity tags
 	std::map<int, Volume> m_volumes;
 
-	std::pair<int, int> m_Version;				// gmsh file version
+	std::pair<int, int> m_Version; // gmsh file version
 
-	TopologyTree m_topologyTree;				// binary search tree
-	std::vector<std::array<Eigen::Vector3d, 4>> m_GradientVectors;        // four gradient vectors per element
-	Box m_tightBox;				// bounding box slightly smaller than the mesh
+	TopologyTree m_topologyTree;                                   // binary search tree
+	std::vector<std::array<Eigen::Vector3d, 4>> m_GradientVectors; // four gradient vectors per element
+	Box m_tightBox;                                                // bounding box slightly smaller than the mesh
 
 private:
 	bool ReadSection(std::ifstream& geofile, std::string section);

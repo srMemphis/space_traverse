@@ -24,7 +24,11 @@ A Windows C++20 console app that simulates electron-beam charging of dielectric 
 - The exe goes to `build/<Config>/space_traverse.exe`; intermediates go to `build/obj/<Config>/<project>/`.
 - The executable takes no arguments. It reads `config.yaml` from the **current working directory**, and relative paths in the config (`msh/...`, `out/...`) resolve from there. Run it with `space_traverse/` as the working directory; `debugdir` in `premake5.lua` makes that the VS debugger default.
 - To switch scenarios, copy one of `space_traverse/configs/*.yaml` over `space_traverse/config.yaml`. Each config names a `.msh` file in `space_traverse/msh/`.
-- There is no test suite and no linter. The smoke check below is the regression gate.
+- There is no test suite. The smoke check below is the regression gate.
+- Code style is set by `.clang-format` in the repository root. `.clang-format-ignore` excludes the vendored `space_traverse/include/` and `space_traverse/lib/`; it needs clang-format 18 or newer. VS 2026 ships one at `C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\Llvm\x64\bin\clang-format.exe`. Format everything from the repository root (Git Bash), then check that `--dry-run --Werror` prints nothing:
+  ```
+  git ls-files '*.cpp' '*.h' | xargs "/c/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/Llvm/x64/bin/clang-format.exe" -i
+  ```
 
 ## Smoke check
 

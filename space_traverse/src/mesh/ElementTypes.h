@@ -1,9 +1,9 @@
 #pragma once
-#include <string>
-#include <span>
-#include <vector>
-
 #include "utils/Types.h"
+
+#include <span>
+#include <string>
+#include <vector>
 
 // 3-node triangle element
 struct ETriangle
@@ -20,8 +20,7 @@ struct ETetrahedron
 struct PhisicalName
 {
 	PhisicalName() {}
-	PhisicalName(int Dim, int Tag, const std::string& Name)
-		: dimention(Dim), tag(Tag), name(Name) {}
+	PhisicalName(int Dim, int Tag, const std::string& Name) : dimention(Dim), tag(Tag), name(Name) {}
 
 	int dimention = 0;
 	int tag = 0;
@@ -35,7 +34,7 @@ public:
 	virtual ~Entity() {}
 
 	int entytyTag = 0;
-	int physicalTag  =-1;
+	int physicalTag = -1;
 
 	double minX = 0;
 	double minY = 0;

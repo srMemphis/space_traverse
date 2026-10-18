@@ -1,7 +1,7 @@
 #pragma once
-#include <ostream>
 #include <list>
 #include <memory>
+#include <ostream>
 
 class UnsignedRange
 {
@@ -19,7 +19,7 @@ public:
 
 	UnsignedRange operator+(const UnsignedRange& other) const;
 	UnsignedRange operator-(const UnsignedRange& other) const;
-	friend std::ostream& operator<< (std::ostream& stream, const UnsignedRange& matrix);
+	friend std::ostream& operator<<(std::ostream& stream, const UnsignedRange& matrix);
 
 private:
 	void ResolveCollisions(std::list<std::pair<size_t, size_t>>::iterator start);
@@ -31,11 +31,7 @@ private:
 class RangeIterator
 {
 public:
-	RangeIterator(const UnsignedRange& range)
-		: m_range(range)
-	{
-		Reset();
-	}
+	RangeIterator(const UnsignedRange& range) : m_range(range) { Reset(); }
 
 	void Reset()
 	{
@@ -43,10 +39,7 @@ public:
 		m_current = 0;
 	}
 
-	size_t Get() const
-	{
-		return m_iter->first + m_current;
-	}
+	size_t Get() const { return m_iter->first + m_current; }
 
 	bool Advance()
 	{
@@ -74,10 +67,7 @@ public:
 		return result;
 	}
 
-	size_t GetMax() const
-	{
-		return m_range.m_data.back().second - 1;
-	}
+	size_t GetMax() const { return m_range.m_data.back().second - 1; }
 
 private:
 	UnsignedRange m_range;

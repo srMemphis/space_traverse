@@ -3,11 +3,10 @@
 #include "debug/Log.h"
 #include "debug/Profiler.h"
 
-#include <cmath>
 #include <algorithm>
+#include <cmath>
 
-Track::Track()
-	:m_stepSize(1), m_dt(0)
+Track::Track() : m_stepSize(1), m_dt(0)
 {
 }
 
@@ -52,7 +51,7 @@ const Eigen::Vector3d& Track::MakeStep()
 
 	// get direction of particle
 	Eigen::Vector3d dir = m_velo.first + 0.5 * m_accel.first * m_dt;
-	
+
 	// normalize it to step size
 	dir.normalize();
 	dir *= m_stepSize;

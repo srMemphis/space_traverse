@@ -21,8 +21,8 @@ private:
 };
 
 // log macros
-#define LOG_TRACE(...)	  SPDLOG_LOGGER_TRACE(Log::GetLogger(), __VA_ARGS__)
-#define LOG_INFO(...)     SPDLOG_LOGGER_INFO(Log::GetLogger(), __VA_ARGS__)
-#define LOG_WARN(...)     SPDLOG_LOGGER_WARN(Log::GetLogger(), __VA_ARGS__)
-#define LOG_ERROR(...)    SPDLOG_LOGGER_ERROR(Log::GetLogger(), __VA_ARGS__)
+#define LOG_TRACE(...) SPDLOG_LOGGER_TRACE(Log::GetLogger(), __VA_ARGS__)
+#define LOG_INFO(...) SPDLOG_LOGGER_INFO(Log::GetLogger(), __VA_ARGS__)
+#define LOG_WARN(...) SPDLOG_LOGGER_WARN(Log::GetLogger(), __VA_ARGS__)
+#define LOG_ERROR(...) SPDLOG_LOGGER_ERROR(Log::GetLogger(), __VA_ARGS__)
 #define LOG_CRITICAL(...) SPDLOG_LOGGER_CRITICAL(Log::GetLogger(), __VA_ARGS__)

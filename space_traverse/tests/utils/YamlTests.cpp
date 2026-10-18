@@ -117,7 +117,7 @@ TEST_SUITE("yaml")
 
 	TEST_CASE("a value the integer type cannot hold is rejected")
 	{
-		// The counts in the config (numtracks, numsteps, iterations, saveInterval) are unsigned.
+		// The counts of a Scenario (numtracks, numsteps, iterations, saveInterval) are unsigned.
 		auto root = Parse("negative: -1\n"
 						  "negativeFloating: -1.0\n"
 						  "negativeString: \"-1\"\n"

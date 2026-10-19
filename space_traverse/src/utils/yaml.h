@@ -4,10 +4,12 @@
 
 #include <cassert>
 #include <fstream>
+#include <limits>
 #include <sstream>
 #include <streambuf>
 #include <string_view>
 #include <type_traits>
+#include <utility>
 
 namespace yaml
 {
@@ -50,19 +52,30 @@ namespace yaml
 		{
 		case fkyaml::node_type::INTEGER:
 		{
-			integer = node.as_int();
+			const auto value = node.as_int();
+			if (!std::in_range<T>(value))
+				return false;
+
+			integer = static_cast<T>(value);
 			return true;
 		}
 		case fkyaml::node_type::FLOAT:
 		{
-			integer = node.as_float();
+			// The value truncated toward zero must fit in T. NaN fails both comparisons.
+			const double value = node.as_float();
+			if (!(value > static_cast<double>(std::numeric_limits<T>::min()) - 1.0 &&
+				  value < static_cast<double>(std::numeric_limits<T>::max()) + 1.0))
+				return false;
+
+			integer = static_cast<T>(value);
 			return true;
 		}
 		case fkyaml::node_type::STRING:
 		{
+			int value = 0;
 			try
 			{
-				integer = std::stoi(node.as_str());
+				value = std::stoi(node.as_str());
 			}
 			catch (...)
 			{
@@ -70,6 +83,10 @@ namespace yaml
 				return false;
 			}
 
+			if (!std::in_range<T>(value))
+				return false;
+
+			integer = static_cast<T>(value);
 			return true;
 		}
 		default:
@@ -136,7 +153,7 @@ namespace yaml
 		{
 			std::istringstream is(node.as_str());
 			is >> std::boolalpha >> boolean;
-			return true;
+			return !is.fail();
 		}
 		default:
 			return false;

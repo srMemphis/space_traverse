@@ -256,6 +256,12 @@ bool Solver::SaveSolutionToFile(ToMatlab& file)
 Eigen::Vector3d Solver::GetFieldCasual(double x, double y, double z)
 {
 	auto elemIndex = m_mesh->FindElementByCoords(x, y, z);
+	if (elemIndex < 0)
+	{
+		LOG_ERROR("[GetField] No element at ({},{},{}), the field there is zero", x, y, z);
+		return Eigen::Vector3d::Zero();
+	}
+
 	auto& element = m_mesh->m_bulkElements.at(elemIndex);
 	auto& gradient = m_mesh->m_GradientVectors.at(elemIndex);
 
@@ -269,6 +275,12 @@ Eigen::Vector3d Solver::GetFieldCasual(double x, double y, double z)
 Eigen::Vector3d Solver::GetFieldSmooth(double x, double y, double z)
 {
 	auto elemIndex = m_mesh->FindElementByCoords(x, y, z);
+	if (elemIndex < 0)
+	{
+		LOG_ERROR("[GetField] No element at ({},{},{}), the field there is zero", x, y, z);
+		return Eigen::Vector3d::Zero();
+	}
+
 	auto& element = m_mesh->m_bulkElements.at(elemIndex);
 	auto& nodes = m_mesh->GetNodes();
 

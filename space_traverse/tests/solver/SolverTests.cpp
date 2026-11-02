@@ -166,4 +166,12 @@ TEST_SUITE("Solver")
 			CHECK_VEC_NEAR(solver.GetField(p.x(), p.y(), p.z()), kExactField);
 		}
 	}
+
+	TEST_CASE_FIXTURE(CubeSolver, "the field outside the mesh is zero")
+	{
+		SolveAnalyticCase();
+
+		// The Field inside is 1 V/m, so 1e-9 V/m is the default relative tolerance at that scale.
+		CHECK_VEC_NEAR_ABS(solver.GetField(3.0, 3.0, 3.0), Eigen::Vector3d::Zero(), 1e-9);
+	}
 }

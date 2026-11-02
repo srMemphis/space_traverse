@@ -12,7 +12,9 @@
 #include <cassert>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <map>
+#include <stdexcept>
 
 Mesh::Mesh()
 {
@@ -144,7 +146,14 @@ double Mesh::GetVolumeOfVolume(const std::string name) const
 {
 	double result = 0;
 
-	int physTag = m_PhisicalNames.find(name)->second.tag;
+	auto iter = m_PhysicalNames.find(name);
+	if (iter == m_PhysicalNames.end())
+	{
+		LOG_CRITICAL("Volume '{}' is not found in the mesh!", name);
+		throw std::runtime_error("Volume '" + name + "' is not found in the mesh");
+	}
+
+	int physTag = iter->second.tag;
 
 	// for every volume
 	for (auto& key_volume : m_volumes)
@@ -169,8 +178,8 @@ int Mesh::NameToTag(const std::string& name) const
 {
 	int tag = 0;
 
-	auto iter = m_PhisicalNames.find(name);
-	if (iter != m_PhisicalNames.end())
+	auto iter = m_PhysicalNames.find(name);
+	if (iter != m_PhysicalNames.end())
 	{
 		tag = iter->second.tag;
 	}
@@ -180,7 +189,7 @@ int Mesh::NameToTag(const std::string& name) const
 
 const std::string& Mesh::TagToName(int tag) const
 {
-	for (auto& name : m_PhisicalNames)
+	for (auto& name : m_PhysicalNames)
 	{
 		if (name.second.tag == tag)
 		{
@@ -188,7 +197,8 @@ const std::string& Mesh::TagToName(int tag) const
 		}
 	}
 
-	return "";
+	static const std::string empty;
+	return empty;
 }
 
 std::vector<double> Mesh::GetNodesX() const
@@ -240,7 +250,7 @@ bool Mesh::IsInNarrowBounds(double x, double y, double z) const
 	return m_tightBox.Contains(x, y, z);
 }
 
-int Mesh::GetPhisicalTagOfTetrahedron(size_t index) const
+int Mesh::GetPhysicalTagOfTetrahedron(size_t index) const
 {
 	for (auto& key_vol : m_volumes)
 	{
@@ -250,6 +260,8 @@ int Mesh::GetPhisicalTagOfTetrahedron(size_t index) const
 			return key_vol.second.physicalTag;
 		}
 	}
+
+	return -1;
 }
 
 Box Mesh::GetBoundingBox() const
@@ -290,12 +302,15 @@ bool Mesh::BuildTopologyData()
 void Mesh::Clear()
 {
 	m_Version = std::pair<int, int>{0, 0};
+	m_PhysicalNames.clear();
 	m_Nodes.clear();
 	m_surfElements.clear();
 	m_bulkElements.clear();
 	m_surfaces.clear();
 	m_volumes.clear();
 	m_topologyTree.Clear();
+	m_GradientVectors.clear();
+	m_tightBox = Box();
 }
 
 int64_t Mesh::FindElementByCoords(double x, double y, double z) const
@@ -524,7 +539,7 @@ bool Mesh::ReadPhysicalNames(std::ifstream& geofile)
 
 	for (int i = 0; i < numNames; i++)
 	{
-		PhisicalName pname;
+		PhysicalName pname;
 
 		geofile >> pname.dimention;
 		geofile >> pname.tag;
@@ -534,7 +549,7 @@ bool Mesh::ReadPhysicalNames(std::ifstream& geofile)
 		pname.name.erase(0, 2);                  // erase the first two characters
 		pname.name.erase(pname.name.size() - 1); // erase the last character
 
-		m_PhisicalNames.emplace(pname.name, pname);
+		m_PhysicalNames.emplace(pname.name, pname);
 
 		LOG_TRACE("dim: {}, tag: {}, name: {}", pname.dimention, pname.tag, pname.name);
 	}
@@ -925,7 +940,8 @@ void Mesh::GenerateGradientVectors()
 void Mesh::GenerateTightBox()
 {
 	// box with exact size of the mesh
-	Box exact;
+	const double inf = std::numeric_limits<double>::infinity();
+	Box exact(inf, inf, inf, -inf, -inf, -inf);
 
 	for (auto& node : m_Nodes)
 	{
@@ -940,13 +956,18 @@ void Mesh::GenerateTightBox()
 
 	double mult = 0.999; // size multiplier
 
-	m_tightBox.xMax = exact.xMax * mult;
-	m_tightBox.yMax = exact.yMax * mult;
-	m_tightBox.zMax = exact.zMax * mult;
+	// shrink about the centre of the box
+	double xMid = (exact.xMax + exact.xMin) / 2;
+	double yMid = (exact.yMax + exact.yMin) / 2;
+	double zMid = (exact.zMax + exact.zMin) / 2;
 
-	m_tightBox.xMin = exact.xMin * mult;
-	m_tightBox.yMin = exact.yMin * mult;
-	m_tightBox.zMin = exact.zMin * mult;
+	m_tightBox.xMax = xMid + (exact.xMax - xMid) * mult;
+	m_tightBox.yMax = yMid + (exact.yMax - yMid) * mult;
+	m_tightBox.zMax = zMid + (exact.zMax - zMid) * mult;
+
+	m_tightBox.xMin = xMid + (exact.xMin - xMid) * mult;
+	m_tightBox.yMin = yMid + (exact.yMin - yMid) * mult;
+	m_tightBox.zMin = zMid + (exact.zMin - zMid) * mult;
 }
 
 bool Mesh::ReadNodes(std::ifstream& geofile)

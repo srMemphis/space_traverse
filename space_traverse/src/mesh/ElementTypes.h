@@ -17,10 +17,10 @@ struct ETetrahedron
 	size_t node[4];
 };
 
-struct PhisicalName
+struct PhysicalName
 {
-	PhisicalName() {}
-	PhisicalName(int Dim, int Tag, const std::string& Name) : dimention(Dim), tag(Tag), name(Name) {}
+	PhysicalName() {}
+	PhysicalName(int Dim, int Tag, const std::string& Name) : dimention(Dim), tag(Tag), name(Name) {}
 
 	int dimention = 0;
 	int tag = 0;

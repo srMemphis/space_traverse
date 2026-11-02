@@ -38,6 +38,24 @@ _Avoid_: Dirichlet boundary
 The physical properties of a Volume: its relative permittivity and its Secondary emission yield.
 _Avoid_: medium
 
+### Mesh
+
+**Mesh**:
+The partition of the geometry into Elements on which the Potential is solved.
+_Avoid_: grid
+
+**Element**:
+One tetrahedron of the Mesh. Every Element belongs to exactly one Volume.
+_Avoid_: tetra, cell
+
+**Mesh bounds**:
+The smallest axis-aligned box that contains the whole Mesh.
+_Avoid_: bounding box
+
+**Narrow bounds**:
+The Mesh bounds shrunk by 0.1% about their centre, so a point inside them lies safely inside the Mesh.
+_Avoid_: tight box
+
 ### Beam and tracks
 
 **Beam**:

@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <execution>
+#include <limits>
 
 TopologyTree::TopologyTree() : m_maxTetrahedronsAtNode(0)
 {
@@ -27,21 +28,20 @@ bool TopologyTree::GenerateData(const std::map<int, Volume>& volumes, const std:
 
 	// create root node
 	//
-	// bounding box
-	Box box;
+	// bounding box of the nodes
+	const double inf = std::numeric_limits<double>::infinity();
+	Box box(inf, inf, inf, -inf, -inf, -inf);
 
 	// update bounding box
-	for (auto& pair : volumes)
+	for (auto& node : nodes)
 	{
-		auto& v = pair.second;
+		box.xMax = box.xMax < node.x ? node.x : box.xMax;
+		box.yMax = box.yMax < node.y ? node.y : box.yMax;
+		box.zMax = box.zMax < node.z ? node.z : box.zMax;
 
-		box.xMax = box.xMax < v.maxX ? v.maxX : box.xMax;
-		box.yMax = box.yMax < v.maxY ? v.maxY : box.yMax;
-		box.zMax = box.zMax < v.maxZ ? v.maxZ : box.zMax;
-
-		box.xMin = box.xMin > v.minX ? v.minX : box.xMin;
-		box.yMin = box.yMin > v.minY ? v.minY : box.yMin;
-		box.zMin = box.zMin > v.minZ ? v.minZ : box.zMin;
+		box.xMin = box.xMin > node.x ? node.x : box.xMin;
+		box.yMin = box.yMin > node.y ? node.y : box.yMin;
+		box.zMin = box.zMin > node.z ? node.z : box.zMin;
 	}
 
 	// add bounding box to the root of topology tree;

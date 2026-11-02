@@ -105,8 +105,8 @@ public:
 				// LOG_TRACE("GJK to many iterations: {}", iter);
 				// LOG(b, m_tet);
 
-				// most of the time there is no intersection
-				return false; // FIXME: Consider returning true for reliability
+				// undecided: report an intersection, FindElementByCoords makes the exact check
+				return true;
 			}
 		}
 	}

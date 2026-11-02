@@ -9,6 +9,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 
 Solver::Solver()
 {
@@ -381,7 +382,14 @@ void Solver::AssembleLeft()
 		// multiply local matrix by epsilon of material
 		auto tag = m_mesh->GetPhysicalTagOfTetrahedron(tetraIndex);
 		auto& name = m_mesh->TagToName(tag);
-		auto& material = m_materials.find(name)->second;
+		auto materialIter = m_materials.find(name);
+		if (materialIter == m_materials.end())
+		{
+			LOG_CRITICAL("[AssembleLeft] No material for volume '{}'!", name);
+			throw std::runtime_error("No material for volume '" + name + "'");
+		}
+
+		auto& material = materialIter->second;
 
 		Klocal *= material.epsilon;
 

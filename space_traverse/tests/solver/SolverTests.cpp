@@ -174,4 +174,11 @@ TEST_SUITE("Solver")
 		// The Field inside is 1 V/m, so 1e-9 V/m is the default relative tolerance at that scale.
 		CHECK_VEC_NEAR_ABS(solver.GetField(3.0, 3.0, 3.0), Eigen::Vector3d::Zero(), 1e-9);
 	}
+
+	TEST_CASE("a volume without a material stops the assembly with an error")
+	{
+		CubeSolver cube("Glass");
+
+		CHECK_THROWS_AS(cube.solver.AssembleLeft(), std::runtime_error);
+	}
 }

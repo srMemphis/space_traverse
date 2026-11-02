@@ -52,7 +52,7 @@ bool ToMatlab::Write(const Eigen::VectorXd& vec, const std::string& name)
 
 	std::vector<double> v(&vec[0], vec.data() + vec.cols() * vec.rows());
 
-	if (vec.IsRowMajor())
+	if constexpr (Eigen::VectorXd::IsRowMajor)
 	{
 		TinyMATWriter_writeContainerAsRow(m_file, name.c_str(), v);
 	}

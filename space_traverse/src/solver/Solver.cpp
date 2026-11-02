@@ -9,6 +9,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 
 Solver::Solver()
 {
@@ -256,6 +257,12 @@ bool Solver::SaveSolutionToFile(ToMatlab& file)
 Eigen::Vector3d Solver::GetFieldCasual(double x, double y, double z)
 {
 	auto elemIndex = m_mesh->FindElementByCoords(x, y, z);
+	if (elemIndex < 0)
+	{
+		LOG_ERROR("[GetField] No element at ({},{},{}), the field there is zero", x, y, z);
+		return Eigen::Vector3d::Zero();
+	}
+
 	auto& element = m_mesh->m_bulkElements.at(elemIndex);
 	auto& gradient = m_mesh->m_GradientVectors.at(elemIndex);
 
@@ -269,6 +276,12 @@ Eigen::Vector3d Solver::GetFieldCasual(double x, double y, double z)
 Eigen::Vector3d Solver::GetFieldSmooth(double x, double y, double z)
 {
 	auto elemIndex = m_mesh->FindElementByCoords(x, y, z);
+	if (elemIndex < 0)
+	{
+		LOG_ERROR("[GetField] No element at ({},{},{}), the field there is zero", x, y, z);
+		return Eigen::Vector3d::Zero();
+	}
+
 	auto& element = m_mesh->m_bulkElements.at(elemIndex);
 	auto& nodes = m_mesh->GetNodes();
 
@@ -369,7 +382,14 @@ void Solver::AssembleLeft()
 		// multiply local matrix by epsilon of material
 		auto tag = m_mesh->GetPhysicalTagOfTetrahedron(tetraIndex);
 		auto& name = m_mesh->TagToName(tag);
-		auto& material = m_materials.find(name)->second;
+		auto materialIter = m_materials.find(name);
+		if (materialIter == m_materials.end())
+		{
+			LOG_CRITICAL("[AssembleLeft] No material for volume '{}'!", name);
+			throw std::runtime_error("No material for volume '" + name + "'");
+		}
+
+		auto& material = materialIter->second;
 
 		Klocal *= material.epsilon;
 

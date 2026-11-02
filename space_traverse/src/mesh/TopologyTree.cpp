@@ -120,7 +120,7 @@ bool TopologyTree::IsInBounds(double x, double y, double z) const
 
 const uint32_t TopologyTree::MaxTetraAtNode() const
 {
-	return m_maxTetrahedronsAtNode;
+	return static_cast<uint32_t>(m_maxTetrahedronsAtNode);
 }
 
 void TopologyTree::Clear()

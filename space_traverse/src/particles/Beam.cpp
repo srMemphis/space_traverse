@@ -92,7 +92,7 @@ void Beam::Reset()
 
 bool Beam::SaveTracksToFile(ToMatlab& file, uint32_t numPoints)
 {
-	file.StartCell("tracks", m_tracks.size());
+	file.StartCell("tracks", static_cast<uint32_t>(m_tracks.size()));
 
 	std::vector<double> coords;
 	coords.reserve(numPoints);
@@ -133,7 +133,7 @@ bool Beam::SaveTracksToFile(ToMatlab& file, uint32_t numPoints)
 		coords.at(coordsSize - 1 + coordsSize * 1) = points.at(pointsSize - 1).y();
 		coords.at(coordsSize - 1 + coordsSize * 2) = points.at(pointsSize - 1).z();
 
-		file.WriteCellAsMatrix(coords, coordsSize, 3);
+		file.WriteCellAsMatrix(coords, static_cast<uint32_t>(coordsSize), 3);
 
 		coords.clear();
 	}
@@ -145,7 +145,7 @@ bool Beam::SaveTracksToFile(ToMatlab& file, uint32_t numPoints)
 
 bool Beam::SaveTracksToFilePresice(ToMatlab& file)
 {
-	file.StartCell("tracks", m_tracks.size());
+	file.StartCell("tracks", static_cast<uint32_t>(m_tracks.size()));
 
 	std::vector<double> coords;
 
@@ -165,7 +165,7 @@ bool Beam::SaveTracksToFilePresice(ToMatlab& file)
 			coords.at(i + size * 2) = points.at(i).z();
 		}
 
-		file.WriteCellAsMatrix(coords, size, 3);
+		file.WriteCellAsMatrix(coords, static_cast<uint32_t>(size), 3);
 
 		coords.clear();
 	}

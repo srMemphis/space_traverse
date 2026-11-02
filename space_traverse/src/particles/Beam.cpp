@@ -123,9 +123,9 @@ bool Beam::SaveTracksToFile(ToMatlab& file, uint32_t numPoints)
 		// writing all between the first and the second
 		for (size_t i = 1; i < coordsSize - 1; i++)
 		{
-			coords.at(i + coordsSize * 0) = points.at(i * step).x();
-			coords.at(i + coordsSize * 1) = points.at(i * step).y();
-			coords.at(i + coordsSize * 2) = points.at(i * step).z();
+			coords.at(i + coordsSize * 0) = points.at(static_cast<size_t>(i * step)).x();
+			coords.at(i + coordsSize * 1) = points.at(static_cast<size_t>(i * step)).y();
+			coords.at(i + coordsSize * 2) = points.at(static_cast<size_t>(i * step)).z();
 		}
 
 		// writing the last point
@@ -201,7 +201,7 @@ void Beam::GenerateUniformDisk(uint32_t circles)
 
 	for (int i = 1; i < n + 1; i++)
 	{
-		int N = std::round(phys::pi * dr * dr * (2 * i - 1) / A1);
+		int N = static_cast<int>(std::round(phys::pi * dr * dr * (2 * i - 1) / A1));
 		double dphi = 2 * phys::pi / N;
 
 		double Rc = centermass(dr * i, dphi);

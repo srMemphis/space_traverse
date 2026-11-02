@@ -48,6 +48,10 @@ _Avoid_: grid
 One tetrahedron of the Mesh. Every Element belongs to exactly one Volume.
 _Avoid_: tetra, cell
 
+**Node**:
+A corner of an Element, shared by every Element that meets there. The Potential is solved for at the Nodes.
+_Avoid_: vertex, point
+
 **Mesh bounds**:
 The smallest axis-aligned box that contains the whole Mesh.
 _Avoid_: bounding box

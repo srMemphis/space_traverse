@@ -15,6 +15,8 @@ workspace "space_traverse"
     systemversion "latest"
     multiprocessorcompile "On"
     warnings "Extra"
+    -- /WX for the compiler only; linker warnings stay warnings (no linkerfatalwarnings).
+    fatalwarnings { "All" }
     -- No premake API for /sdl, /utf-8 or FavorSizeOrSpeed (/Ot).
     buildoptions { "/sdl", "/utf-8", "/Ot" }
     -- premake does not add _CONSOLE on its own; the old project defined it everywhere.

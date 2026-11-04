@@ -17,6 +17,7 @@ A Windows C++20 console app that simulates electron-beam charging of dielectric 
   msbuild build/space_traverse.slnx /p:Configuration=Release /p:Platform=x64
   ```
   Re-run `generate_vs2026.bat` after editing `premake5.lua` or adding/removing source files. It writes `build/space_traverse.slnx` and `build/projects/*.vcxproj`. Always pass the `.slnx` explicitly to MSBuild.
+- Warnings: every project builds at `/W4` with `/WX`, so a compiler warning fails the build; the linker is not `/WX`. `space_traverse/include/` is external (`/external:I`, `/external:W0`), so vendored headers do not warn.
 - Toolset `v145` (VS 2026), C++20, OpenMP, x64 only. Projects:
   - `space_traverse_core` (StaticLib): everything in `space_traverse/src/`.
   - `space_traverse` (ConsoleApp): `space_traverse/app/main.cpp`, links `space_traverse_core` and TinyMAT. `TinyMAT_Debug.lib`/`TinyMAT_Release.lib` are prebuilt for x64 in `space_traverse/lib/TinyMAT/`; `lib/TinyMAT/License/SOURCE.txt` records how to rebuild them.

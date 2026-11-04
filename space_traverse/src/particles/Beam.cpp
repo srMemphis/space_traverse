@@ -92,7 +92,7 @@ void Beam::Reset()
 
 bool Beam::SaveTracksToFile(ToMatlab& file, uint32_t numPoints)
 {
-	file.StartCell("tracks", m_tracks.size());
+	file.StartCell("tracks", static_cast<uint32_t>(m_tracks.size()));
 
 	std::vector<double> coords;
 	coords.reserve(numPoints);
@@ -123,9 +123,9 @@ bool Beam::SaveTracksToFile(ToMatlab& file, uint32_t numPoints)
 		// writing all between the first and the second
 		for (size_t i = 1; i < coordsSize - 1; i++)
 		{
-			coords.at(i + coordsSize * 0) = points.at(i * step).x();
-			coords.at(i + coordsSize * 1) = points.at(i * step).y();
-			coords.at(i + coordsSize * 2) = points.at(i * step).z();
+			coords.at(i + coordsSize * 0) = points.at(static_cast<size_t>(i * step)).x();
+			coords.at(i + coordsSize * 1) = points.at(static_cast<size_t>(i * step)).y();
+			coords.at(i + coordsSize * 2) = points.at(static_cast<size_t>(i * step)).z();
 		}
 
 		// writing the last point
@@ -133,7 +133,7 @@ bool Beam::SaveTracksToFile(ToMatlab& file, uint32_t numPoints)
 		coords.at(coordsSize - 1 + coordsSize * 1) = points.at(pointsSize - 1).y();
 		coords.at(coordsSize - 1 + coordsSize * 2) = points.at(pointsSize - 1).z();
 
-		file.WriteCellAsMatrix(coords, coordsSize, 3);
+		file.WriteCellAsMatrix(coords, static_cast<uint32_t>(coordsSize), 3);
 
 		coords.clear();
 	}
@@ -145,7 +145,7 @@ bool Beam::SaveTracksToFile(ToMatlab& file, uint32_t numPoints)
 
 bool Beam::SaveTracksToFilePresice(ToMatlab& file)
 {
-	file.StartCell("tracks", m_tracks.size());
+	file.StartCell("tracks", static_cast<uint32_t>(m_tracks.size()));
 
 	std::vector<double> coords;
 
@@ -165,7 +165,7 @@ bool Beam::SaveTracksToFilePresice(ToMatlab& file)
 			coords.at(i + size * 2) = points.at(i).z();
 		}
 
-		file.WriteCellAsMatrix(coords, size, 3);
+		file.WriteCellAsMatrix(coords, static_cast<uint32_t>(size), 3);
 
 		coords.clear();
 	}
@@ -201,7 +201,7 @@ void Beam::GenerateUniformDisk(uint32_t circles)
 
 	for (int i = 1; i < n + 1; i++)
 	{
-		int N = std::round(phys::pi * dr * dr * (2 * i - 1) / A1);
+		int N = static_cast<int>(std::round(phys::pi * dr * dr * (2 * i - 1) / A1));
 		double dphi = 2 * phys::pi / N;
 
 		double Rc = centermass(dr * i, dphi);

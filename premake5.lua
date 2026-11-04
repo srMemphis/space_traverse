@@ -14,16 +14,18 @@ workspace "space_traverse"
     characterset "Unicode"
     systemversion "latest"
     multiprocessorcompile "On"
-    warnings "Default"
+    warnings "Extra"
+    -- /WX for the compiler only; linker warnings stay warnings (no linkerfatalwarnings).
+    fatalwarnings { "All" }
     -- No premake API for /sdl, /utf-8 or FavorSizeOrSpeed (/Ot).
     buildoptions { "/sdl", "/utf-8", "/Ot" }
     -- premake does not add _CONSOLE on its own; the old project defined it everywhere.
     defines { "_CONSOLE" }
 
-    includedirs {
-        "space_traverse/src",
-        "space_traverse/include",
-    }
+    includedirs { "space_traverse/src" }
+    -- Vendored headers: /external:I with /external:W0, so /W4 applies only to our code.
+    externalincludedirs { "space_traverse/include" }
+    externalwarnings "Off"
 
     targetdir "build/%{cfg.buildcfg}"
     objdir "build/obj/%{cfg.buildcfg}/%{prj.name}"

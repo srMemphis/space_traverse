@@ -337,7 +337,6 @@ void Solver::AssembleLeft()
 	PROFILE_FUNCTION();
 
 	auto& nodes = m_mesh->GetNodes();
-	size_t numNodes = nodes.size();
 
 	// the chunky boys
 	auto elemPerCol = m_mesh->MaxTetraAtNode();

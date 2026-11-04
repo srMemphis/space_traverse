@@ -434,7 +434,7 @@ void Mesh::SaveSurfaceToFile(const std::string& physname, ToMatlab& file) const
 	file.Write(x, newname + "_x");
 	file.Write(y, newname + "_y");
 	file.Write(z, newname + "_z");
-	file.WriteAsMatrix(tomatlabindex, size, 3, newname + "_T");
+	file.WriteAsMatrix(tomatlabindex, static_cast<uint32_t>(size), 3, newname + "_T");
 }
 
 void Mesh::SaveNodesToFile(ToMatlab& file) const

@@ -112,7 +112,8 @@ public:
 	}
 
 private:
-	static void LOG(const Box& b, const std::array<Eigen::Vector3d, 4>& tet, bool result)
+	static void LOG([[maybe_unused]] const Box& b, [[maybe_unused]] const std::array<Eigen::Vector3d, 4>& tet,
+					[[maybe_unused]] bool result)
 	{
 #if (GJK_LOG == 1)
 		std::ofstream myfile;

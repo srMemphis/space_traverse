@@ -103,7 +103,7 @@ namespace yaml
 		{
 		case fkyaml::node_type::INTEGER:
 		{
-			floating = node.as_int();
+			floating = static_cast<T>(node.as_int());
 			return true;
 		}
 		case fkyaml::node_type::FLOAT:
